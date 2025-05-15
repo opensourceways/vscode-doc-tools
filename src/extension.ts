@@ -4,19 +4,37 @@ import * as fs from 'fs';
 import { lint } from 'markdownlint/async';
 
 export function activate(context: vscode.ExtensionContext) {
-  const disposable = vscode.workspace.onDidSaveTextDocument((document) => {
+  // 用于存储错误信息
+  const diagnosticsCollection = vscode.languages.createDiagnosticCollection('markdownlint');
+
+  // 首次激活后检查
+  if (vscode.window.activeTextEditor && vscode.window.activeTextEditor.document.languageId === 'markdown') {
+    lintMarkdown(vscode.window.activeTextEditor.document, diagnosticsCollection);
+  }
+
+  // 监听文件打开
+  const onDidOpenTextDocumentListener = vscode.workspace.onDidOpenTextDocument((document) => {
     if (document.languageId === 'markdown') {
-      lintMarkdown(document);
+      lintMarkdown(document, diagnosticsCollection);
     }
   });
 
-  context.subscriptions.push(disposable);
+  context.subscriptions.push(onDidOpenTextDocumentListener);
+
+  // 监听文件保存
+  const onDidSaveTextDocumentListener = vscode.workspace.onDidSaveTextDocument((document) => {
+    if (document.languageId === 'markdown') {
+      lintMarkdown(document, diagnosticsCollection);
+    }
+  });
+
+  context.subscriptions.push(onDidSaveTextDocumentListener);
 
   // 注册命令
   const lintCommand = vscode.commands.registerCommand('markdownlint.run', () => {
     const editor = vscode.window.activeTextEditor;
     if (editor && editor.document.languageId === 'markdown') {
-      lintMarkdown(editor.document);
+      lintMarkdown(editor.document, diagnosticsCollection);
     } else {
       vscode.window.showInformationMessage('请在Markdown文件中运行Markdownlint');
     }
@@ -25,7 +43,7 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(lintCommand);
 }
 
-const lintMarkdown = (document: vscode.TextDocument) => {
+const lintMarkdown = (document: vscode.TextDocument, diagnosticsCollection: vscode.DiagnosticCollection) => {
   const config = vscode.workspace.getConfiguration('markdownlint');
   const enableLint = config.get<boolean>('enable', true);
 
@@ -34,7 +52,6 @@ const lintMarkdown = (document: vscode.TextDocument) => {
   }
 
   const filePath = document.fileName;
-  const diagnosticsCollection = vscode.languages.createDiagnosticCollection('markdownlint');
 
   // 读取文件内容
   const content = document.getText();
@@ -57,6 +74,7 @@ const lintMarkdown = (document: vscode.TextDocument) => {
 
     // 解析结果并显示诊断信息
     const diagnostics = parseLintResult(result);
+    diagnosticsCollection.delete(document.uri);
     diagnosticsCollection.set(document.uri, diagnostics);
   });
 };
