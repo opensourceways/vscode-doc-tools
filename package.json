@@ -4,20 +4,39 @@
   "description": "linter for markdown docs",
   "version": "0.0.1",
   "engines": {
-    "vscode": "^1.100.0"
+    "vscode": "^1.82.0"
   },
+  "type":"module",
   "categories": [
-    "Other"
+    "Linters"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onLanguage:markdown"
+  ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "docs-lint.helloWorld",
-        "title": "Hello World"
+        "command": "markdownlint.run",
+        "title": "运行Markdownlint检查"
       }
-    ]
+    ],
+    "configuration": {
+      "type": "object",
+      "title": "Markdownlint配置",
+      "properties": {
+        "markdownlint.enable": {
+          "type": "boolean",
+          "default": true,
+          "description": "启用Markdownlint代码检查"
+        },
+        "markdownlint.config": {
+          "type": "object",
+          "default": {},
+          "description": "Markdownlint自定义配置"
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "pnpm run compile",
@@ -27,15 +46,18 @@
     "lint": "eslint src",
     "test": "vscode-test"
   },
+  "dependencies": {
+    "markdownlint": "^0.38.0"
+  },
   "devDependencies": {
-    "@types/vscode": "^1.100.0",
     "@types/mocha": "^10.0.10",
     "@types/node": "20.x",
+    "@types/vscode": "^1.82.0",
     "@typescript-eslint/eslint-plugin": "^8.31.1",
     "@typescript-eslint/parser": "^8.31.1",
-    "eslint": "^9.25.1",
-    "typescript": "^5.8.3",
     "@vscode/test-cli": "^0.0.10",
-    "@vscode/test-electron": "^2.5.2"
+    "@vscode/test-electron": "^2.5.2",
+    "eslint": "^9.25.1",
+    "typescript": "^5.8.3"
   }
 }
