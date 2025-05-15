@@ -1,26 +1,112 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
+import * as path from 'path';
+import * as fs from 'fs';
+import { lint } from 'markdownlint/async';
 
-// This method is called when your extension is activated
-// Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
+  const disposable = vscode.workspace.onDidSaveTextDocument((document) => {
+    if (document.languageId === 'markdown') {
+      lintMarkdown(document);
+    }
+  });
 
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
-	console.log('Congratulations, your extension "docs-lint" is now active!');
+  context.subscriptions.push(disposable);
 
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with registerCommand
-	// The commandId parameter must match the command field in package.json
-	const disposable = vscode.commands.registerCommand('docs-lint.helloWorld', () => {
-		// The code you place here will be executed every time your command is executed
-		// Display a message box to the user
-		vscode.window.showInformationMessage('Hello World from docs-lint!');
-	});
+  // 注册命令
+  const lintCommand = vscode.commands.registerCommand('markdownlint.run', () => {
+    const editor = vscode.window.activeTextEditor;
+    if (editor && editor.document.languageId === 'markdown') {
+      lintMarkdown(editor.document);
+    } else {
+      vscode.window.showInformationMessage('请在Markdown文件中运行Markdownlint');
+    }
+  });
 
-	context.subscriptions.push(disposable);
+  context.subscriptions.push(lintCommand);
 }
 
-// This method is called when your extension is deactivated
+const lintMarkdown = (document: vscode.TextDocument) => {
+  const config = vscode.workspace.getConfiguration('markdownlint');
+  const enableLint = config.get<boolean>('enable', true);
+
+  if (!enableLint) {
+    return;
+  }
+
+  const filePath = document.fileName;
+  const diagnosticsCollection = vscode.languages.createDiagnosticCollection('markdownlint');
+
+  // 读取文件内容
+  const content = document.getText();
+
+  // 加载配置
+  const options = {
+    strings: { [filePath]: content },
+    config: loadCustomConfig(config.get<string>('configPath', '')),
+  };
+
+  lint(options, (err, result) => {
+    if (err) {
+      vscode.window.showErrorMessage(`Markdownlint执行错误: ${err.message}`);
+      return;
+    }
+
+    if (!result) {
+      return;
+    }
+
+    // 解析结果并显示诊断信息
+    const diagnostics = parseLintResult(result);
+    diagnosticsCollection.set(document.uri, diagnostics);
+  });
+};
+
+const loadCustomConfig = (configPath: string): any | undefined => {
+  if (!configPath) {
+    return undefined;
+  }
+
+  try {
+    const absolutePath = path.isAbsolute(configPath) ? configPath : path.join(vscode.workspace.rootPath || '', configPath);
+
+    if (fs.existsSync(absolutePath)) {
+      const configContent = fs.readFileSync(absolutePath, 'utf8');
+      return JSON.parse(configContent);
+    }
+
+    vscode.window.showWarningMessage(`Markdownlint配置文件不存在: ${absolutePath}`);
+  } catch (error) {
+    vscode.window.showErrorMessage(`读取Markdownlint配置文件失败: ${error}`);
+  }
+
+  return undefined;
+};
+
+const parseLintResult = (result: any): vscode.Diagnostic[] => {
+  const diagnostics: vscode.Diagnostic[] = [];
+
+  // 遍历每个文件的结果
+  Object.keys(result).forEach((file) => {
+    const fileResults = result[file];
+
+    // 遍历每个问题
+    fileResults.forEach((issue: any) => {
+      const range = new vscode.Range(new vscode.Position(issue.lineNumber - 1, 0), new vscode.Position(issue.lineNumber - 1, Number.MAX_SAFE_INTEGER));
+
+      const diagnostic = new vscode.Diagnostic(
+        range,
+        `${issue.ruleDescription} (${issue.ruleNames.join(', ')})`,
+        issue.errorContext ? vscode.DiagnosticSeverity.Error : vscode.DiagnosticSeverity.Warning
+      );
+
+      diagnostic.code = issue.ruleNames.join(',');
+      diagnostic.source = 'markdownlint';
+
+      diagnostics.push(diagnostic);
+    });
+  });
+
+  return diagnostics;
+};
+
 export function deactivate() {}
