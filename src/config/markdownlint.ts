@@ -1,0 +1,27 @@
+import { type Configuration } from "markdownlint";
+
+export default {
+  default: true,
+  MD003: { style: 'atx' },
+  MD007: { indent: 4 },
+  MD029: { style: 'ordered' },
+  MD009: false,
+  MD013: false,
+  MD014: false,
+  MD020: false,
+  MD021: false,
+  MD024: false,
+  MD025: false,
+  MD033: false,
+  MD036: false,
+  MD042: false,
+  MD043: false,
+  MD044: false,
+  MD045: false,
+  MD048: false,
+  MD049: false,
+  MD050: false,
+  MD051: false,
+  MD052: false,
+  MD053: false,
+} as Configuration;
