@@ -31,7 +31,6 @@ export function activate(context: vscode.ExtensionContext) {
 
   // 监听内容变化
   const onDidChangeTextDocumentListener = vscode.workspace.onDidChangeTextDocument((event) => {
-    console.log('changed');
     if (event.document.languageId === 'markdown') {
       clearTimeout(timer);
       timer = setTimeout(() => {
