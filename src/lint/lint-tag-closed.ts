@@ -11,17 +11,21 @@ export default function lintTagClosed(document: vscode.TextDocument) {
   let match: RegExpExecArray | null;
 
   while ((match = tagRegex.exec(text)) !== null) {
+    // 跳过链接
+    if (match[0].startsWith('<') && match[0].endsWith('>') && match[0].includes('://')) {
+      continue;
+    }
+
+    // 转义的标签
+    if (match[0].startsWith('\\<') || match[0].endsWith('\\>')) {
+      continue;
+    } 
+
     const tag = match[1]?.toLowerCase();
     const isClosingTag = tag && match[0].startsWith('</');
     const isSelfClosingTag = tag && selfClosingTags.has(tag);
     const isComment = match[0].startsWith('<!--');
     const isCodeBlock = match[0].startsWith('```') || match[0].startsWith('`');
-    const isEscaped = match[0].startsWith('\\<') || match[0].endsWith('\\>');
-
-    if (isEscaped) {
-      // 跳过被转义的标签
-      continue;
-    }
 
     if (isClosingTag) {
       if (stack.length === 0 || stack.pop()?.tag !== tag) {
