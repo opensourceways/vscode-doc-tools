@@ -6,7 +6,7 @@
   "engines": {
     "vscode": "^1.82.0"
   },
-  "type":"module",
+  "type": "module",
   "categories": [
     "Linters"
   ],
@@ -15,6 +15,9 @@
   ],
   "main": "./out/extension.js",
   "contributes": {
+    "codeActionsProvider": {
+      "language": "markdown"
+    },
     "commands": [
       {
         "command": "markdownlint.run",
@@ -47,9 +50,12 @@
     "test": "vscode-test"
   },
   "dependencies": {
+    "cspell-lib": "^9.0.2",
+    "js-yaml": "^4.1.0",
     "markdownlint": "^0.38.0"
   },
   "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
     "@types/mocha": "^10.0.10",
     "@types/node": "20.x",
     "@types/vscode": "^1.82.0",

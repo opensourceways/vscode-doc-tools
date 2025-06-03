@@ -1,12 +1,13 @@
 import * as vscode from 'vscode';
-import fs from 'fs';
 import path from 'path';
 
-function isValidLocalLink(link: string, document: vscode.TextDocument) {
-  return fs.existsSync(path.join(path.dirname(document.uri.fsPath), link));
+import { isAccessibleLink } from '../utils/common.js';
+
+function isValidLink(link: string, document: vscode.TextDocument) {
+  return isAccessibleLink(link.startsWith('http') ? link : path.join(path.dirname(document.uri.fsPath), link));
 }
 
-export default function lintImgLink(document: vscode.TextDocument) {
+export async function lintImgLink(document: vscode.TextDocument) {
   const diagnostics: vscode.Diagnostic[] = [];
   const text = document.getText();
 
@@ -15,12 +16,14 @@ export default function lintImgLink(document: vscode.TextDocument) {
   let match;
   while ((match = markdownRegex.exec(text)) !== null) {
     const link = match[1];
-    if (link && !link.startsWith('http') && !isValidLocalLink(link, document)) {
+    if (link && !(await isValidLink(link, document))) {
       const range = new vscode.Range(
         document.positionAt(match.index + match[0].indexOf(link)),
         document.positionAt(match.index + match[0].indexOf(link) + link.length)
       );
-      diagnostics.push(new vscode.Diagnostic(range, `Invalid image url: ${link}`, vscode.DiagnosticSeverity.Error));
+      const diagnostic = new vscode.Diagnostic(range, `Invalid image link: ${link}`, vscode.DiagnosticSeverity.Warning);
+      diagnostic.source = 'img-link-lint';
+      diagnostics.push(diagnostic);
     }
   }
 
@@ -28,12 +31,14 @@ export default function lintImgLink(document: vscode.TextDocument) {
   const htmlRegex = /<img\s+[^>]*src="([^"]+)"[^>]*>/gi;
   while ((match = htmlRegex.exec(text)) !== null) {
     const link = match[1];
-    if (link && !link.startsWith('http') && !isValidLocalLink(link, document)) {
+    if (link && !(await isValidLink(link, document))) {
       const range = new vscode.Range(
         document.positionAt(match.index + match[0].indexOf(link)),
         document.positionAt(match.index + match[0].indexOf(link) + link.length)
       );
-      diagnostics.push(new vscode.Diagnostic(range, `Invalid image url: ${link}`, vscode.DiagnosticSeverity.Error));
+      const diagnostic = new vscode.Diagnostic(range, `Invalid image link: ${link}`, vscode.DiagnosticSeverity.Warning);
+      diagnostic.source = 'img-link-lint';
+      diagnostics.push(diagnostic);
     }
   }
 

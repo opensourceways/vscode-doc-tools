@@ -20,7 +20,7 @@ const parseLintResult = (result: LintResults): vscode.Diagnostic[] => {
         `${issue.ruleDescription} (${issue.ruleNames.join(', ')})${issue.errorDetail ? `\n${issue.errorDetail}` : ''}`,
         issue.errorContext ? vscode.DiagnosticSeverity.Error : vscode.DiagnosticSeverity.Warning
       );
-
+      
       diagnostic.code = issue.ruleNames.join(',');
       diagnostic.source = 'markdownlint';
 
@@ -31,7 +31,7 @@ const parseLintResult = (result: LintResults): vscode.Diagnostic[] => {
   return diagnostics;
 };
 
-export default function lintMarkdown(document: vscode.TextDocument) {
+export function lintMarkdown(document: vscode.TextDocument) {
   const config = vscode.workspace.getConfiguration('markdownlint');
   const enableLint = config.get<boolean>('enable', true);
 
