@@ -1,12 +1,13 @@
 {
-  "name": "docs-lint",
-  "displayName": "docs-lint",
+  "name": "docs-linter",
+  "displayName": "Docs Linter",
   "description": "linter for markdown docs",
+  "publisher": "gzbang",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.82.0"
   },
-  "type":"module",
+  "type": "module",
   "categories": [
     "Linters"
   ],

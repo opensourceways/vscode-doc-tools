@@ -1,9 +1,10 @@
 # Change Log
 
-All notable changes to the "docs-lint" extension will be documented in this file.
+All notable changes to the "docs-linter" extension will be documented in this file.
 
-Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
+## [0.0.1]
+### Features
 
-## [Unreleased]
-
-- Initial release
+- 新增markdown语法检测功能
+- 新增html标签闭合检测功能
+- 新增url检测功能
