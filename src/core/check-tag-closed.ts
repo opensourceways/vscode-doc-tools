@@ -4,14 +4,13 @@ export async function checkTagClosed(document: vscode.TextDocument) {
   const diagnostics: vscode.Diagnostic[] = [];
   const text = document.getText();
   const stack: { tag: string; code: string; start: number }[] = []; // 保存标签及其起始位置
-  const selfClosingTags = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr']);
+  const selfClosedTags = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr']);
 
   // 正则表达式，匹配 HTML 标签、注释和代码块，同时排除被转义的标签
-  const tagRegex =
+  const REGEX_TAG =
     /(?<!\\)<\s*\/?\s*([a-zA-Z0-9\-]+)([^>]*)>|<\s*\/?\s*([a-zA-Z0-9\-]+)([^>]*?)\/>|<!--[\s\S]*?-->|(```[\s\S]*?```|`[^`]*`)|\\<[^>]*>|<[^>]*\\>/g;
-  let match: RegExpExecArray | null;
 
-  while ((match = tagRegex.exec(text)) !== null) {
+  for (const match of text.matchAll(REGEX_TAG)) {
     // 跳过链接
     if (match[0].startsWith('<') && match[0].endsWith('>') && match[0].includes('://')) {
       continue;
@@ -38,10 +37,9 @@ export async function checkTagClosed(document: vscode.TextDocument) {
     }
 
     const tag = match[1]?.toLowerCase();
-    const isClosingTag = tag && match[0].startsWith('</');
-    const isSelfClosingTag = tag && selfClosingTags.has(tag);
+    const isClosedTag = tag && match[0].startsWith('</');
 
-    if (isClosingTag) {
+    if (isClosedTag) {
       if (stack.length === 0 || stack.pop()?.tag !== tag) {
         const range = new vscode.Range(
           document.positionAt(match.index).line,
@@ -54,7 +52,7 @@ export async function checkTagClosed(document: vscode.TextDocument) {
         diagnostic.code = match[0];
         diagnostics.push(diagnostic);
       }
-    } else if (tag && !isSelfClosingTag) {
+    } else if (tag && !selfClosedTags.has(tag)) {
       stack.push({ tag, code: match[0], start: match.index });
     }
   }
