@@ -66,7 +66,7 @@ export async function checkTagClosed(document: vscode.TextDocument) {
       document.positionAt(start + code.length + 1).line,
       document.positionAt(start + code.length + 1).character
     );
-    const diagnostic = new vscode.Diagnostic(range, `Unclosed HTML tag: <${tag}>.`, vscode.DiagnosticSeverity.Error);
+    const diagnostic = new vscode.Diagnostic(range, `Unclosed html tag: <${tag}>.`, vscode.DiagnosticSeverity.Error);
     diagnostic.source = 'tag-closed-check';
     diagnostic.code = code;
     diagnostics.push(diagnostic);

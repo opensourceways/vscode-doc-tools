@@ -1,15 +1,23 @@
 {
-  "name": "docs-linter",
-  "displayName": "Docs Linter",
-  "description": "linter for markdown docs",
+  "name": "doc-tools",
+  "displayName": "Doc Tools",
+  "description": "tools for markdown docs",
   "publisher": "gzbang",
-  "version": "0.0.2",
+  "icon": "icon.png",
+  "version": "0.0.3",
   "engines": {
-    "vscode": "^1.82.0"
+    "vscode": "^1.75.0"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/opensourceways/doc-tools.git"
+  },
+  "license": "MIT",
   "type": "module",
   "categories": [
-    "Linters"
+    "Programming Languages",
+    "Linters",
+    "Other"
   ],
   "activationEvents": [
     "onLanguage:markdown"
@@ -59,7 +67,7 @@
     "@types/js-yaml": "^4.0.9",
     "@types/mocha": "^10.0.10",
     "@types/node": "20.x",
-    "@types/vscode": "^1.82.0",
+    "@types/vscode": "^1.75.0",
     "@typescript-eslint/eslint-plugin": "^8.31.1",
     "@typescript-eslint/parser": "^8.31.1",
     "@vscode/test-cli": "^0.0.10",

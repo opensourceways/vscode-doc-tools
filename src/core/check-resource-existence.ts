@@ -42,7 +42,7 @@ export async function checkResourceExistence(document: vscode.TextDocument) {
     }
   }
 
-  // 提取 HTML <video> 标签中的链接
+  // 提取html <video>标签中的链接，使用/g进行匹配，每次匹配lastIndex更新，直至循环终止
   const REGEX_VIDEO = /<video\s+[^>]*src="([^"]+)"[^>]*>/gi;
   while ((match = REGEX_VIDEO.exec(text)) !== null) {
     const link = match[1];
@@ -56,6 +56,5 @@ export async function checkResourceExistence(document: vscode.TextDocument) {
       diagnostics.push(diagnostic);
     }
   }
-  
   return diagnostics;
 }
