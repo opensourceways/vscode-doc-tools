@@ -12,9 +12,9 @@ export async function checkResourceExistence(document: vscode.TextDocument) {
   const text = document.getText();
 
   // 提取 Markdown 图片语法中的链接
-  const markdownRegex = /!\[.*?\]\((.*?)\)/g;
+  const REGEX_MARKDOWN_PIC = /!\[.*?\]\((.*?)\)/g;
   let match;
-  while ((match = markdownRegex.exec(text)) !== null) {
+  while ((match = REGEX_MARKDOWN_PIC.exec(text)) !== null) {
     const link = match[1];
     if (link && !(await isValidLink(link, document))) {
       const range = new vscode.Range(
@@ -28,8 +28,8 @@ export async function checkResourceExistence(document: vscode.TextDocument) {
   }
 
   // 提取 HTML <img> 标签中的链接
-  const imgRegex = /<img\s+[^>]*src="([^"]+)"[^>]*>/gi;
-  while ((match = imgRegex.exec(text)) !== null) {
+  const REGEX_IMG = /<img\s+[^>]*src="([^"]+)"[^>]*>/gi;
+  while ((match = REGEX_IMG.exec(text)) !== null) {
     const link = match[1];
     if (link && !(await isValidLink(link, document))) {
       const range = new vscode.Range(
@@ -43,8 +43,8 @@ export async function checkResourceExistence(document: vscode.TextDocument) {
   }
 
   // 提取 HTML <video> 标签中的链接
-  const videoRegex = /<video\s+[^>]*src="([^"]+)"[^>]*>/gi;
-  while ((match = videoRegex.exec(text)) !== null) {
+  const REGEX_VIDEO = /<video\s+[^>]*src="([^"]+)"[^>]*>/gi;
+  while ((match = REGEX_VIDEO.exec(text)) !== null) {
     const link = match[1];
     if (link && !(await isValidLink(link, document))) {
       const range = new vscode.Range(

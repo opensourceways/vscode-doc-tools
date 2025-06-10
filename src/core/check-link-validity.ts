@@ -3,9 +3,9 @@ import * as vscode from 'vscode';
 import { isAccessibleLink } from '../utils/common.js';
 
 function extractLinks(text: string): { url: string; position: vscode.Position }[] {
-  const markdownLinkRegex = /!?\[.*?\]\((http[^)]+)\)/g; // 匹配普通链接
-  const aTagRegex = /<a[^>]*href=["'](http[^"]+)["'][^>]*>/g; // 匹配 <a> 标签链接
-  const angleBracketRegex = /<(http[^>]+)>/g; // 匹配 <链接地址> 格式的链接
+  const REGEX_MD_LINK = /!?\[.*?\]\((http[^)]+)\)/g; // 匹配普通链接
+  const REGEX_MD_LINK2 = /<(http[^>]+)>/g; // 匹配 <链接地址> 格式的链接
+  const REGEX_A_TAG = /<a[^>]*href=["'](http[^"]+)["'][^>]*>/g; // 匹配 <a> 标签链接
   const links: { url: string; position: vscode.Position }[] = [];
   const lines = text.split('\n');
 
@@ -15,7 +15,7 @@ function extractLinks(text: string): { url: string; position: vscode.Position }[
     let match;
 
     // 匹配普通链接
-    while ((match = markdownLinkRegex.exec(line)) !== null) {
+    while ((match = REGEX_MD_LINK.exec(line)) !== null) {
       const url = match[1];
       if (!match[0].startsWith('!')) {
         const startIndex = line.indexOf(match[0], offset);
@@ -28,7 +28,7 @@ function extractLinks(text: string): { url: string; position: vscode.Position }[
 
     // 匹配 <a> 标签链接
     offset = 0;
-    while ((match = aTagRegex.exec(line)) !== null) {
+    while ((match = REGEX_A_TAG.exec(line)) !== null) {
       const url = match[1];
       const startIndex = line.indexOf(match[0], offset);
       const urlIndex = match[0].indexOf(url);
@@ -39,7 +39,7 @@ function extractLinks(text: string): { url: string; position: vscode.Position }[
 
     // 匹配 <链接地址> 格式的链接
     offset = 0;
-    while ((match = angleBracketRegex.exec(line)) !== null) {
+    while ((match = REGEX_MD_LINK2.exec(line)) !== null) {
       const url = match[1];
       const startIndex = line.indexOf(match[0], offset);
       const urlIndex = match[0].indexOf(url);
