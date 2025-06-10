@@ -18,11 +18,11 @@ const parseLintResult = (result: LintResults): vscode.Diagnostic[] => {
       const diagnostic = new vscode.Diagnostic(
         range,
         `${issue.ruleDescription} (${issue.ruleNames.join(', ')})${issue.errorDetail ? `\n${issue.errorDetail}` : ''}`,
-        issue.errorContext ? vscode.DiagnosticSeverity.Error : vscode.DiagnosticSeverity.Warning
+        vscode.DiagnosticSeverity.Warning
       );
       
       diagnostic.code = issue.ruleNames.join(',');
-      diagnostic.source = 'markdownlint';
+      diagnostic.source = 'markdown-lint';
 
       diagnostics.push(diagnostic);
     });

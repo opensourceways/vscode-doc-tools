@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 
-export async function lintTagClosed(document: vscode.TextDocument) {
+export async function checkTagClosed(document: vscode.TextDocument) {
   const diagnostics: vscode.Diagnostic[] = [];
   const text = document.getText();
   const stack: { tag: string; code: string; start: number }[] = []; // 保存标签及其起始位置
@@ -50,7 +50,7 @@ export async function lintTagClosed(document: vscode.TextDocument) {
           document.positionAt(match.index + match[0].length).character
         );
         const diagnostic = new vscode.Diagnostic(range, `Unclosed html tag: <${tag}>.`, vscode.DiagnosticSeverity.Error);
-        diagnostic.source = 'tag-closed-lint';
+        diagnostic.source = 'tag-closed-check';
         diagnostic.code = match[0];
         diagnostics.push(diagnostic);
       }
@@ -69,7 +69,7 @@ export async function lintTagClosed(document: vscode.TextDocument) {
       document.positionAt(start + code.length + 1).character
     );
     const diagnostic = new vscode.Diagnostic(range, `Unclosed HTML tag: <${tag}>.`, vscode.DiagnosticSeverity.Error);
-    diagnostic.source = 'tag-closed-lint';
+    diagnostic.source = 'tag-closed-check';
     diagnostic.code = code;
     diagnostics.push(diagnostic);
   }
@@ -81,7 +81,7 @@ export function getTagClosedCodeActions(document: vscode.TextDocument, context: 
   const actions: vscode.CodeAction[] = [];
 
   context.diagnostics.forEach((item) => {
-    if (item.source !== 'tag-closed-lint') {
+    if (item.source !== 'tag-closed-check') {
       return;
     }
 

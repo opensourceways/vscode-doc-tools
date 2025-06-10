@@ -5,13 +5,28 @@ import ignoreWords from '../config/ignore-words.js';
 
 const wordsMap = new Map<string, string[]>();
 
-export async function lintSpelling(document: vscode.TextDocument) {
+export async function checkCodespell(document: vscode.TextDocument) {
   const text = document.getText();
 
   const result = await spellCheckDocument(
-    { uri: 'text.txt', text, languageId: 'markdown', locale: 'en, en-US' },
-    { generateSuggestions: true, noConfigSearch: true },
-    { words: ignoreWords, suggestionsTimeout: 2000 }
+    {
+      uri: 'text.txt',
+      text,
+      languageId: 'markdown',
+      locale: 'en, en-US',
+    },
+    {
+      generateSuggestions: true,
+      noConfigSearch: true,
+    },
+    {
+      words: ignoreWords,
+      suggestionsTimeout: 2000,
+      ignoreRegExpList: [
+        '/\\[.*?\\]\\(.*?\\)/g',
+        '/<[^>]*?>/g',
+      ],
+    }
   );
 
   const diagnostics: vscode.Diagnostic[] = [];
@@ -23,8 +38,8 @@ export async function lintSpelling(document: vscode.TextDocument) {
     const start = document.positionAt(issue.offset);
     const end = document.positionAt(issue.offset + issue.text.length);
     const range = new vscode.Range(start, end);
-    const diagnostic = new vscode.Diagnostic(range, `Spelling error: ${issue.text}`, vscode.DiagnosticSeverity.Information);
-    diagnostic.source = 'spelling-lint';
+    const diagnostic = new vscode.Diagnostic(range, `Codespell warning: ${issue.text}`, vscode.DiagnosticSeverity.Information);
+    diagnostic.source = 'codespell-check';
     diagnostic.code = issue.text;
     diagnostics.push(diagnostic);
   });
@@ -32,11 +47,11 @@ export async function lintSpelling(document: vscode.TextDocument) {
   return diagnostics;
 }
 
-export function getSpellingCodeActions(document: vscode.TextDocument, context: vscode.CodeActionContext) {
+export function getCodespellActions(document: vscode.TextDocument, context: vscode.CodeActionContext) {
   const actions: vscode.CodeAction[] = [];
 
   context.diagnostics.forEach((item) => {
-    if (item.source !== 'spelling-lint') {
+    if (item.source !== 'codespell-check') {
       return;
     }
 
@@ -44,7 +59,6 @@ export function getSpellingCodeActions(document: vscode.TextDocument, context: v
     if (!Array.isArray(suggestions)) {
       return;
     }
-
 
     suggestions.forEach((word) => {
       const action = new vscode.CodeAction(word, vscode.CodeActionKind.QuickFix);

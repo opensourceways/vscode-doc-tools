@@ -52,7 +52,7 @@ function extractLinks(text: string): { url: string; position: vscode.Position }[
   return links;
 }
 
-export async function lintLink(document: vscode.TextDocument) {
+export async function checkLinkValidity(document: vscode.TextDocument) {
   const diagnostics: vscode.Diagnostic[] = [];
   const text = document.getText();
   const links = extractLinks(text);
@@ -62,7 +62,7 @@ export async function lintLink(document: vscode.TextDocument) {
     if (!valid) {
       const range = new vscode.Range(link.position, link.position.translate(0, link.url.length));
       const diagnostic = new vscode.Diagnostic(range, `Invalid link: ${link.url}`, vscode.DiagnosticSeverity.Warning);
-      diagnostic.source = 'link-lint'
+      diagnostic.source = 'link-validity-check'
       diagnostics.push(diagnostic);
     }
   }
