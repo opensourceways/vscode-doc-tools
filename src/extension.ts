@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
 import { lint, getCodeActions } from './core/index.js';
-import genToc from './command/gen-toc.js';
 
 import { EVENT_TYPE } from './@types/event.js';
 
