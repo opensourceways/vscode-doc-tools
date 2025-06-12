@@ -20,7 +20,8 @@
     "Other"
   ],
   "activationEvents": [
-    "onLanguage:markdown"
+    "onLanguage:markdown",
+    "onLanguage:yaml"
   ],
   "main": "./out/extension.js",
   "contributes": {
