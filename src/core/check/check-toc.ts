@@ -29,7 +29,7 @@ function collectInvalidLinkDiagnostics(document: vscode.TextDocument, link: stri
       document.positionAt(match.index + match[0].length).line,
       document.positionAt(match.index + match[0].length).character
     );
-    const diagnostic = new vscode.Diagnostic(range, `Non-existent resource: ${link}.`, vscode.DiagnosticSeverity.Error);
+    const diagnostic = new vscode.Diagnostic(range, `Non-existent doc in toc: ${link}.`, vscode.DiagnosticSeverity.Error);
     diagnostic.source = 'toc-check';
     diagnostics.push(diagnostic);
   }
