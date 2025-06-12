@@ -1,11 +1,12 @@
 import * as vscode from 'vscode';
 import { checkMarkdown, checkTocYaml, getCodeActions } from './core/index.js';
 import { EVENT_TYPE } from './@types/event.js';
+import genTocManual from './command/gen-toc-manual.js';
 
 // 用于存储错误信息
 const diagnosticsCollection = vscode.languages.createDiagnosticCollection('markdownlint');
 // 用于存储延迟任务记录
-const timerMap = new Map<string, NodeJS.Timeout>()
+const timerMap = new Map<string, NodeJS.Timeout>();
 
 /**
  * 触发器（延迟 1s 触发检查，避免频繁触发）
@@ -36,15 +37,82 @@ function trigger(document: vscode.TextDocument, event: EVENT_TYPE) {
       checkMarkdown(document, diagnosticsCollection, event);
       return;
     }
-    
+
     // 检查 _toc.yaml
     if (document.languageId === 'yaml' && document.uri.path.split('/').pop() === '_toc.yaml') {
       checkTocYaml(document, diagnosticsCollection);
       return;
-    } 
+    }
   }, 1000);
 
   timerMap.set(key, timer);
+}
+
+/**
+ * 注册事件
+ * @param context 上下文对象
+ */
+function registerEvent(context: vscode.ExtensionContext) {
+  // 监听文件打开
+  context.subscriptions.push(
+    vscode.workspace.onDidOpenTextDocument((document) => {
+      trigger(document, EVENT_TYPE.EVENT_OPEN_TEXT_DOC);
+    })
+  );
+
+  // 监听文件保存
+  context.subscriptions.push(
+    vscode.workspace.onDidSaveTextDocument((document) => {
+      trigger(document, EVENT_TYPE.EVENT_SAVE_TEXT_DOC);
+    })
+  );
+
+  // 监听内容变化
+  context.subscriptions.push(
+    vscode.workspace.onDidChangeTextDocument((event) => {
+      trigger(event.document, EVENT_TYPE.EVENT_CHANGE_TEXT_DOC);
+    })
+  );
+}
+
+/**
+ * 注册命令
+ * @param context 上下文对象
+ */
+function registerCommand(context: vscode.ExtensionContext) {
+  // 注册 markdownlint.run 命令
+  context.subscriptions.push(
+    vscode.commands.registerCommand('markdownlint.run', () => {
+      const editor = vscode.window.activeTextEditor;
+      if (editor && editor.document.languageId === 'markdown') {
+        trigger(editor.document, EVENT_TYPE.EVENT_RUN_COMMAND);
+      } else {
+        vscode.window.showInformationMessage('请在Markdown文件中运行Markdownlint');
+      }
+    })
+  );
+
+  // 注册 gen-toc.manual 命令
+  context.subscriptions.push(
+    vscode.commands.registerCommand('gen-toc.manual', (uri: vscode.Uri) => {
+      genTocManual(uri);
+    })
+  );
+}
+
+/**
+ * 注册code action
+ * @param context 上下文对象
+ */
+function registerCodeAction(context: vscode.ExtensionContext) {
+  // 注册 code action 菜单
+  context.subscriptions.push(
+    vscode.languages.registerCodeActionsProvider('markdown', {
+      provideCodeActions(document, _range, context, _token) {
+        return getCodeActions(document, context);
+      },
+    })
+  );
 }
 
 /**
@@ -57,41 +125,10 @@ export function activate(context: vscode.ExtensionContext) {
     trigger(vscode.window.activeTextEditor.document, EVENT_TYPE.EVENT_ACTIVE);
   }
 
-  // 监听文件打开
-  context.subscriptions.push(vscode.workspace.onDidOpenTextDocument((document) => {
-    trigger(document, EVENT_TYPE.EVENT_OPEN_TEXT_DOC)
-  }));
-
-  // 监听文件保存
-  context.subscriptions.push(vscode.workspace.onDidSaveTextDocument((document) => {
-    trigger(document, EVENT_TYPE.EVENT_SAVE_TEXT_DOC)
-  }));
-
-  // 监听内容变化
-  context.subscriptions.push(vscode.workspace.onDidChangeTextDocument((event) => {
-    trigger(event.document, EVENT_TYPE.EVENT_CHANGE_TEXT_DOC);
-  }));
-
-  // 注册 markdownlint.run 命令
-  const lintCommand = vscode.commands.registerCommand('markdownlint.run', () => {
-    const editor = vscode.window.activeTextEditor;
-    if (editor && editor.document.languageId === 'markdown') {
-      trigger(editor.document, EVENT_TYPE.EVENT_RUN_COMMAND);
-    } else {
-      vscode.window.showInformationMessage('请在Markdown文件中运行Markdownlint');
-    }
-  });
-
-  context.subscriptions.push(lintCommand);
-
-  // 注册 code action 菜单
-  const codeActionProvider = vscode.languages.registerCodeActionsProvider('markdown', {
-    provideCodeActions(document, _range, context, _token) {
-      return getCodeActions(document, context);
-    },
-  });
-
-  context.subscriptions.push(codeActionProvider);
+  // 注册事件、命令和 code action
+  registerEvent(context);
+  registerCommand(context);
+  registerCodeAction(context);
 }
 
 /**

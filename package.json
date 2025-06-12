@@ -32,8 +32,21 @@
       {
         "command": "markdownlint.run",
         "title": "运行Markdownlint检查"
+      },
+      {
+        "command": "gen-toc.manual",
+        "title": "生成指南 _toc.yaml"
       }
     ],
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "gen-toc.manual",
+          "when": "explorerResourceIsFolder",
+          "group": "gen-toc"
+        }
+      ]
+    },
     "configuration": {
       "type": "object",
       "title": "Markdownlint配置",

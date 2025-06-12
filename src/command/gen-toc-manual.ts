@@ -92,16 +92,30 @@ function getManualToc(dirPath: string) {
   return toc;
 }
 
-export default async function genToc(dirPath: string) {
+export default async function genTocManual(uri: vscode.Uri) {
+  const dirPath = uri.fsPath.replace(/\\/g, '/');
+
   if (!fs.existsSync(dirPath)) {
-    vscode.window.showErrorMessage(`${dirPath} 不存在`);
+    vscode.window.showErrorMessage(`路径不存在：${dirPath}`);
+    return;
   }
 
   if (!fs.statSync(dirPath).isDirectory()) {
-    vscode.window.showErrorMessage(`${dirPath} 不是一个目录`);
+    vscode.window.showErrorMessage(`非目录路径：${dirPath}`);
+    return;
+  }
+
+  if (!dirPath.includes('docs/zh') && !dirPath.includes('docs/en')) {
+    vscode.window.showErrorMessage(`非文档下的 zh 或 en 目录：${dirPath}`);
+    return;
   }
 
   const toc = getManualToc(dirPath);
+  if (toc.sections?.length === 0) {
+    vscode.window.showErrorMessage(`未收集到有效的 markdown 信息，请检查当前目录下是否存在 markdown，或 markdown 是否存在标题。目录路径：（${dirPath}）`);
+    return;
+  }
+
   const tocPath = path.join(dirPath, '_toc.yaml');
   fs.writeFileSync(tocPath, yaml.dump(toc), 'utf8');
   const doc = await vscode.workspace.openTextDocument(tocPath);
