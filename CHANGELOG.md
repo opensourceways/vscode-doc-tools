@@ -22,3 +22,14 @@ All notable changes to the "docs-tools" extension will be documented in this fil
 ### Fix
 
 - 优化提示语
+
+## [0.0.4]
+
+### Feat
+
+- 新增目录生成功能
+
+### Fix
+
+- 优化链接与资源正则匹配
+- 注释和代码块不检测优化性
