@@ -3,9 +3,9 @@ import fs from 'fs';
 import path from 'path';
 import yaml from 'js-yaml';
 
-import type { TocItem, Toc } from '../@types/toc.js';
-import { getFileContent, getYamlContent } from '../utils/file.js';
-import { getTitle } from '../utils/markdwon.js';
+import type { TocItem, Toc } from '../../@types/toc.js';
+import { getFileContent, getYamlContent } from '../../utils/file.js';
+import { getTitle } from '../../utils/markdwon.js';
 
 function checkAndGetHrefMap(sections: TocItem[], dirPath: string, map = new Map<string, TocItem>()) {
   for (let i = sections.length - 1; i >= 0; i--) {
@@ -49,7 +49,7 @@ function getManualToc(dirPath: string) {
   // 遍历目录加入sections
   const walkDir = (targetPath: string) => {
     fs.readdirSync(targetPath).forEach((name) => {
-      const completedPath = path.join(targetPath, name);
+      const completedPath = path.join(targetPath, name).replace(/\\/g, '/');
 
       // 目录继续处理
       if (fs.statSync(completedPath).isDirectory()) {
@@ -69,7 +69,7 @@ function getManualToc(dirPath: string) {
       }
 
       // 跳过已有的md
-      const relativePath = `.${completedPath.replace(dirPath, '').replace(/\\/g, '/')}`;
+      const relativePath = `.${completedPath.replace(dirPath, '')}`;
       const item = hrefMap.get(relativePath);
       if (item) {
         // 更新label
@@ -92,7 +92,7 @@ function getManualToc(dirPath: string) {
   return toc;
 }
 
-export default async function genTocManual(uri: vscode.Uri) {
+export async function genTocManual(uri: vscode.Uri) {
   const dirPath = uri.fsPath.replace(/\\/g, '/');
 
   if (!fs.existsSync(dirPath)) {

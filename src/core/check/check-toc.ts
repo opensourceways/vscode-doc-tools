@@ -1,8 +1,8 @@
 import * as vscode from 'vscode';
 import yaml from 'js-yaml';
 
-import { TocItem } from '../@types/toc.js';
-import { isValidLink } from '../utils/common.js';
+import { TocItem } from '../../@types/toc.js';
+import { isValidLink } from '../../utils/common.js';
 
 function flatItemUrl(item: TocItem, links = new Set<string>()) {
   if (typeof item.href === 'string') {
@@ -29,7 +29,7 @@ function collectInvalidLinkDiagnostics(document: vscode.TextDocument, link: stri
       document.positionAt(match.index + match[0].length).line,
       document.positionAt(match.index + match[0].length).character
     );
-    const diagnostic = new vscode.Diagnostic(range, `Invalid link: ${link}.`, vscode.DiagnosticSeverity.Error);
+    const diagnostic = new vscode.Diagnostic(range, `Non-existent resource: ${link}.`, vscode.DiagnosticSeverity.Error);
     diagnostic.source = 'toc-check';
     diagnostics.push(diagnostic);
   }

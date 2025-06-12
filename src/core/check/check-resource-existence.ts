@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 
-import { isValidLink } from '../utils/common.js';
-import { geFilterMdContent } from '../utils/markdwon.js';
+import { isValidLink } from '../../utils/common.js';
+import { geFilterMdContent } from '../../utils/markdwon.js';
 
 export async function checkResourceExistence(document: vscode.TextDocument) {
   const diagnostics: vscode.Diagnostic[] = [];
