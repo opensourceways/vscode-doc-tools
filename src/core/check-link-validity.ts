@@ -62,7 +62,7 @@ export async function checkLinkValidity(document: vscode.TextDocument) {
     if (!valid) {
       const range = new vscode.Range(link.position, link.position.translate(0, link.url.length));
       const diagnostic = new vscode.Diagnostic(range, `Invalid link: ${link.url}`, vscode.DiagnosticSeverity.Warning);
-      diagnostic.source = 'link-validity-check'
+      diagnostic.source = 'link-validity-check';
       diagnostics.push(diagnostic);
     }
   }

@@ -22,10 +22,7 @@ export async function checkCodespell(document: vscode.TextDocument) {
     {
       words: ignoreWords,
       suggestionsTimeout: 2000,
-      ignoreRegExpList: [
-        '/\\[.*?\\]\\(.*?\\)/g',
-        '/<[^>]*?>/g',
-      ],
+      ignoreRegExpList: ['/\\[.*?\\]\\(.*?\\)/g', '/<[^>]*?>/g'],
     }
   );
 
@@ -38,7 +35,7 @@ export async function checkCodespell(document: vscode.TextDocument) {
     const start = document.positionAt(issue.offset);
     const end = document.positionAt(issue.offset + issue.text.length);
     const range = new vscode.Range(start, end);
-    const diagnostic = new vscode.Diagnostic(range, `Codespell warning: ${issue.text}`, vscode.DiagnosticSeverity.Information);
+    const diagnostic = new vscode.Diagnostic(range, `CodeSpell warning: ${issue.text}`, vscode.DiagnosticSeverity.Information);
     diagnostic.source = 'codespell-check';
     diagnostic.code = issue.text;
     diagnostics.push(diagnostic);
