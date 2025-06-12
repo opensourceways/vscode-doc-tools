@@ -1,77 +1,62 @@
 import * as vscode from 'vscode';
-import { lint, getCodeActions } from './core/index.js';
-
-import { EVENT_TYPE } from './@types/event.js';
+import { checkMarkdown, getCodeActions } from './core/index.js';
 
 // 用于存储错误信息
 const diagnosticsCollection = vscode.languages.createDiagnosticCollection('markdownlint');
-let timer: string | number | NodeJS.Timeout;
+// 用于存储延迟任务记录
+const timerMap = new Map<string, NodeJS.Timeout>()
 
+/**
+ * 触发器（延迟 1s 触发检查，避免频繁触发）
+ * @param document 文档对象
+ */
+function trigger(document: vscode.TextDocument) {
+  if (document.languageId !== 'markdown' && document.languageId !== 'yaml') {
+    return;
+  }
+
+  // 清理上一次还未开始执行的任务
+  const key = document.uri.path;
+  let timer = timerMap.get(key);
+  if (!timer) {
+    clearTimeout(timer);
+  }
+
+  // 重新创建延迟任务
+  timer = setTimeout(() => {
+    if (document.languageId === 'markdown') {
+      checkMarkdown(document, diagnosticsCollection);
+      timerMap.delete(key);
+    }
+  }, 1000);
+
+  timerMap.set(key, timer);
+}
+
+/**
+ * 激活插件
+ * @param context 上下文对象
+ */
 export function activate(context: vscode.ExtensionContext) {
   // 首次激活后检查
-  if (vscode.window.activeTextEditor && vscode.window.activeTextEditor.document.languageId === 'markdown') {
-    lint({
-      document: vscode.window.activeTextEditor.document,
-      diagnosticsCollection,
-      eventType: EVENT_TYPE.EVENT_ACTIVE,
-    });
+  if (vscode.window.activeTextEditor) {
+    trigger(vscode.window.activeTextEditor.document);
   }
 
   // 监听文件打开
-  const onDidOpenTextDocumentListener = vscode.workspace.onDidOpenTextDocument((document) => {
-    if (document.languageId === 'markdown') {
-      lint({
-        document,
-        diagnosticsCollection,
-        eventType: EVENT_TYPE.EVENT_OPEN_TEXT_DOC,
-      });
-    }
-  });
-
-  context.subscriptions.push(onDidOpenTextDocumentListener);
+  context.subscriptions.push(vscode.workspace.onDidOpenTextDocument(trigger));
 
   // 监听文件保存
-  const onDidSaveTextDocumentListener = vscode.workspace.onDidSaveTextDocument((document) => {
-    if (document.languageId === 'markdown') {
-      lint({
-        document,
-        diagnosticsCollection,
-        eventType: EVENT_TYPE.EVENT_SAVE_TEXT_DOC,
-      });
-    }
-  });
-
-  context.subscriptions.push(onDidSaveTextDocumentListener);
+  context.subscriptions.push(vscode.workspace.onDidSaveTextDocument(trigger));
 
   // 监听内容变化
-  let lastChanged: (readonly vscode.TextDocumentContentChangeEvent[])[] = [];
-  const onDidChangeTextDocumentListener = vscode.workspace.onDidChangeTextDocument((event) => {
-    if (event.document.languageId === 'markdown') {
-      lastChanged.push(event.contentChanges);
-      clearTimeout(timer);
-      timer = setTimeout(() => {
-        lint({
-          document: event.document,
-          diagnosticsCollection,
-          eventType: EVENT_TYPE.EVENT_CHANGE_TEXT_DOC,
-          contentChanged: lastChanged,
-        });
-        lastChanged = [];
-      }, 1000);
-    }
-  });
-
-  context.subscriptions.push(onDidChangeTextDocumentListener);
+  context.subscriptions.push(vscode.workspace.onDidChangeTextDocument((event) => trigger(event.document)));
 
   // 注册 markdownlint.run 命令
   const lintCommand = vscode.commands.registerCommand('markdownlint.run', () => {
     const editor = vscode.window.activeTextEditor;
     if (editor && editor.document.languageId === 'markdown') {
-      lint({
-        document: editor.document,
-        diagnosticsCollection,
-        eventType: EVENT_TYPE.EVENT_RUN_COMMAND,
-      });
+      trigger(editor.document);
     } else {
       vscode.window.showInformationMessage('请在Markdown文件中运行Markdownlint');
     }
@@ -89,6 +74,9 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(codeActionProvider);
 }
 
+/**
+ * 失活插件
+ */
 export function deactivate() {
   diagnosticsCollection.dispose();
 }

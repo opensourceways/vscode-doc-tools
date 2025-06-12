@@ -5,16 +5,8 @@ import { checkCodespell, getCodespellActions } from './check-codespell.js';
 import { checkResourceExistence } from './check-resource-existence.js';
 import { checkLinkValidity } from './check-link-validity.js';
 
-import type { EVENT_TYPE } from '../@types/event.js';
-
-export async function lint(opts: {
-  document: vscode.TextDocument;
-  diagnosticsCollection: vscode.DiagnosticCollection;
-  eventType: EVENT_TYPE;
-  contentChanged?: (readonly vscode.TextDocumentContentChangeEvent[])[];
-}) {
+export async function checkMarkdown(document: vscode.TextDocument, diagnosticsCollection: vscode.DiagnosticCollection) {
   // 先执行不怎么耗时的检查
-  const { document, diagnosticsCollection } = opts;
   const diagnostics: vscode.Diagnostic[] = [...(await checkTagClosed(document)), ...(await checkCodespell(document)), ...(await lintMarkdown(document))];
   diagnosticsCollection.delete(document.uri);
   diagnosticsCollection.set(document.uri, diagnostics);
