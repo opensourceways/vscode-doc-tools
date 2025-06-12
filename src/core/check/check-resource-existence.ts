@@ -1,15 +1,11 @@
 import * as vscode from 'vscode';
-import path from 'path';
 
-import { isAccessibleLink } from '../utils/common.js';
-
-function isValidLink(link: string, document: vscode.TextDocument) {
-  return isAccessibleLink(link.startsWith('http') ? link : path.join(path.dirname(document.uri.fsPath), link));
-}
+import { isValidLink } from '../../utils/common.js';
+import { geFilterMdContent } from '../../utils/markdwon.js';
 
 export async function checkResourceExistence(document: vscode.TextDocument) {
   const diagnostics: vscode.Diagnostic[] = [];
-  const text = document.getText();
+  const text = geFilterMdContent(document.getText());
 
   // 提取 Markdown 图片语法中的链接
   const REGEX_MARKDOWN_PIC = /!\[.*?\]\((.*?)\)/g;

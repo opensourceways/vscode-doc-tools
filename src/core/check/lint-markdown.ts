@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { lint } from 'markdownlint/async';
 import { LintResults } from 'markdownlint';
 
-import mdLintConfig from '../config/markdownlint.js';
+import mdLintConfig from '../../config/markdownlint.js';
 
 const parseLintResult = (result: LintResults): vscode.Diagnostic[] => {
   const diagnostics: vscode.Diagnostic[] = [];

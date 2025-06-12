@@ -1,5 +1,12 @@
+import * as vscode from 'vscode';
+import path from 'path';
 import fs from 'fs';
+
 import { createHeadRequest } from './request.js';
+
+export function isValidLink(link: string, document: vscode.TextDocument) {
+  return isAccessibleLink(link.startsWith('http') ? link : path.join(path.dirname(document.uri.fsPath), link));
+}
 
 export function isAccessibleLink(link: string) {
   if (link.startsWith('http')) {

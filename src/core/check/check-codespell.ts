@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { spellCheckDocument } from 'cspell-lib';
 
-import ignoreWords from '../config/ignore-words.js';
+import ignoreWords from '../../config/ignore-words.js';
 
 const wordsMap = new Map<string, string[]>();
 

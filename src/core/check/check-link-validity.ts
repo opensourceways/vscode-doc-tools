@@ -1,11 +1,12 @@
 import * as vscode from 'vscode';
 
-import { isAccessibleLink } from '../utils/common.js';
+import { isValidLink } from '../../utils/common.js';
+import { geFilterMdContent } from '../../utils/markdwon.js';
 
 function extractLinks(text: string): { url: string; position: vscode.Position }[] {
-  const REGEX_MD_LINK = /!?\[.*?\]\((http[^)]+)\)/g; // 匹配普通链接
+  const REGEX_MD_LINK = /(?<!\!)\[.*?\]\((.+?)\)/g; // 匹配 [xx](xxx) 链接
   const REGEX_MD_LINK2 = /<(http[^>]+)>/g; // 匹配 <链接地址> 格式的链接
-  const REGEX_A_TAG = /<a[^>]*href=["'](http[^"]+)["'][^>]*>/g; // 匹配 <a> 标签链接
+  const REGEX_A_TAG = /<a[^>]*href=["']([^"]+?)["'][^>]*>/ig; // 匹配 <a> 标签链接
   const links: { url: string; position: vscode.Position }[] = [];
   const lines = text.split('\n');
 
@@ -14,21 +15,8 @@ function extractLinks(text: string): { url: string; position: vscode.Position }[
     let offset = 0;
     let match;
 
-    // 匹配普通链接
+    // 匹配 [xx](xxx) 链接
     while ((match = REGEX_MD_LINK.exec(line)) !== null) {
-      const url = match[1];
-      if (!match[0].startsWith('!')) {
-        const startIndex = line.indexOf(match[0], offset);
-        const urlIndex = match[0].indexOf(url);
-        const position = new vscode.Position(i, startIndex + urlIndex);
-        links.push({ url, position });
-        offset = startIndex + match[0].length;
-      }
-    }
-
-    // 匹配 <a> 标签链接
-    offset = 0;
-    while ((match = REGEX_A_TAG.exec(line)) !== null) {
       const url = match[1];
       const startIndex = line.indexOf(match[0], offset);
       const urlIndex = match[0].indexOf(url);
@@ -47,6 +35,17 @@ function extractLinks(text: string): { url: string; position: vscode.Position }[
       links.push({ url, position });
       offset = startIndex + match[0].length;
     }
+
+    // 匹配 <a> 标签链接
+    offset = 0;
+    while ((match = REGEX_A_TAG.exec(line)) !== null) {
+      const url = match[1];
+      const startIndex = line.indexOf(match[0], offset);
+      const urlIndex = match[0].indexOf(url);
+      const position = new vscode.Position(i, startIndex + urlIndex);
+      links.push({ url, position });
+      offset = startIndex + match[0].length;
+    }
   }
 
   return links;
@@ -54,11 +53,10 @@ function extractLinks(text: string): { url: string; position: vscode.Position }[
 
 export async function checkLinkValidity(document: vscode.TextDocument) {
   const diagnostics: vscode.Diagnostic[] = [];
-  const text = document.getText();
-  const links = extractLinks(text);
+  const links = extractLinks(geFilterMdContent(document.getText()));
 
   for (const link of links) {
-    const valid = await isAccessibleLink(link.url);
+    const valid = await isValidLink(link.url, document);
     if (!valid) {
       const range = new vscode.Range(link.position, link.position.translate(0, link.url.length));
       const diagnostic = new vscode.Diagnostic(range, `Invalid link: ${link.url}`, vscode.DiagnosticSeverity.Warning);

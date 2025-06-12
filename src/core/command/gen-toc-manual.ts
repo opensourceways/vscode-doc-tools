@@ -3,9 +3,9 @@ import fs from 'fs';
 import path from 'path';
 import yaml from 'js-yaml';
 
-import type { TocItem, Toc } from '../@types/toc.js';
-import { getFileContent, getYamlContent } from '../utils/file.js';
-import { getTitle } from '../utils/markdwon.js';
+import type { TocItem, Toc } from '../../@types/toc.js';
+import { getFileContent, getYamlContent } from '../../utils/file.js';
+import { getTitle } from '../../utils/markdwon.js';
 
 function checkAndGetHrefMap(sections: TocItem[], dirPath: string, map = new Map<string, TocItem>()) {
   for (let i = sections.length - 1; i >= 0; i--) {
@@ -49,7 +49,7 @@ function getManualToc(dirPath: string) {
   // 遍历目录加入sections
   const walkDir = (targetPath: string) => {
     fs.readdirSync(targetPath).forEach((name) => {
-      const completedPath = path.join(targetPath, name);
+      const completedPath = path.join(targetPath, name).replace(/\\/g, '/');
 
       // 目录继续处理
       if (fs.statSync(completedPath).isDirectory()) {
@@ -69,7 +69,7 @@ function getManualToc(dirPath: string) {
       }
 
       // 跳过已有的md
-      const relativePath = `.${completedPath.replace(dirPath, '').replace(/\\/g, '/')}`;
+      const relativePath = `.${completedPath.replace(dirPath, '')}`;
       const item = hrefMap.get(relativePath);
       if (item) {
         // 更新label
@@ -92,16 +92,30 @@ function getManualToc(dirPath: string) {
   return toc;
 }
 
-export default async function genToc(dirPath: string) {
+export async function genTocManual(uri: vscode.Uri) {
+  const dirPath = uri.fsPath.replace(/\\/g, '/');
+
   if (!fs.existsSync(dirPath)) {
-    vscode.window.showErrorMessage(`${dirPath} 不存在`);
+    vscode.window.showErrorMessage(`路径不存在：${dirPath}`);
+    return;
   }
 
   if (!fs.statSync(dirPath).isDirectory()) {
-    vscode.window.showErrorMessage(`${dirPath} 不是一个目录`);
+    vscode.window.showErrorMessage(`非目录路径：${dirPath}`);
+    return;
+  }
+
+  if (!dirPath.includes('docs/zh') && !dirPath.includes('docs/en')) {
+    vscode.window.showErrorMessage(`非文档下的 zh 或 en 目录：${dirPath}`);
+    return;
   }
 
   const toc = getManualToc(dirPath);
+  if (toc.sections?.length === 0) {
+    vscode.window.showErrorMessage(`未收集到有效的 markdown 信息，请检查当前目录下是否存在 markdown，或 markdown 是否存在标题。目录路径：（${dirPath}）`);
+    return;
+  }
+
   const tocPath = path.join(dirPath, '_toc.yaml');
   fs.writeFileSync(tocPath, yaml.dump(toc), 'utf8');
   const doc = await vscode.workspace.openTextDocument(tocPath);
