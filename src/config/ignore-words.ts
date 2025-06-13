@@ -35,4 +35,8 @@ export default [
   'flashinfer',
   'eulercopilot',
   'deepseek',
+  'gitee',
+  'github',
+  'devstation',
+  'traefik',
 ];

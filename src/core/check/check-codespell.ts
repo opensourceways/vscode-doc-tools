@@ -26,7 +26,7 @@ export async function checkCodespell(document: vscode.TextDocument) {
     {
       words: ignoreWords,
       suggestionsTimeout: 2000,
-      ignoreRegExpList: ['/\\[.*?\\]\\(.*?\\)/g', '/<[^>]*?>/g'],
+      ignoreRegExpList: ['/\\[.*?\\]\\(.*?\\)/g', '/<[^>]*?>/g', '```[\s\S]*?```|`[^`]*`'],
     }
   );
 
