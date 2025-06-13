@@ -30,20 +30,24 @@
     },
     "commands": [
       {
-        "command": "markdownlint.run",
-        "title": "运行Markdownlint检查"
+        "command": "doc.tools.check.markdown",
+        "title": "Doc Tools：运行Markdown检查"
       },
       {
-        "command": "gen-toc.manual",
-        "title": "生成指南 _toc.yaml"
+        "command": "doc.tools.gen.toc.manual",
+        "title": "Doc Tools：生成指南 _toc.yaml"
+      },
+      {
+        "command": "doc.tools.add.codespell.white.list",
+        "title": "Doc Tools：添加单词白名单"
       }
     ],
     "menus": {
       "explorer/context": [
         {
-          "command": "gen-toc.manual",
+          "command": "doc.tools.gen.toc.manual",
           "when": "explorerResourceIsFolder",
-          "group": "gen-toc"
+          "group": "doc.tools.toc"
         }
       ]
     },
@@ -84,7 +88,12 @@
         "docTools.markdown.check.codespell.enable": {
           "type": "boolean",
           "default": true,
-          "description": "启用单词拼写检查检查"
+          "description": "启用单词拼写检查"
+        },
+        "docTools.markdown.check.codespell.whiteList": {
+          "type": "array",
+          "default": [],
+          "description": "单词白名单（添加后忽略对该单词的检查）"
         },
         "docTools.check.toc.enable": {
           "type": "boolean",

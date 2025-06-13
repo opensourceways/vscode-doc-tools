@@ -60,7 +60,7 @@ export function triggerCheck(event: EVENT_TYPE, document: vscode.TextDocument, d
  * @param {vscode.TextDocument} document 文档对象
  * @param {vscode.DiagnosticCollection} diagnosticsCollection 提示收集
  */
-export async function checkMarkdown(event: EVENT_TYPE, document: vscode.TextDocument, diagnosticsCollection: vscode.DiagnosticCollection) {
+async function checkMarkdown(event: EVENT_TYPE, document: vscode.TextDocument, diagnosticsCollection: vscode.DiagnosticCollection) {
   // 先执行不耗时的检查
   const diagnostics: vscode.Diagnostic[] = await Promise.all([checkTagClosed(document), checkCodespell(document), lintMarkdown(document)]).then((result) => {
     return result.flat();
@@ -87,7 +87,7 @@ export async function checkMarkdown(event: EVENT_TYPE, document: vscode.TextDocu
  * @param {vscode.TextDocument} document 文档对象
  * @param {vscode.DiagnosticCollection} diagnosticsCollection 提示收集
  */
-export async function checkTocYaml(document: vscode.TextDocument, diagnosticsCollection: vscode.DiagnosticCollection) {
+async function checkTocYaml(document: vscode.TextDocument, diagnosticsCollection: vscode.DiagnosticCollection) {
   const diagnostics: vscode.Diagnostic[] = await checkToc(document);
   diagnosticsCollection.delete(document.uri);
   diagnosticsCollection.set(document.uri, diagnostics);

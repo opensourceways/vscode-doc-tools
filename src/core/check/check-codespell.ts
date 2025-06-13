@@ -12,6 +12,7 @@ export async function checkCodespell(document: vscode.TextDocument) {
   }
 
   const text = document.getText();
+  const whiteList = vscode.workspace.getConfiguration('docTools.markdown.check.codespell').get<string[]>('whiteList', []);
   const result = await spellCheckDocument(
     {
       uri: 'text.txt',
@@ -24,7 +25,7 @@ export async function checkCodespell(document: vscode.TextDocument) {
       noConfigSearch: true,
     },
     {
-      words: ignoreWords,
+      words: Array.isArray(whiteList) ? [...whiteList, ...ignoreWords] : ignoreWords,
       suggestionsTimeout: 2000,
       ignoreRegExpList: ['/\\[.*?\\]\\(.*?\\)/g', '/<[^>]*?>/g', '```[\s\S]*?```|`[^`]*`'],
     }
@@ -68,9 +69,16 @@ export function getCodespellActions(document: vscode.TextDocument, context: vsco
       const action = new vscode.CodeAction(word, vscode.CodeActionKind.QuickFix);
       action.edit = new vscode.WorkspaceEdit();
       action.edit.replace(document.uri, item.range, word);
-
       actions.push(action);
     });
+
+    const whiteListAction = new vscode.CodeAction('加入白名单', vscode.CodeActionKind.QuickFix);
+    whiteListAction.command = {
+      command: 'doc.tools.add.codespell.white.list',
+      title: '加入白名单',
+      arguments: [item.code]
+    };
+    actions.push(whiteListAction);
   });
 
   return actions;
