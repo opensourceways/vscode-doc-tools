@@ -51,6 +51,11 @@
       "type": "object",
       "title": "Markdownlint配置",
       "properties": {
+        "docTools.scope.enable": {
+          "type": "boolean",
+          "default": true,
+          "description": "启用检查范围仅限于 docs/zh 和 docs/en 目录"
+        },
         "docTools.markdown.lint.enable": {
           "type": "boolean",
           "default": true,

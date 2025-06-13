@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { lint } from 'markdownlint/async';
-import { LintResults } from 'markdownlint';
+import { type Configuration, LintResults } from 'markdownlint';
 
 import mdLintConfig from '../../config/markdownlint.js';
 import { isConfigEnabled } from '../../utils/common.js';
@@ -43,9 +43,10 @@ export function lintMarkdown(document: vscode.TextDocument) {
   const content = document.getText();
 
   // 加载配置
+  const settingConfig = vscode.workspace.getConfiguration('docTools.markdown.lint').get<Configuration>('config', {});
   const options = {
     strings: { [filePath]: content },
-    config: mdLintConfig,
+    config: Object.keys(settingConfig).length > 0 ? settingConfig : mdLintConfig,
   };
 
   return new Promise<vscode.Diagnostic[]>((resolve) => {
