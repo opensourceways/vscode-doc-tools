@@ -27,7 +27,7 @@ export async function checkMdInToc(document: vscode.TextDocument) {
     return;
   }
 
-  const mdPath = path.dirname(document.uri.fsPath).replace(/\\/g, '/');
+  const mdPath = document.uri.fsPath.replace(/\\/g, '/');
   let dirArr = mdPath.split('/');
 
   while (dirArr.length) {
