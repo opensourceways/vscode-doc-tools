@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 
 import { isConfigEnabled } from '@/utils/common';
+import { geFilterMdContent } from '@/utils/markdwon';
 
 export async function checkTagClosed(document: vscode.TextDocument) {
   const diagnostics: vscode.Diagnostic[] = [];
@@ -8,13 +9,12 @@ export async function checkTagClosed(document: vscode.TextDocument) {
     return diagnostics;
   }
 
-  const text = document.getText();
-  const stack: { tag: string; code: string; start: number }[] = []; // 保存标签及其起始位置
+  const text = geFilterMdContent(document.getText());
+  const record: { tag: string; match: RegExpExecArray }[] = []; // 保存标签及其起始位置
   const selfClosedTags = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr']);
 
-  // 正则表达式，匹配 HTML 标签、注释和代码块，同时排除被转义的标签
-  const REGEX_TAG =
-    /(?<!\\)<\s*\/?\s*([a-zA-Z0-9\-]+)([^>]*)>|<\s*\/?\s*([a-zA-Z0-9\-]+)([^>]*?)\/>|<!--[\s\S]*?-->|(```[\s\S]*?```|`[^`]*`)|\\<[^>]*>|<[^>]*\\>/g;
+  // 正则表达式，匹配 HTML 标签、被转义的标签
+  const REGEX_TAG = /(?<!\\)<\s*\/?\s*([a-zA-Z0-9\-]+)([^>]*)>|<\s*\/?\s*([a-zA-Z0-9\-]+)([^>]*?)\/>|\\<([^>]*)>|<([^>]*)\\>/g;
 
   for (const match of text.matchAll(REGEX_TAG)) {
     // 跳过链接
@@ -24,16 +24,14 @@ export async function checkTagClosed(document: vscode.TextDocument) {
 
     // 转义的标签
     if (match[0].startsWith('\\<') || match[0].endsWith('\\>')) {
-      continue;
-    }
-
-    // 跳过代码块
-    if (match[0].startsWith('```') || match[0].startsWith('`')) {
-      continue;
-    }
-
-    // 跳过html注释
-    if (match[0].startsWith('<!--')) {
+      // 处于 html 标签中不允许使用 \<xx\> \<xx> <xx\> 写法
+      if (record.length > 0) {
+        const range = new vscode.Range(document.positionAt(match.index), document.positionAt(match.index + match[0].length));
+        const diagnostic = new vscode.Diagnostic(range, `Unclosed html tag: ${match[0]}.\\<或\\>的转义写法不允许在标签嵌套中使用`, vscode.DiagnosticSeverity.Error);
+        diagnostic.source = 'tag-closed-check';
+        diagnostic.code = match[0];
+        diagnostics.push(diagnostic);
+      }
       continue;
     }
 
@@ -42,39 +40,54 @@ export async function checkTagClosed(document: vscode.TextDocument) {
       continue;
     }
 
-    const tag = match[1]?.toLowerCase();
-    const isClosedTag = tag && match[0].startsWith('</');
+    // 跳过自闭合标签
+    if (match[1] && selfClosedTags.has(match[1]?.toLowerCase())) {
+      continue;
+    }
 
-    if (isClosedTag) {
-      if (stack.length === 0 || stack.pop()?.tag !== tag) {
-        const range = new vscode.Range(
-          document.positionAt(match.index).line,
-          document.positionAt(match.index).character,
-          document.positionAt(match.index + match[0].length).line,
-          document.positionAt(match.index + match[0].length).character
-        );
-        const diagnostic = new vscode.Diagnostic(range, `Unclosed html taga: <${tag}>.`, vscode.DiagnosticSeverity.Error);
-        diagnostic.source = 'tag-closed-check';
-        diagnostic.code = match[0];
-        diagnostics.push(diagnostic);
+    // 跳过tag非字母开头
+    if (match[1] && !/^[a-zA-Z]/.test(match[1])) {
+      continue;
+    }
+
+    const tag = match[1]?.toLowerCase();
+    const isEndTag = tag && match[0].startsWith('</');
+
+    // 非 </xx> 结束标签保存记录
+    if (!isEndTag) {
+      record.push({
+        tag,
+        match,
+      });
+      continue;
+    }
+
+    // </xx> 寻找对应的 <xx>
+    let tagMacthed = false;
+    for (let i = record.length - 1; i >= 0; i--) {
+      if (record[i].tag === tag) {
+        tagMacthed = true;
+        record.splice(i, 1);
+        break;
       }
-    } else if (tag && !selfClosedTags.has(tag)) {
-      stack.push({ tag, code: match[0], start: match.index });
+    }
+
+    if (!tagMacthed) {
+      const range = new vscode.Range(document.positionAt(match.index), document.positionAt(match.index + match[0].length));
+      const diagnostic = new vscode.Diagnostic(range, `Unclosed html tag: <${tag}>.`, vscode.DiagnosticSeverity.Error);
+      diagnostic.source = 'tag-closed-check';
+      diagnostic.code = match[0];
+      diagnostics.push(diagnostic);
     }
   }
 
-  // 检查剩余未闭合的标签
-  while (stack.length > 0) {
-    const { tag, code, start } = stack.pop()!;
-    const range = new vscode.Range(
-      document.positionAt(start).line,
-      document.positionAt(start).character,
-      document.positionAt(start + code.length + 1).line,
-      document.positionAt(start + code.length + 1).character
-    );
-    const diagnostic = new vscode.Diagnostic(range, `Unclosed html 1tags: <${tag}>.`, vscode.DiagnosticSeverity.Error);
+  // 检查剩余的标签
+  while (record.length > 0) {
+    const { tag, match } = record.pop()!;
+    const range = new vscode.Range(document.positionAt(match.index), document.positionAt(match.index + match[0].length));
+    const diagnostic = new vscode.Diagnostic(range, `Unclosed html tag: <${tag}>.`, vscode.DiagnosticSeverity.Error);
     diagnostic.source = 'tag-closed-check';
-    diagnostic.code = code;
+    diagnostic.code = match[0];
     diagnostics.push(diagnostic);
   }
 
@@ -95,14 +108,14 @@ export function getTagClosedCodeActions(document: vscode.TextDocument, context: 
     const code = String(item.code);
     const escapeAction = new vscode.CodeAction('转义字符替换', vscode.CodeActionKind.QuickFix);
     escapeAction.edit = new vscode.WorkspaceEdit();
-    escapeAction.edit.replace(document.uri, item.range, code.replace('<', '&lt;').replace('>', '&gt;'));
+    escapeAction.edit.replace(document.uri, item.range, code.replace('\\<', '<').replace('\\>', '>').replace('<', '&lt;').replace('>', '&gt;'));
     actions.push(escapeAction);
 
     const match = code.match(/<\s*\/?\s*([a-zA-Z0-9\-]+)([^>]*)>/);
     if (match) {
       const closedAction = new vscode.CodeAction('闭合标签', vscode.CodeActionKind.QuickFix);
       closedAction.edit = new vscode.WorkspaceEdit();
-      closedAction.edit.replace(document.uri, item.range, `${item.code}</${match[1]}>`);
+      closedAction.edit.replace(document.uri, item.range, `${(item.code as string).replace('\\<', '<').replace('\\>', '>')}</${match[1]}>`);
       actions.push(closedAction);
     }
   });
