@@ -1,10 +1,14 @@
 import * as vscode from 'vscode';
 
-import { isValidLink } from '../../utils/common.js';
+import { isConfigEnabled, isValidLink } from '../../utils/common.js';
 import { geFilterMdContent } from '../../utils/markdwon.js';
 
 export async function checkResourceExistence(document: vscode.TextDocument) {
   const diagnostics: vscode.Diagnostic[] = [];
+  if (!isConfigEnabled('docTools.markdown.check.resourceExistence')) {
+    return diagnostics;
+  }
+  
   const text = geFilterMdContent(document.getText());
 
   // 提取 Markdown 图片语法中的链接

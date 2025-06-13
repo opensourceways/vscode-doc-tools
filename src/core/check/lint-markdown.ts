@@ -3,6 +3,7 @@ import { lint } from 'markdownlint/async';
 import { LintResults } from 'markdownlint';
 
 import mdLintConfig from '../../config/markdownlint.js';
+import { isConfigEnabled } from '../../utils/common.js';
 
 const parseLintResult = (result: LintResults): vscode.Diagnostic[] => {
   const diagnostics: vscode.Diagnostic[] = [];
@@ -32,10 +33,7 @@ const parseLintResult = (result: LintResults): vscode.Diagnostic[] => {
 };
 
 export function lintMarkdown(document: vscode.TextDocument) {
-  const config = vscode.workspace.getConfiguration('markdownlint');
-  const enableLint = config.get<boolean>('enable', true);
-
-  if (!enableLint) {
+  if (!isConfigEnabled('docTools.markdown.lint')) {
     return Promise.resolve([]);
   }
 

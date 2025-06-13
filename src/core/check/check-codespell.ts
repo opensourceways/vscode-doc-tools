@@ -2,12 +2,16 @@ import * as vscode from 'vscode';
 import { spellCheckDocument } from 'cspell-lib';
 
 import ignoreWords from '../../config/ignore-words.js';
+import { isConfigEnabled } from '../../utils/common.js';
 
 const wordsMap = new Map<string, string[]>();
 
 export async function checkCodespell(document: vscode.TextDocument) {
-  const text = document.getText();
+  if (!isConfigEnabled('docTools.markdown.check.codespell')) {
+    return [];
+  }
 
+  const text = document.getText();
   const result = await spellCheckDocument(
     {
       uri: 'text.txt',
@@ -46,6 +50,9 @@ export async function checkCodespell(document: vscode.TextDocument) {
 
 export function getCodespellActions(document: vscode.TextDocument, context: vscode.CodeActionContext) {
   const actions: vscode.CodeAction[] = [];
+  if (!isConfigEnabled('docTools.markdown.check.codespell')) {
+    return actions;
+  }
 
   context.diagnostics.forEach((item) => {
     if (item.source !== 'codespell-check') {

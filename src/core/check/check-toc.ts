@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import yaml from 'js-yaml';
 
 import { TocItem } from '../../@types/toc.js';
-import { isValidLink } from '../../utils/common.js';
+import { isConfigEnabled, isValidLink } from '../../utils/common.js';
 
 function flatItemUrl(item: TocItem, links = new Set<string>()) {
   if (typeof item.href === 'string') {
@@ -39,6 +39,9 @@ function collectInvalidLinkDiagnostics(document: vscode.TextDocument, link: stri
 
 export async function checkToc(document: vscode.TextDocument) {
   const diagnostics: vscode.Diagnostic[] = [];
+  if (!isConfigEnabled('docTools.check.toc')) {
+    return diagnostics;
+  }
 
   try {
     const obj = yaml.load(document.getText()) as TocItem;

@@ -4,6 +4,7 @@ import fs from 'fs';
 
 import { getYamlContent } from '../../utils/file.js';
 import { TocItem } from '../../@types/toc.js';
+import { isConfigEnabled } from '../../utils/common.js';
 
 function isMdInToc(toc: TocItem, dirPath: string, mdPath: string) {
   if (toc && typeof toc.href === 'string' && path.join(dirPath, toc.href).replace(/\\/g, '/') === mdPath) {
@@ -22,9 +23,13 @@ function isMdInToc(toc: TocItem, dirPath: string, mdPath: string) {
 }
 
 export async function checkMdInToc(document: vscode.TextDocument) {
+  if (!isConfigEnabled('docTools.check.toc')) {
+    return;
+  }
+
   const mdPath = path.dirname(document.uri.fsPath).replace(/\\/g, '/');
   let dirArr = mdPath.split('/');
-  
+
   while (dirArr.length) {
     const dirPath = dirArr.join('/');
     const tocPath = path.join(dirPath, '_toc.yaml');

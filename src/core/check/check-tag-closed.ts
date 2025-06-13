@@ -1,7 +1,13 @@
 import * as vscode from 'vscode';
 
+import { isConfigEnabled } from '../../utils/common.js';
+
 export async function checkTagClosed(document: vscode.TextDocument) {
   const diagnostics: vscode.Diagnostic[] = [];
+  if (!isConfigEnabled('docTools.markdown.check.tagClosed')) {
+    return diagnostics;
+  }
+
   const text = document.getText();
   const stack: { tag: string; code: string; start: number }[] = []; // 保存标签及其起始位置
   const selfClosedTags = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr']);
@@ -77,6 +83,9 @@ export async function checkTagClosed(document: vscode.TextDocument) {
 
 export function getTagClosedCodeActions(document: vscode.TextDocument, context: vscode.CodeActionContext) {
   const actions: vscode.CodeAction[] = [];
+  if (!isConfigEnabled('docTools.markdown.check.tagClosed')) {
+    return actions;
+  }
 
   context.diagnostics.forEach((item) => {
     if (item.source !== 'tag-closed-check') {

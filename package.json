@@ -51,15 +51,40 @@
       "type": "object",
       "title": "Markdownlint配置",
       "properties": {
-        "markdownlint.enable": {
+        "docTools.markdown.lint.enable": {
           "type": "boolean",
           "default": true,
-          "description": "启用Markdownlint代码检查"
+          "description": "启用Markdownlint检查"
         },
-        "markdownlint.config": {
+        "docTools.markdown.lint.config": {
           "type": "object",
           "default": {},
           "description": "Markdownlint自定义配置"
+        },
+        "docTools.markdown.check.tagClosed.enable": {
+          "type": "boolean",
+          "default": true,
+          "description": "启用Html标签闭合检查"
+        },
+        "docTools.markdown.check.linkValidity.enable": {
+          "type": "boolean",
+          "default": true,
+          "description": "启用链接有效性检查（包含：1. 内链；2. 外链）"
+        },
+        "docTools.markdown.check.resourceExistence.enable": {
+          "type": "boolean",
+          "default": true,
+          "description": "启用资源是否存在检查（包含：1. 内链；2. 外链）"
+        },
+        "docTools.markdown.check.codespell.enable": {
+          "type": "boolean",
+          "default": true,
+          "description": "启用单词拼写检查检查"
+        },
+        "docTools.check.toc.enable": {
+          "type": "boolean",
+          "default": true,
+          "description": "启用 _toc.yaml 检查（包含：1.目录中引用的文件需要存在；2.md 文件是否加入 _toc.yaml）"
         }
       }
     }
