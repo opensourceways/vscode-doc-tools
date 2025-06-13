@@ -2,8 +2,9 @@ import * as vscode from 'vscode';
 
 import { EVENT_TYPE } from './@types/event.js';
 import { getCodeActions, triggerCheck } from './core/check/index.js';
-import { genTocManual } from './core/command/gen-toc-manual.js';
-import { markdownLintRun } from './core/command/markdown-lint-run.js';
+import { genTocManual } from './core/command/cmd-gen-toc-manual.js';
+import { checkMarkdown } from './core/command/cmd-check-markdown.js';
+import { addCodespellWhitelist } from './core/command/cmd-add-codespell-whitlist.js';
 
 // 用于存储错误信息
 const diagnosticsCollection = vscode.languages.createDiagnosticCollection('doc-tools');
@@ -40,17 +41,24 @@ function registerEvent(context: vscode.ExtensionContext) {
  * @param context 上下文对象
  */
 function registerCommand(context: vscode.ExtensionContext) {
-  // 注册 markdownlint.run 命令
+  // 注册 运行Markdown检查 命令
   context.subscriptions.push(
-    vscode.commands.registerCommand('markdownlint.run', () => {
-      markdownLintRun(diagnosticsCollection);
+    vscode.commands.registerCommand('doc.tools.check.markdown', () => {
+      checkMarkdown(diagnosticsCollection);
     })
   );
 
-  // 注册 gen-toc.manual 命令
+  // 注册 生成指南 _toc.yaml 命令
   context.subscriptions.push(
-    vscode.commands.registerCommand('gen-toc.manual', (uri: vscode.Uri) => {
+    vscode.commands.registerCommand('doc.tools.gen.toc.manual', (uri: vscode.Uri) => {
       genTocManual(uri);
+    })
+  );
+
+  // 注册 添加单词白名单 命令
+  context.subscriptions.push(
+    vscode.commands.registerCommand('doc.tools.add.codespell.white.list', (word: string) => {
+      addCodespellWhitelist(word, diagnosticsCollection);
     })
   );
 }

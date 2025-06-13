@@ -4,6 +4,10 @@ import fs from 'fs';
 
 import { createHeadRequest } from './request.js';
 
+export function isConfigEnabled(configName: string) {
+  return vscode.workspace.getConfiguration(configName).get<boolean>('enable', true);
+}
+
 export function isValidLink(link: string, document: vscode.TextDocument) {
   return isAccessibleLink(link.startsWith('http') ? link : path.join(path.dirname(document.uri.fsPath), link));
 }

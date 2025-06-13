@@ -7,6 +7,7 @@ import { checkLinkValidity } from './check-link-validity.js';
 import { checkToc } from './check-toc.js';
 import { checkMdInToc } from './check-md-in-toc.js';
 import { EVENT_TYPE } from '../../@types/event.js';
+import { isConfigEnabled } from '../../utils/common.js';
 
 // 用于存储延迟任务记录
 const timerMap = new Map<string, NodeJS.Timeout>();
@@ -24,7 +25,7 @@ export function triggerCheck(event: EVENT_TYPE, document: vscode.TextDocument, d
 
   // 不符合 docs/zh 或 docs/en 的跳过检查
   const key = document.uri.path;
-  if (!key.includes('docs/zh') && !key.includes('docs/en')) {
+  if (isConfigEnabled('docTools.scope') && !key.includes('docs/zh') && !key.includes('docs/en')) {
     return;
   }
 
@@ -59,7 +60,7 @@ export function triggerCheck(event: EVENT_TYPE, document: vscode.TextDocument, d
  * @param {vscode.TextDocument} document 文档对象
  * @param {vscode.DiagnosticCollection} diagnosticsCollection 提示收集
  */
-export async function checkMarkdown(event: EVENT_TYPE, document: vscode.TextDocument, diagnosticsCollection: vscode.DiagnosticCollection) {
+async function checkMarkdown(event: EVENT_TYPE, document: vscode.TextDocument, diagnosticsCollection: vscode.DiagnosticCollection) {
   // 先执行不耗时的检查
   const diagnostics: vscode.Diagnostic[] = await Promise.all([checkTagClosed(document), checkCodespell(document), lintMarkdown(document)]).then((result) => {
     return result.flat();
@@ -86,7 +87,7 @@ export async function checkMarkdown(event: EVENT_TYPE, document: vscode.TextDocu
  * @param {vscode.TextDocument} document 文档对象
  * @param {vscode.DiagnosticCollection} diagnosticsCollection 提示收集
  */
-export async function checkTocYaml(document: vscode.TextDocument, diagnosticsCollection: vscode.DiagnosticCollection) {
+async function checkTocYaml(document: vscode.TextDocument, diagnosticsCollection: vscode.DiagnosticCollection) {
   const diagnostics: vscode.Diagnostic[] = await checkToc(document);
   diagnosticsCollection.delete(document.uri);
   diagnosticsCollection.set(document.uri, diagnostics);

@@ -1,12 +1,12 @@
 import * as vscode from 'vscode';
 
-import { isValidLink } from '../../utils/common.js';
+import { isConfigEnabled, isValidLink } from '../../utils/common.js';
 import { geFilterMdContent } from '../../utils/markdwon.js';
 
 function extractLinks(text: string): { url: string; position: vscode.Position }[] {
   const REGEX_MD_LINK = /(?<!\!)\[.*?\]\((.+?)\)/g; // 匹配 [xx](xxx) 链接
   const REGEX_MD_LINK2 = /<(http[^>]+)>/g; // 匹配 <链接地址> 格式的链接
-  const REGEX_A_TAG = /<a[^>]*href=["']([^"]+?)["'][^>]*>/ig; // 匹配 <a> 标签链接
+  const REGEX_A_TAG = /<a[^>]*href=["']([^"]+?)["'][^>]*>/gi; // 匹配 <a> 标签链接
   const links: { url: string; position: vscode.Position }[] = [];
   const lines = text.split('\n');
 
@@ -53,9 +53,22 @@ function extractLinks(text: string): { url: string; position: vscode.Position }[
 
 export async function checkLinkValidity(document: vscode.TextDocument) {
   const diagnostics: vscode.Diagnostic[] = [];
-  const links = extractLinks(geFilterMdContent(document.getText()));
+  if (!isConfigEnabled('docTools.markdown.check.linkValidity')) {
+    return diagnostics;
+  }
 
+  const links = extractLinks(geFilterMdContent(document.getText()));
   for (const link of links) {
+    // 跳过锚点
+    if (link.url.startsWith('#')) {
+      continue;
+    }
+
+    // 去除锚点
+    if (link.url.includes('#')) {
+      link.url = link.url.split('#')[0];
+    }
+
     const valid = await isValidLink(link.url, document);
     if (!valid) {
       const range = new vscode.Range(link.position, link.position.translate(0, link.url.length));
