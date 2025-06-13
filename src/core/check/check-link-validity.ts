@@ -3,79 +3,72 @@ import * as vscode from 'vscode';
 import { isConfigEnabled, isValidLink } from '@/utils/common';
 import { geFilterMdContent } from '@/utils/markdwon';
 
-function extractLinks(text: string): { url: string; position: vscode.Position }[] {
-  const REGEX_MD_LINK = /(?<!\!)\[.*?\]\((.+?)\)/g; // 匹配 [xx](xxx) 链接
-  const REGEX_MD_LINK2 = /<(http[^>]+)>/g; // 匹配 <链接地址> 格式的链接
-  const REGEX_A_TAG = /<a[^>]*href=["']([^"]+?)["'][^>]*>/gi; // 匹配 <a> 标签链接
-  const links: { url: string; position: vscode.Position }[] = [];
-  const lines = text.split('\n');
+const REGEX = [
+  /(?<!\!)\[.*?\]\((.+?)\)/g, // 匹配 [xx](xxx) 链接
+  /<(http[^>]+)>/g, // 匹配 <链接地址> 格式的链接
+  /<a[^>]*href=["']([^"]+?)["'][^>]*>/gi, // 匹配 <a> 标签链接
+]
 
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    let offset = 0;
-    let match;
+/**
+ * 提取链接
+ * @param text 文本
+ * @returns 返回提取的链接数组
+ */
+function extractLinks(text: string) {
+  const links: { link: string; startPos: number; endPos: number }[] = [];
+  for (const reg of REGEX) {
+    for (const match of text.matchAll(reg)) {
+      if (!match[1]) {
+        continue;
+      }
 
-    // 匹配 [xx](xxx) 链接
-    while ((match = REGEX_MD_LINK.exec(line)) !== null) {
-      const url = match[1];
-      const startIndex = line.indexOf(match[0], offset);
-      const urlIndex = match[0].indexOf(url);
-      const position = new vscode.Position(i, startIndex + urlIndex);
-      links.push({ url, position });
-      offset = startIndex + match[0].length;
-    }
+      const link = match[1];
+      const startPos = match.index + match[0].indexOf(link);
+      const endPos = startPos + link.length;
 
-    // 匹配 <链接地址> 格式的链接
-    offset = 0;
-    while ((match = REGEX_MD_LINK2.exec(line)) !== null) {
-      const url = match[1];
-      const startIndex = line.indexOf(match[0], offset);
-      const urlIndex = match[0].indexOf(url);
-      const position = new vscode.Position(i, startIndex + urlIndex);
-      links.push({ url, position });
-      offset = startIndex + match[0].length;
-    }
-
-    // 匹配 <a> 标签链接
-    offset = 0;
-    while ((match = REGEX_A_TAG.exec(line)) !== null) {
-      const url = match[1];
-      const startIndex = line.indexOf(match[0], offset);
-      const urlIndex = match[0].indexOf(url);
-      const position = new vscode.Position(i, startIndex + urlIndex);
-      links.push({ url, position });
-      offset = startIndex + match[0].length;
+      links.push({
+        link,
+        startPos,
+        endPos,
+      });
     }
   }
 
   return links;
 }
 
+/**
+ * 检查链接有效性
+ * @param document 文档对象
+ * @returns 返回错误 Diagnostic 提示数组
+ */
 export async function checkLinkValidity(document: vscode.TextDocument) {
   const diagnostics: vscode.Diagnostic[] = [];
   if (!isConfigEnabled('docTools.markdown.check.linkValidity')) {
     return diagnostics;
   }
 
-  const links = extractLinks(geFilterMdContent(document.getText()));
-  for (const link of links) {
+  const text = geFilterMdContent(document.getText());
+  const links = extractLinks(text);
+  for (const item of links) {
     // 跳过锚点
-    if (link.url.startsWith('#')) {
+    if (item.link.startsWith('#')) {
       continue;
     }
 
     // 去除锚点
-    if (link.url.includes('#')) {
-      link.url = link.url.split('#')[0];
+    if (item.link.includes('#')) {
+      item.link = item.link.split('#')[0];
     }
 
-    const valid = await isValidLink(link.url, document);
-    if (!valid) {
-      const range = new vscode.Range(link.position, link.position.translate(0, link.url.length));
-      const diagnostic = new vscode.Diagnostic(range, `Invalid link: ${link.url}`, vscode.DiagnosticSeverity.Warning);
-      diagnostic.source = 'link-validity-check';
-      diagnostics.push(diagnostic);
+    if (await isValidLink(item.link, document)) {
+      continue;
     }
+
+    const range = new vscode.Range(document.positionAt(item.startPos), document.positionAt(item.endPos));
+    const diagnostic = new vscode.Diagnostic(range, `Invalid link: ${item.link}`, vscode.DiagnosticSeverity.Warning);
+    diagnostic.source = 'link-validity-check';
+    diagnostics.push(diagnostic);
   }
 
   return diagnostics;
