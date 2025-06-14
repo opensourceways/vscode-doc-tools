@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 
-import { triggerCheck } from '../check/index.js';
-import { EVENT_TYPE } from '../../@types/event.js';
+import { triggerCheck } from '@/core/check';
+import { EVENT_TYPE } from '@/@types/event';
 
 export function checkMarkdown(diagnosticsCollection: vscode.DiagnosticCollection) {
   const editor = vscode.window.activeTextEditor;

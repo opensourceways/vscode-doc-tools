@@ -2,9 +2,9 @@ import * as vscode from 'vscode';
 import path from 'path';
 import fs from 'fs';
 
-import { getYamlContent } from '../../utils/file.js';
-import { TocItem } from '../../@types/toc.js';
-import { isConfigEnabled } from '../../utils/common.js';
+import { getYamlContent } from '@/utils/file';
+import { TocItem } from '@/@types/toc';
+import { isConfigEnabled } from '@/utils/common';
 
 function isMdInToc(toc: TocItem, dirPath: string, mdPath: string) {
   if (toc && typeof toc.href === 'string' && path.join(dirPath, toc.href).replace(/\\/g, '/') === mdPath) {

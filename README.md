@@ -20,6 +20,7 @@
 ## Tag Closed Check
 
 1. 自动提示
+
 2. 修复功能
 
 ![Tag Closed Check](src/assets//gif/check-tag-closed.gif)

@@ -1,8 +1,8 @@
 import * as vscode from 'vscode';
 import yaml from 'js-yaml';
 
-import { TocItem } from '../../@types/toc.js';
-import { isConfigEnabled, isValidLink } from '../../utils/common.js';
+import { TocItem } from '@/@types/toc.js';
+import { isConfigEnabled, isValidLink } from '@/utils/common';
 
 function flatItemUrl(item: TocItem, links = new Set<string>()) {
   if (typeof item.href === 'string') {

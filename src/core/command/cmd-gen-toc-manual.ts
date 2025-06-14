@@ -3,9 +3,9 @@ import fs from 'fs';
 import path from 'path';
 import yaml from 'js-yaml';
 
-import type { TocItem, Toc } from '../../@types/toc.js';
-import { getFileContent, getYamlContent } from '../../utils/file.js';
-import { getTitle } from '../../utils/markdwon.js';
+import type { TocItem, Toc } from '@/@types/toc';
+import { getFileContent, getYamlContent } from '@/utils/file';
+import { getTitle } from '@/utils/markdwon';
 
 function checkAndGetHrefMap(sections: TocItem[], dirPath: string, map = new Map<string, TocItem>()) {
   for (let i = sections.length - 1; i >= 0; i--) {

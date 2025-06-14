@@ -13,7 +13,6 @@
     "url": "https://github.com/opensourceways/doc-tools.git"
   },
   "license": "MIT",
-  "type": "module",
   "categories": [
     "Programming Languages",
     "Linters",
@@ -23,7 +22,7 @@
     "onLanguage:markdown",
     "onLanguage:yaml"
   ],
-  "main": "./out/extension.js",
+  "main": "./dist/extension.js",
   "contributes": {
     "codeActionsProvider": {
       "language": "markdown"
@@ -104,14 +103,18 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "pnpm run compile",
-    "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./",
-    "pretest": "pnpm run compile && pnpm run lint",
+    "vscode:prepublish": "yarn run package",
+    "compile": "webpack",
+    "watch": "webpack --watch",
+    "package": "webpack --mode production --devtool hidden-source-map",
+    "compile-tests": "tsc -p . --outDir out",
+    "watch-tests": "tsc -p . -w --outDir out",
+    "pretest": "yarn run compile-tests && yarn run compile && yarn run lint",
     "lint": "eslint src",
     "test": "vscode-test"
   },
   "dependencies": {
+    "@vscode/vsce": "^3.5.0",
     "cspell-lib": "^9.0.2",
     "js-yaml": "^4.1.0",
     "markdownlint": "^0.38.0"
@@ -119,13 +122,16 @@
   "devDependencies": {
     "@types/js-yaml": "^4.0.9",
     "@types/mocha": "^10.0.10",
-    "@types/node": "20.x",
+    "@types/node": "^24.0.1",
     "@types/vscode": "^1.75.0",
     "@typescript-eslint/eslint-plugin": "^8.31.1",
     "@typescript-eslint/parser": "^8.31.1",
     "@vscode/test-cli": "^0.0.10",
     "@vscode/test-electron": "^2.5.2",
     "eslint": "^9.25.1",
-    "typescript": "^5.8.3"
+    "ts-loader": "^9.5.2",
+    "typescript": "^5.8.3",
+    "webpack": "^5.99.7",
+    "webpack-cli": "^6.0.1"
   }
 }
