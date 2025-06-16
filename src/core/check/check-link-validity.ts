@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 
-import { isConfigEnabled, isValidLink } from '../../utils/common.js';
-import { geFilterMdContent } from '../../utils/markdwon.js';
+import { isConfigEnabled, isValidLink } from '@/utils/common';
+import { geFilterMdContent } from '@/utils/markdwon';
 
 function extractLinks(text: string): { url: string; position: vscode.Position }[] {
   const REGEX_MD_LINK = /(?<!\!)\[.*?\]\((.+?)\)/g; // 匹配 [xx](xxx) 链接

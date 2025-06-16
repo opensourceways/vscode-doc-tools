@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import path from 'path';
 import fs from 'fs';
 
-import { createHeadRequest } from './request.js';
+import { createHeadRequest } from '@/utils/request';
 
 export function isConfigEnabled(configName: string) {
   return vscode.workspace.getConfiguration(configName).get<boolean>('enable', true);

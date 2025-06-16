@@ -1,8 +1,8 @@
 import * as vscode from 'vscode';
 import { spellCheckDocument } from 'cspell-lib';
 
-import ignoreWords from '../../config/ignore-words.js';
-import { isConfigEnabled } from '../../utils/common.js';
+import ignoreWords from '@/config/ignore-words';
+import { isConfigEnabled } from '@/utils/common';
 
 const wordsMap = new Map<string, string[]>();
 

@@ -1,10 +1,10 @@
 import * as vscode from 'vscode';
 
-import { EVENT_TYPE } from './@types/event.js';
-import { getCodeActions, triggerCheck } from './core/check/index.js';
-import { genTocManual } from './core/command/cmd-gen-toc-manual.js';
-import { checkMarkdown } from './core/command/cmd-check-markdown.js';
-import { addCodespellWhitelist } from './core/command/cmd-add-codespell-whitlist.js';
+import { EVENT_TYPE } from '@/@types/event';
+import { getCodeActions, triggerCheck } from '@/core/check';
+import { genTocManual } from '@/core/command/cmd-gen-toc-manual';
+import { checkMarkdown } from '@/core/command/cmd-check-markdown';
+import { addCodespellWhitelist } from '@/core/command/cmd-add-codespell-whitlist';
 
 // 用于存储错误信息
 const diagnosticsCollection = vscode.languages.createDiagnosticCollection('doc-tools');

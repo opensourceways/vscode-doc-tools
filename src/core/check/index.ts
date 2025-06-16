@@ -1,13 +1,13 @@
 import * as vscode from 'vscode';
-import { lintMarkdown } from './lint-markdown.js';
-import { checkTagClosed, getTagClosedCodeActions } from './check-tag-closed.js';
-import { checkCodespell, getCodespellActions } from './check-codespell.js';
-import { checkResourceExistence } from './check-resource-existence.js';
-import { checkLinkValidity } from './check-link-validity.js';
-import { checkToc } from './check-toc.js';
-import { checkMdInToc } from './check-md-in-toc.js';
-import { EVENT_TYPE } from '../../@types/event.js';
-import { isConfigEnabled } from '../../utils/common.js';
+import { lintMarkdown } from '@/core/check/lint-markdown';
+import { checkTagClosed, getTagClosedCodeActions } from '@/core/check/check-tag-closed';
+import { checkCodespell, getCodespellActions } from '@/core/check/check-codespell';
+import { checkResourceExistence } from '@/core/check/check-resource-existence';
+import { checkLinkValidity } from '@/core/check/check-link-validity';
+import { checkToc } from '@/core/check/check-toc';
+import { checkMdInToc } from '@/core/check/check-md-in-toc';
+import { EVENT_TYPE } from '@/@types/event';
+import { isConfigEnabled } from '@/utils/common';
 
 // 用于存储延迟任务记录
 const timerMap = new Map<string, NodeJS.Timeout>();

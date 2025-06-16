@@ -2,8 +2,8 @@ import * as vscode from 'vscode';
 import { lint } from 'markdownlint/async';
 import { type Configuration, LintResults } from 'markdownlint';
 
-import mdLintConfig from '../../config/markdownlint.js';
-import { isConfigEnabled } from '../../utils/common.js';
+import mdLintConfig from '@/config/markdownlint';
+import { isConfigEnabled } from '@/utils/common';
 
 const parseLintResult = (result: LintResults): vscode.Diagnostic[] => {
   const diagnostics: vscode.Diagnostic[] = [];
