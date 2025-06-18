@@ -33,3 +33,15 @@ All notable changes to the "docs-tools" extension will be documented in this fil
 
 - 优化链接与资源正则匹配
 - 注释和代码块不检测优化性
+
+## [0.0.5]
+
+### Feat
+
+- 新增功能配置项
+- 新增单词加入白名单
+
+### Fix
+
+- 优化Html标签闭合检查
+- 优化目录文件检查
