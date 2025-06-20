@@ -3,11 +3,6 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-/**
- * @typedef {import('webpack').Configuration} WebpackConfig
- */
-
-/** @type {WebpackConfig} */
 const extensionConfig = {
   target: 'node',
   mode: 'none',
@@ -25,6 +20,7 @@ const extensionConfig = {
     extensions: ['.ts', '.js'],
     alias: {
       '@': path.resolve(__dirname, 'src'),
+      'cspell-lib': path.resolve(__dirname, 'node_modules/cspell-lib/dist/lib/index.js'),
     },
   },
   module: {
@@ -35,12 +31,6 @@ const extensionConfig = {
         use: [
           {
             loader: 'ts-loader',
-            options: {
-              transpileOnly: true,
-              compilerOptions: {
-                module: 'esnext',
-              },
-            },
           },
         ],
       },
