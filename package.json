@@ -86,7 +86,7 @@
         },
         "docTools.markdown.check.codespell.enable": {
           "type": "boolean",
-          "default": true,
+          "default": false,
           "description": "启用单词拼写检查"
         },
         "docTools.markdown.check.codespell.whiteList": {
