@@ -18,7 +18,7 @@ export async function checkTagClosed(document: vscode.TextDocument) {
 
   for (const match of text.matchAll(REGEX_TAG)) {
     // 跳过链接
-    if (match[0].startsWith('<') && match[0].endsWith('>') && match[0].includes('://')) {
+    if (match[0].startsWith('<') && match[0].endsWith('>') && !match[0].includes('href=') && !match[0].includes('src=') && match[0].includes('://')) {
       continue;
     }
 
@@ -27,7 +27,11 @@ export async function checkTagClosed(document: vscode.TextDocument) {
       // 处于 html 标签中不允许使用 \<xx\> \<xx> <xx\> 写法
       if (record.length > 0) {
         const range = new vscode.Range(document.positionAt(match.index), document.positionAt(match.index + match[0].length));
-        const diagnostic = new vscode.Diagnostic(range, `Unclosed html tag: ${match[0]}.\\<或\\>的转义写法不允许在标签嵌套中使用`, vscode.DiagnosticSeverity.Error);
+        const diagnostic = new vscode.Diagnostic(
+          range,
+          `Unclosed html tag: ${match[0]}.\\<或\\>的转义写法不允许在标签嵌套中使用`,
+          vscode.DiagnosticSeverity.Error
+        );
         diagnostic.source = 'tag-closed-check';
         diagnostic.code = match[0];
         diagnostics.push(diagnostic);
