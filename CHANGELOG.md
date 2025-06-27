@@ -6,7 +6,7 @@ All notable changes to the "docs-tools" extension will be documented in this fil
 
 ### Feat
 
-- 新增markdown语法检查功能
+- 新增 markdown 语法检查功能
 - 新增标签闭合检查功能
 - 新增链接检查功能
 - 新增资源是否存在检查功能
@@ -31,17 +31,17 @@ All notable changes to the "docs-tools" extension will be documented in this fil
 
 ### Fix
 
-- 优化链接与资源正则匹配
-- 注释和代码块不检测优化性
+- 优化链接与资源检查正则匹配
+- 链接检查跳过注释和代码块
 
 ## [0.0.5]
 
 ### Feat
 
-- 新增功能配置项
-- 新增单词加入白名单
+- 支持配置项
+- 单词拼写检查新增白名单功能，用户可以将常见词加入白名单
 
 ### Fix
 
-- 优化Html标签闭合检查
+- 优化 HTML 标签闭合检查
 - 优化目录文件检查
