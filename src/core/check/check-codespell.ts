@@ -27,12 +27,16 @@ export async function checkCodespell(document: vscode.TextDocument) {
     {
       words: Array.isArray(whiteList) ? [...whiteList, ...ignoreWords] : ignoreWords,
       suggestionsTimeout: 2000,
-      ignoreRegExpList: ['/\\[.*?\\]\\(.*?\\)/g', '/<[^>]*?>/g', '```[\s\S]*?```|`[^`]*`'],
+      ignoreRegExpList: [
+        '/\\[.*?\\]\\(.*?\\)/g', // 匹配Markdown链接语法：[文本](URL)
+        '/<[^>]*?>/g', // 匹配HTML标签：<tag>content</tag> 或 <tag/>
+        '```[\s\S]*?```|`[^`]*`', // 匹配代码块和行内代码
+      ],
     }
   );
 
   const diagnostics: vscode.Diagnostic[] = [];
-  result.issues.forEach((issue) => {
+  result.issues.forEach((issue: any) => {
     if (Array.isArray(issue.suggestions)) {
       wordsMap.set(issue.text, issue.suggestions);
     }
@@ -76,7 +80,7 @@ export function getCodespellActions(document: vscode.TextDocument, context: vsco
     whiteListAction.command = {
       command: 'doc.tools.codespell.add.whitelist',
       title: '加入白名单',
-      arguments: [item.code]
+      arguments: [item.code],
     };
     actions.push(whiteListAction);
   });
