@@ -5,7 +5,7 @@ import { geFilterMdContent } from '@/utils/markdwon';
 
 export async function checkTagClosed(document: vscode.TextDocument) {
   const diagnostics: vscode.Diagnostic[] = [];
-  if (!isConfigEnabled('docTools.markdown.check.tagClosed')) {
+  if (!isConfigEnabled('docTools.check.tagClosed')) {
     return diagnostics;
   }
 
@@ -100,7 +100,7 @@ export async function checkTagClosed(document: vscode.TextDocument) {
 
 export function getTagClosedCodeActions(document: vscode.TextDocument, context: vscode.CodeActionContext) {
   const actions: vscode.CodeAction[] = [];
-  if (!isConfigEnabled('docTools.markdown.check.tagClosed')) {
+  if (!isConfigEnabled('docTools.check.tagClosed')) {
     return actions;
   }
 

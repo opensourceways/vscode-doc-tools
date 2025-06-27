@@ -45,7 +45,7 @@ function extractLinks(text: string) {
  */
 export async function checkResourceExistence(document: vscode.TextDocument) {
   const diagnostics: vscode.Diagnostic[] = [];
-  if (!isConfigEnabled('docTools.markdown.check.resourceExistence')) {
+  if (!isConfigEnabled('docTools.check.resourceExistence')) {
     return diagnostics;
   }
 
