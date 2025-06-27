@@ -6,7 +6,7 @@ export async function addCodespellWhitelist(word: string, diagnosticsCollection:
   }
 
   // 加入白名单配置
-  const config = vscode.workspace.getConfiguration('docTools.markdown.check.codespell');
+  const config = vscode.workspace.getConfiguration('docTools.check.codespell');
   const whiteList = config.get<string[]>('whiteList', []);
   whiteList.push(word);
   await config.update('whiteList', whiteList, vscode.ConfigurationTarget.Global);

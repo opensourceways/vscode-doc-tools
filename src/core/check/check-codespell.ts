@@ -7,12 +7,12 @@ import { isConfigEnabled } from '@/utils/common';
 const wordsMap = new Map<string, string[]>();
 
 export async function checkCodespell(document: vscode.TextDocument) {
-  if (!isConfigEnabled('docTools.markdown.check.codespell')) {
+  if (!isConfigEnabled('docTools.check.codespell')) {
     return [];
   }
 
   const text = document.getText();
-  const whiteList = vscode.workspace.getConfiguration('docTools.markdown.check.codespell').get<string[]>('whiteList', []);
+  const whiteList = vscode.workspace.getConfiguration('docTools.check.codespell').get<string[]>('whiteList', []);
   const result = await spellCheckDocument(
     {
       uri: 'text.txt',
@@ -51,7 +51,7 @@ export async function checkCodespell(document: vscode.TextDocument) {
 
 export function getCodespellActions(document: vscode.TextDocument, context: vscode.CodeActionContext) {
   const actions: vscode.CodeAction[] = [];
-  if (!isConfigEnabled('docTools.markdown.check.codespell')) {
+  if (!isConfigEnabled('docTools.check.codespell')) {
     return actions;
   }
 

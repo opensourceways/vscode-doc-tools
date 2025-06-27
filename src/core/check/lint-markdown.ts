@@ -33,7 +33,7 @@ const parseLintResult = (result: LintResults): vscode.Diagnostic[] => {
 };
 
 export function lintMarkdown(document: vscode.TextDocument) {
-  if (!isConfigEnabled('docTools.markdown.lint')) {
+  if (!isConfigEnabled('docTools.markdownlint')) {
     return Promise.resolve([]);
   }
 
@@ -43,7 +43,7 @@ export function lintMarkdown(document: vscode.TextDocument) {
   const content = document.getText();
 
   // 加载配置
-  const settingConfig = vscode.workspace.getConfiguration('docTools.markdown.lint').get<Configuration>('config', {});
+  const settingConfig = vscode.workspace.getConfiguration('docTools.markdownlint').get<Configuration>('config', {});
   const options = {
     strings: { [filePath]: content },
     config: Object.keys(settingConfig).length > 0 ? settingConfig : mdLintConfig,

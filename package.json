@@ -52,44 +52,44 @@
     },
     "configuration": {
       "type": "object",
-      "title": "Markdownlint配置",
+      "title": "Doc Tools配置",
       "properties": {
         "docTools.scope.enable": {
           "type": "boolean",
           "default": true,
           "description": "启用检查范围仅限于 docs/zh 和 docs/en 目录"
         },
-        "docTools.markdown.lint.enable": {
+        "docTools.markdownlint.enable": {
           "type": "boolean",
           "default": true,
           "description": "启用Markdownlint检查"
         },
-        "docTools.markdown.lint.config": {
+        "docTools.markdownlint.config": {
           "type": "object",
           "default": {},
           "description": "Markdownlint自定义配置"
         },
-        "docTools.markdown.check.tagClosed.enable": {
+        "docTools.check.tagClosed.enable": {
           "type": "boolean",
           "default": true,
           "description": "启用Html标签闭合检查"
         },
-        "docTools.markdown.check.linkValidity.enable": {
+        "docTools.check.linkValidity.enable": {
           "type": "boolean",
           "default": true,
           "description": "启用链接有效性检查（包含：1. 内链；2. 外链）"
         },
-        "docTools.markdown.check.resourceExistence.enable": {
+        "docTools.check.resourceExistence.enable": {
           "type": "boolean",
           "default": true,
           "description": "启用资源是否存在检查（包含：1. 内链；2. 外链）"
         },
-        "docTools.markdown.check.codespell.enable": {
+        "docTools.check.codespell.enable": {
           "type": "boolean",
           "default": false,
           "description": "启用单词拼写检查"
         },
-        "docTools.markdown.check.codespell.whiteList": {
+        "docTools.check.codespell.whiteList": {
           "type": "array",
           "default": [],
           "description": "单词白名单（添加后忽略对该单词的检查）"

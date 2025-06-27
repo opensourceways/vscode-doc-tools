@@ -44,7 +44,7 @@ function extractLinks(text: string) {
  */
 export async function checkLinkValidity(document: vscode.TextDocument) {
   const diagnostics: vscode.Diagnostic[] = [];
-  if (!isConfigEnabled('docTools.markdown.check.linkValidity')) {
+  if (!isConfigEnabled('docTools.check.linkValidity')) {
     return diagnostics;
   }
 
