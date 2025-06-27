@@ -74,7 +74,7 @@ export function getCodespellActions(document: vscode.TextDocument, context: vsco
 
     const whiteListAction = new vscode.CodeAction('加入白名单', vscode.CodeActionKind.QuickFix);
     whiteListAction.command = {
-      command: 'doc.tools.add.codespell.white.list',
+      command: 'doc.tools.codespell.add.whitelist',
       title: '加入白名单',
       arguments: [item.code]
     };

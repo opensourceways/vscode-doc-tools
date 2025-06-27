@@ -43,7 +43,7 @@ function registerEvent(context: vscode.ExtensionContext) {
 function registerCommand(context: vscode.ExtensionContext) {
   // 注册 运行Markdown检查 命令
   context.subscriptions.push(
-    vscode.commands.registerCommand('doc.tools.check.markdown', () => {
+    vscode.commands.registerCommand('doc.tools.check', () => {
       checkMarkdown(diagnosticsCollection);
     })
   );
@@ -57,7 +57,7 @@ function registerCommand(context: vscode.ExtensionContext) {
 
   // 注册 添加单词白名单 命令
   context.subscriptions.push(
-    vscode.commands.registerCommand('doc.tools.add.codespell.white.list', (word: string) => {
+    vscode.commands.registerCommand('doc.tools.codespell.add.whitelist', (word: string) => {
       addCodespellWhitelist(word, diagnosticsCollection);
     })
   );

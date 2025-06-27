@@ -29,7 +29,7 @@
     },
     "commands": [
       {
-        "command": "doc.tools.check.markdown",
+        "command": "doc.tools.check",
         "title": "Doc Tools：运行Markdown检查"
       },
       {
@@ -37,7 +37,7 @@
         "title": "Doc Tools：生成指南 _toc.yaml"
       },
       {
-        "command": "doc.tools.add.codespell.white.list",
+        "command": "doc.tools.codespell.add.whitelist",
         "title": "Doc Tools：添加单词白名单"
       }
     ],
