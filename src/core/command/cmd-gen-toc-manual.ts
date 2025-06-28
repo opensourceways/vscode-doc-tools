@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import yaml from 'js-yaml';
 
-import type { TocItem, Toc } from '@/@types/toc';
+import type { TocItem } from '@/@types/toc';
 import { getFileContent, getYamlContent } from '@/utils/file';
 import { getTitle } from '@/utils/markdwon';
 
@@ -33,7 +33,7 @@ function checkAndGetHrefMap(sections: TocItem[], dirPath: string, map = new Map<
 
 function getManualToc(dirPath: string) {
   // 获取原本的_toc.yaml
-  const toc = getYamlContent(path.join(dirPath, '_toc.yaml')) as Toc;
+  const toc = getYamlContent(path.join(dirPath, '_toc.yaml')) as TocItem;
   toc.isManual = true;
   if (!toc.label) {
     toc.label = '';
@@ -65,6 +65,7 @@ function getManualToc(dirPath: string) {
       // 跳过没有标题的md
       const title = getTitle(getFileContent(completedPath));
       if (!title) {
+        vscode.window.showWarningMessage(`标题不存在：${name}`);
         return;
       }
 
