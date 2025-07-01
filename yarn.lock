@@ -1287,7 +1287,7 @@ cspell-io@9.1.2:
     "@cspell/cspell-service-bus" "9.1.2"
     "@cspell/url" "9.1.2"
 
-cspell-lib@^9.1.1:
+cspell-lib@^9.1.2:
   version "9.1.2"
   resolved "https://registry.npmmirror.com/cspell-lib/-/cspell-lib-9.1.2.tgz#b47972c8c311c954076e70166ac56685c0e1d725"
   integrity sha512-OFCssgfp6Z2gd1K8j2FsYr9YGoA/C6xXlcUwgU75Ut/XMZ/S44chdA9fUupGd4dUOw+CZl0qKzSP21J6kYObIw==

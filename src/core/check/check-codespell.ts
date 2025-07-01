@@ -25,12 +25,14 @@ export async function checkCodespell(document: vscode.TextDocument) {
       noConfigSearch: true,
     },
     {
+      allowCompoundWords: true,
       words: Array.isArray(whiteList) ? [...whiteList, ...ignoreWords] : ignoreWords,
       suggestionsTimeout: 2000,
       ignoreRegExpList: [
         '/\\[.*?\\]\\(.*?\\)/g', // 匹配Markdown链接语法：[文本](URL)
-        '/<[^>]*?>/g', // 匹配HTML标签：<tag>content</tag> 或 <tag/>
-        '```[\s\S]*?```|`[^`]*`', // 匹配代码块和行内代码
+        '/<[^>]*?>/g',  // 匹配HTML标签：<tag>content</tag> 或 <tag/>
+        '```[\\s\\S]*?```|`[^`]*`', // 匹配代码块和行内代码
+        '[\\u4e00-\\u9fa5]',  // 匹配中文字符
       ],
     }
   );
