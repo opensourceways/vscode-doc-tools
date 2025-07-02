@@ -39,6 +39,10 @@
       {
         "command": "doc.tools.codespell.add.whitelist",
         "title": "Doc Tools：添加单词白名单"
+      },
+      {
+        "command": "doc.tools.preview.markdown",
+        "title": "Doc Tools：预览文档页面"
       }
     ],
     "menus": {
@@ -47,6 +51,12 @@
           "command": "doc.tools.gen.toc.manual",
           "when": "explorerResourceIsFolder",
           "group": "doc.tools.toc"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "doc.tools.preview.markdown",
+          "when": "resourceLangId == markdown"
         }
       ]
     },
@@ -98,6 +108,11 @@
           "type": "boolean",
           "default": true,
           "description": "启用 _toc.yaml 检查（包含：1.目录中引用的文件需要存在；2.md 文件是否加入 _toc.yaml）"
+        },
+        "docTools.preview.markdown.repoPath": {
+          "type": "string",
+          "default": "",
+          "description": "预览页面使用的构建仓库存放位置"
         }
       }
     }
@@ -119,7 +134,8 @@
   "dependencies": {
     "cspell-lib": "^9.1.2",
     "js-yaml": "^4.1.0",
-    "markdownlint": "^0.38.0"
+    "markdownlint": "^0.38.0",
+    "strip-ansi": "^7.1.0"
   },
   "devDependencies": {
     "@types/js-yaml": "^4.0.9",
@@ -136,4 +152,3 @@
     "typescript": "^5.8.3"
   }
 }
-

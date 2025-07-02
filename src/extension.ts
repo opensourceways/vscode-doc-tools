@@ -5,6 +5,7 @@ import { getCodeActions, triggerCheck } from '@/core/check';
 import { genTocManual } from '@/core/command/cmd-gen-toc-manual';
 import { checkMarkdown } from '@/core/command/cmd-check-markdown';
 import { addCodespellWhitelist } from '@/core/command/cmd-add-codespell-whitlist';
+import { previewMarkdown } from '@/core/command/cmd-preview-markdown';
 
 // 用于存储错误信息
 const diagnosticsCollection = vscode.languages.createDiagnosticCollection('doc-tools');
@@ -59,6 +60,13 @@ function registerCommand(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.commands.registerCommand('doc.tools.codespell.add.whitelist', (word: string) => {
       addCodespellWhitelist(word, diagnosticsCollection);
+    })
+  );
+
+  // 注册 预览文档页面 命令
+  context.subscriptions.push(
+    vscode.commands.registerCommand('doc.tools.preview.markdown', (word: string) => {
+      previewMarkdown();
     })
   );
 }
