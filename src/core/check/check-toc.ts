@@ -4,7 +4,7 @@ import yaml from 'js-yaml';
 import { TocItem } from '@/@types/toc.js';
 import { isConfigEnabled, isValidLink } from '@/utils/common';
 
-const ALLOWED_KEYS = ['label', 'isManual', 'sections', 'href', 'upstream', 'path'];
+const ALLOWED_KEYS = ['label', 'description', 'isManual', 'sections', 'href', 'upstream', 'path'];
 
 function collectInvalidDiagnostics(document: vscode.TextDocument, text: string, message: string) {
   const diagnostics: vscode.Diagnostic[] = [];
