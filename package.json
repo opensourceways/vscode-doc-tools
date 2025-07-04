@@ -43,6 +43,10 @@
       {
         "command": "doc.tools.url.add.whitelist",
         "title": "Doc Tools：添加链接白名单"
+      },
+      {
+        "command": "doc.tools.preview.markdown",
+        "title": "Doc Tools：预览文档页面"
       }
     ],
     "menus": {
@@ -51,6 +55,12 @@
           "command": "doc.tools.gen.toc.manual",
           "when": "explorerResourceIsFolder",
           "group": "doc.tools.toc"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "doc.tools.preview.markdown",
+          "when": "resourceLangId == markdown"
         }
       ]
     },
@@ -107,6 +117,11 @@
           "type": "boolean",
           "default": true,
           "description": "启用 _toc.yaml 检查（包含：1.目录中引用的文件需要存在；2.md 文件是否加入 _toc.yaml）"
+        },
+        "docTools.preview.markdown.repoPath": {
+          "type": "string",
+          "default": "",
+          "description": "预览页面使用的构建仓库存放位置"
         }
       }
     }
@@ -145,4 +160,3 @@
     "typescript": "^5.8.3"
   }
 }
-

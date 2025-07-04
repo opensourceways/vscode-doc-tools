@@ -1,4 +1,5 @@
 import fs from 'fs';
+import path from 'path';
 import yaml from 'js-yaml';
 
 /**
@@ -28,4 +29,21 @@ export function getYamlContent<T>(fsPath: string, defaultVal = {}) {
   } catch {}
 
   return defaultVal as T;
+}
+
+export function copyDirectorySync(sourceDir: string, destDir: string) {
+  if (!fs.existsSync(destDir)) {
+    fs.mkdirSync(destDir, { recursive: true });
+  }
+
+  fs.readdirSync(sourceDir, { withFileTypes: true }).forEach((item) => {
+    const sourcePath = path.join(sourceDir, item.name);
+    const targetPath = path.join(destDir, item.name);
+
+    if (item.isDirectory()) {
+      copyDirectorySync(sourcePath, targetPath);
+    } else {
+      fs.copyFileSync(sourcePath, targetPath);
+    }
+  });
 }

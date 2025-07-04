@@ -5,29 +5,7 @@ import fs from 'fs';
 import { getYamlContent } from '@/utils/file';
 import { TocItem } from '@/@types/toc';
 import { isConfigEnabled } from '@/utils/common';
-
-/**
- * 判断 markdown 是否加入 _toc.yaml
- * @param {TocItem} toc toc item
- * @param {string} dirPath 当前目录
- * @param {string} mdPath markdown 路径
- * @returns {boolean} 加入返回 true，未加入返回 false
- */
-function isMdInToc(toc: TocItem, dirPath: string, mdPath: string) {
-  if (toc && typeof toc.href === 'string' && path.join(dirPath, toc.href).replace(/\\/g, '/') === mdPath) {
-    return true;
-  }
-
-  if (Array.isArray(toc.sections)) {
-    for (const item of toc.sections) {
-      if (isMdInToc(item, dirPath, mdPath)) {
-        return true;
-      }
-    }
-  }
-
-  return false;
-}
+import { isMdInToc } from '@/utils/markdwon';
 
 /**
  * 检查 markdown 是否加入 _toc.yaml

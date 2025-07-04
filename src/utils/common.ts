@@ -8,3 +8,13 @@ import * as vscode from 'vscode';
 export function isConfigEnabled(configName: string) {
   return vscode.workspace.getConfiguration(configName).get<boolean>('enable', true);
 }
+
+/**
+ * 延迟
+ * @param {number} t 延迟时间
+ */
+export function delay(t: number) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, t > 0 ? t : 0);
+  });
+}
