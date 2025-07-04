@@ -18,7 +18,13 @@ export async function checkTagClosed(document: vscode.TextDocument) {
 
   for (const match of text.matchAll(REGEX_TAG)) {
     // 跳过链接
-    if (match[0].startsWith('<') && match[0].endsWith('>') && !match[0].includes('href=') && !match[0].includes('src=') && match[0].includes('://')) {
+    if (
+      match[0].startsWith('<') &&
+      match[0].endsWith('>') &&
+      !match[0].includes('href=') &&
+      !match[0].includes('src=') &&
+      (match[0].includes('://') || match[0].includes('@'))
+    ) {
       continue;
     }
 
