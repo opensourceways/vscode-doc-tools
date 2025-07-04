@@ -5,13 +5,14 @@ import { getCodeActions, triggerCheck } from '@/core/check';
 import { genTocManual } from '@/core/command/cmd-gen-toc-manual';
 import { checkMarkdown } from '@/core/command/cmd-check-markdown';
 import { addCodespellWhitelist } from '@/core/command/cmd-add-codespell-whitlist';
+import { addUrlWhitelist } from '@/core/command/cmd-add-url-whilelist';
 
 // 用于存储错误信息
 const diagnosticsCollection = vscode.languages.createDiagnosticCollection('doc-tools');
 
 /**
  * 注册事件
- * @param context 上下文对象
+ * @param {vscode.ExtensionContext} context 上下文对象
  */
 function registerEvent(context: vscode.ExtensionContext) {
   // 监听文件打开
@@ -38,7 +39,7 @@ function registerEvent(context: vscode.ExtensionContext) {
 
 /**
  * 注册命令
- * @param context 上下文对象
+ * @param {vscode.ExtensionContext} context 上下文对象
  */
 function registerCommand(context: vscode.ExtensionContext) {
   // 注册 运行Markdown检查 命令
@@ -61,11 +62,18 @@ function registerCommand(context: vscode.ExtensionContext) {
       addCodespellWhitelist(word, diagnosticsCollection);
     })
   );
+
+  // 注册 添加链接白名单 命令
+  context.subscriptions.push(
+    vscode.commands.registerCommand('doc.tools.url.add.whitelist', (url: string) => {
+      addUrlWhitelist(url, diagnosticsCollection);
+    })
+  );
 }
 
 /**
  * 注册code action
- * @param context 上下文对象
+ * @param {vscode.ExtensionContext} context 上下文对象
  */
 function registerCodeAction(context: vscode.ExtensionContext) {
   // 注册 code action 菜单
@@ -80,7 +88,7 @@ function registerCodeAction(context: vscode.ExtensionContext) {
 
 /**
  * 激活插件
- * @param context 上下文对象
+ * @param {vscode.ExtensionContext} context 上下文对象
  */
 export function activate(context: vscode.ExtensionContext) {
   // 首次激活后检查

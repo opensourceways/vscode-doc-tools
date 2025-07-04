@@ -1,7 +1,10 @@
 import * as vscode from 'vscode';
+import path from 'path';
 
-import { isConfigEnabled, isValidLink } from '@/utils/common';
-import { geFilterMdContent } from '@/utils/markdwon';
+import { isConfigEnabled } from '@/utils/common';
+import { isAccessibleLink } from '@/utils/request';
+
+import defaultWhitelistUrls from '@/config/whitelist-urls';
 
 const REGEX = [
   /!\[.*?\]\((.*?)\)/g, // 提取 ![xxx](xxx) 语法的链接
@@ -12,8 +15,8 @@ const REGEX = [
 
 /**
  * 提取链接
- * @param text 文本
- * @returns 返回提取的链接数组
+ * @param {string} text 文本
+ * @returns {{ link: string; startPos: number; endPos: number }[]} 返回提取的链接数组
  */
 function extractLinks(text: string) {
   const links: { link: string; startPos: number; endPos: number }[] = [];
@@ -40,18 +43,20 @@ function extractLinks(text: string) {
 
 /**
  * 检查资源链接有效性
- * @param document 文档对象
- * @returns 返回错误 Diagnostic 提示数组
+ * @param {string} content markdown 内容
+ * @param {vscode.TextDocument} document 文档对象
+ * @returns {vscode.Diagnostic[]} 返回错误 Diagnostic 提示数组
  */
-export async function checkResourceExistence(document: vscode.TextDocument) {
+export async function checkResourceExistence(content: string, document: vscode.TextDocument) {
   const diagnostics: vscode.Diagnostic[] = [];
   if (!isConfigEnabled('docTools.check.resourceExistence')) {
     return diagnostics;
   }
 
-  const text = geFilterMdContent(document.getText());
-  for (const item of extractLinks(text)) {
-    if (await isValidLink(item.link, document)) {
+  const whiteList = vscode.workspace.getConfiguration('docTools.check.url').get<string[]>('whiteList', []);
+  const allWhiteList = Array.isArray(whiteList) ? [...whiteList, ...defaultWhitelistUrls] : defaultWhitelistUrls;
+  for (const item of extractLinks(content)) {
+    if (await isAccessibleLink(item.link, path.dirname(document.uri.fsPath), allWhiteList)) {
       continue;
     }
 
@@ -62,4 +67,37 @@ export async function checkResourceExistence(document: vscode.TextDocument) {
   }
 
   return diagnostics;
+}
+
+/**
+ * 获取资源链接有效性错误可执行的 action
+ * @param {vscode.CodeActionContext} context code action 上下文
+ * @returns {vscode.CodeAction[]} 返回可以执行的 action
+ */
+export function getResourceExistenceCodeActions(context: vscode.CodeActionContext) {
+  const actions: vscode.CodeAction[] = [];
+  if (!isConfigEnabled('docTools.check.resourceExistence')) {
+    return actions;
+  }
+
+  context.diagnostics.forEach((item) => {
+    if (item.source !== 'resource-existence-check') {
+      return;
+    }
+
+    const link = item.message.replace('Non-existent resource: ', '');
+    if (!link.startsWith('http')) {
+      return;
+    }
+
+    const whiteListAction = new vscode.CodeAction('添加地址白名单', vscode.CodeActionKind.QuickFix);
+    whiteListAction.command = {
+      command: 'doc.tools.url.add.whitelist',
+      title: '添加地址白名单',
+      arguments: [link],
+    };
+    actions.push(whiteListAction);
+  });
+
+  return actions;
 }

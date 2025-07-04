@@ -1,30 +1,30 @@
 import * as vscode from 'vscode';
 
 /**
- * 加入单词白名单
- * @param {string} word 错误单词
+ * 加入链接白名单
+ * @param {string} url 链接
  * @param {vscode.DiagnosticCollection} diagnosticsCollection Diagnostic Collection
  * @returns 
  */
-export async function addCodespellWhitelist(word: string, diagnosticsCollection: vscode.DiagnosticCollection) {
-  if (!word) {
+export async function addUrlWhitelist(url: string, diagnosticsCollection: vscode.DiagnosticCollection) {
+  if (!url) {
     return;
   }
 
   // 加入白名单配置
-  const config = vscode.workspace.getConfiguration('docTools.check.codespell');
+  const config = vscode.workspace.getConfiguration('docTools.check.url');
   const whiteList = config.get<string[]>('whiteList', []);
-  whiteList.push(word);
+  whiteList.push(url);
   await config.update('whiteList', whiteList, vscode.ConfigurationTarget.Global);
 
-  // 更新单词标记
+  // 更新标记
   diagnosticsCollection.forEach((uri, diagnostics) => {
     const filterDiagnostics = diagnostics.filter((item) => {
-      if (item.source !== 'codespell-check') {
+      if (item.source !== 'link-validity-check' && item.source !== 'resource-existence-check') {
         return true;
       }
 
-      return item.code !== word;
+      return item.message.replace('Invalid link: ', '').replace('Non-existent resource: ', '') !== url;
     });
 
     if (filterDiagnostics.length !== diagnostics.length) {
