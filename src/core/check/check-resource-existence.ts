@@ -1,7 +1,11 @@
 import * as vscode from 'vscode';
+import path from 'path';
 
-import { isConfigEnabled, isValidLink } from '@/utils/common';
+import { isConfigEnabled } from '@/utils/common';
 import { geFilterMdContent } from '@/utils/markdwon';
+import { isAccessibleLink } from '@/utils/request';
+
+import defaultWhitelistUrls from '@/config/whitelist-urls';
 
 const REGEX = [
   /!\[.*?\]\((.*?)\)/g, // 提取 ![xxx](xxx) 语法的链接
@@ -49,9 +53,11 @@ export async function checkResourceExistence(document: vscode.TextDocument) {
     return diagnostics;
   }
 
+  const whiteList = vscode.workspace.getConfiguration('docTools.check.url').get<string[]>('whiteList', []);
+  const allWhiteList = Array.isArray(whiteList) ? [...whiteList, ...defaultWhitelistUrls] : defaultWhitelistUrls;
   const text = geFilterMdContent(document.getText());
   for (const item of extractLinks(text)) {
-    if (await isValidLink(item.link, document)) {
+    if (await isAccessibleLink(item.link, path.dirname(document.uri.fsPath), allWhiteList)) {
       continue;
     }
 
@@ -62,4 +68,37 @@ export async function checkResourceExistence(document: vscode.TextDocument) {
   }
 
   return diagnostics;
+}
+
+/**
+ * 获取资源链接有效性错误可执行的 action
+ * @param context code action 上下文
+ * @returns 返回可以执行的 action
+ */
+export function getResourceExistenceCodeActions(context: vscode.CodeActionContext) {
+  const actions: vscode.CodeAction[] = [];
+  if (!isConfigEnabled('docTools.check.resourceExistence')) {
+    return actions;
+  }
+
+  context.diagnostics.forEach((item) => {
+    if (item.source !== 'resource-existence-check') {
+      return;
+    }
+
+    const link = item.message.replace('Non-existent resource: ', '');
+    if (!link.startsWith('http')) {
+      return;
+    }
+
+    const whiteListAction = new vscode.CodeAction('添加地址白名单', vscode.CodeActionKind.QuickFix);
+    whiteListAction.command = {
+      command: 'doc.tools.url.add.whitelist',
+      title: '添加地址白名单',
+      arguments: [link],
+    };
+    actions.push(whiteListAction);
+  });
+
+  return actions;
 }

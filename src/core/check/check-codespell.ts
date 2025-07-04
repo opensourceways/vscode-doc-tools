@@ -55,7 +55,7 @@ export async function checkCodespell(document: vscode.TextDocument) {
   return diagnostics;
 }
 
-export function getCodespellActions(document: vscode.TextDocument, context: vscode.CodeActionContext) {
+export function getCodespellCodeActions(document: vscode.TextDocument, context: vscode.CodeActionContext) {
   const actions: vscode.CodeAction[] = [];
   if (!isConfigEnabled('docTools.check.codespell')) {
     return actions;

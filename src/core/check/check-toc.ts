@@ -1,8 +1,10 @@
 import * as vscode from 'vscode';
+import path from 'path';
 import yaml from 'js-yaml';
 
 import { TocItem } from '@/@types/toc.js';
-import { isConfigEnabled, isValidLink } from '@/utils/common';
+import { isConfigEnabled } from '@/utils/common';
+import { isAccessibleLink } from '@/utils/request';
 
 const ALLOWED_KEYS = ['label', 'description', 'isManual', 'sections', 'href', 'upstream', 'path'];
 
@@ -42,7 +44,7 @@ async function walkToc(item: TocItem, document: vscode.TextDocument, diagnostics
   if (item.href) {
     const url = typeof item.href === 'string' ? item.href : item.href.upstream;
     if (url && !handled.has(`href:\\s+${url}`)) {
-      const valid = await isValidLink(url, document);
+      const valid = await isAccessibleLink(url, path.dirname(document.uri.fsPath));
       if (!valid) {
         diagnostics.push(...collectInvalidDiagnostics(document, `href:\\s+${url}`, `Non-existent doc in toc: ${url}.`));
       }

@@ -1,9 +1,9 @@
 import * as vscode from 'vscode';
 import { lintMarkdown } from '@/core/check/lint-markdown';
 import { checkTagClosed, getTagClosedCodeActions } from '@/core/check/check-tag-closed';
-import { checkCodespell, getCodespellActions } from '@/core/check/check-codespell';
-import { checkResourceExistence } from '@/core/check/check-resource-existence';
-import { checkLinkValidity } from '@/core/check/check-link-validity';
+import { checkCodespell, getCodespellCodeActions } from '@/core/check/check-codespell';
+import { checkResourceExistence, getResourceExistenceCodeActions } from '@/core/check/check-resource-existence';
+import { checkLinkValidity, getLinkValidityCodeActions } from '@/core/check/check-link-validity';
 import { checkToc } from '@/core/check/check-toc';
 import { checkMdInToc } from '@/core/check/check-md-in-toc';
 import { EVENT_TYPE } from '@/@types/event';
@@ -99,6 +99,11 @@ async function checkTocYaml(document: vscode.TextDocument, diagnosticsCollection
  * @param {vscode.CodeActionContext} context 上下文对象
  */
 export function getCodeActions(document: vscode.TextDocument, context: vscode.CodeActionContext) {
-  const actions: vscode.CodeAction[] = [...getCodespellActions(document, context), ...getTagClosedCodeActions(document, context)];
+  const actions: vscode.CodeAction[] = [
+    ...getCodespellCodeActions(document, context),
+    ...getTagClosedCodeActions(document, context),
+    ...getLinkValidityCodeActions(context),
+    ...getResourceExistenceCodeActions(context),
+  ];
   return actions;
 }

@@ -1,0 +1,28 @@
+import * as vscode from 'vscode';
+
+export async function addUrlWhitelist(url: string, diagnosticsCollection: vscode.DiagnosticCollection) {
+  if (!url) {
+    return;
+  }
+
+  // 加入白名单配置
+  const config = vscode.workspace.getConfiguration('docTools.check.url');
+  const whiteList = config.get<string[]>('whiteList', []);
+  whiteList.push(url);
+  await config.update('whiteList', whiteList, vscode.ConfigurationTarget.Global);
+
+  // 更新标记
+  diagnosticsCollection.forEach((uri, diagnostics) => {
+    const filterDiagnostics = diagnostics.filter((item) => {
+      if (item.source !== 'link-validity-check' && item.source !== 'resource-existence-check') {
+        return true;
+      }
+
+      return item.message.replace('Invalid link: ', '').replace('Non-existent resource: ', '') !== url;
+    });
+
+    if (filterDiagnostics.length !== diagnostics.length) {
+      diagnosticsCollection.set(uri, filterDiagnostics);
+    }
+  });
+}

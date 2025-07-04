@@ -1,13 +1,17 @@
 import * as vscode from 'vscode';
+import path from 'path';
 
-import { isConfigEnabled, isValidLink } from '@/utils/common';
+import { isConfigEnabled } from '@/utils/common';
 import { geFilterMdContent } from '@/utils/markdwon';
+import { isAccessibleLink } from '@/utils/request';
+
+import defaultWhitelistUrls from '@/config/whitelist-urls';
 
 const REGEX = [
   /(?<!\!)\[.*?\]\((.+?)\)/g, // 匹配 [xx](xxx) 链接
   /<(http[^>]+)>/g, // 匹配 <链接地址> 格式的链接
   /<a[^>]*href=["']([^"]+?)["'][^>]*>/gi, // 匹配 <a> 标签链接
-]
+];
 
 /**
  * 提取链接
@@ -48,6 +52,8 @@ export async function checkLinkValidity(document: vscode.TextDocument) {
     return diagnostics;
   }
 
+  const whiteList = vscode.workspace.getConfiguration('docTools.check.url').get<string[]>('whiteList', []);
+  const allWhiteList = Array.isArray(whiteList) ? [...whiteList, ...defaultWhitelistUrls] : defaultWhitelistUrls;
   const text = geFilterMdContent(document.getText());
   const links = extractLinks(text);
   for (const item of links) {
@@ -61,7 +67,7 @@ export async function checkLinkValidity(document: vscode.TextDocument) {
       item.link = item.link.split('#')[0];
     }
 
-    if (await isValidLink(item.link, document)) {
+    if (await isAccessibleLink(item.link, path.dirname(document.uri.fsPath), allWhiteList)) {
       continue;
     }
 
@@ -72,4 +78,37 @@ export async function checkLinkValidity(document: vscode.TextDocument) {
   }
 
   return diagnostics;
+}
+
+/**
+ * 获取链接有效性错误可执行的 action
+ * @param context code action 上下文
+ * @returns 返回可以执行的 action
+ */
+export function getLinkValidityCodeActions(context: vscode.CodeActionContext) {
+  const actions: vscode.CodeAction[] = [];
+  if (!isConfigEnabled('docTools.check.linkValidity')) {
+    return actions;
+  }
+
+  context.diagnostics.forEach((item) => {
+    if (item.source !== 'link-validity-check') {
+      return;
+    }
+
+    const link = item.message.replace('Invalid link: ', '');
+    if (!link.startsWith('http')) {
+      return;
+    }
+
+    const whiteListAction = new vscode.CodeAction('添加地址白名单', vscode.CodeActionKind.QuickFix);
+    whiteListAction.command = {
+      command: 'doc.tools.url.add.whitelist',
+      title: '添加地址白名单',
+      arguments: [link],
+    };
+    actions.push(whiteListAction);
+  });
+
+  return actions;
 }
