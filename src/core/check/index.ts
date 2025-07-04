@@ -8,6 +8,7 @@ import { checkToc } from '@/core/check/check-toc';
 import { checkMdInToc } from '@/core/check/check-md-in-toc';
 import { EVENT_TYPE } from '@/@types/event';
 import { isConfigEnabled } from '@/utils/common';
+import { getMarkdownFilterContent } from '@/utils/markdwon';
 
 // 用于存储延迟任务记录
 const timerMap = new Map<string, NodeJS.Timeout>();
@@ -61,8 +62,13 @@ export function triggerCheck(event: EVENT_TYPE, document: vscode.TextDocument, d
  * @param {vscode.DiagnosticCollection} diagnosticsCollection 提示收集
  */
 async function checkMarkdown(event: EVENT_TYPE, document: vscode.TextDocument, diagnosticsCollection: vscode.DiagnosticCollection) {
+  const content = getMarkdownFilterContent(document.getText());
   // 先执行不耗时的检查
-  const diagnostics: vscode.Diagnostic[] = await Promise.all([checkTagClosed(document), checkCodespell(document), lintMarkdown(document)]).then((result) => {
+  const diagnostics: vscode.Diagnostic[] = await Promise.all([
+    checkTagClosed(content, document),
+    checkCodespell(content, document),
+    lintMarkdown(document),
+  ]).then((result) => {
     return result.flat();
   });
 
@@ -70,7 +76,7 @@ async function checkMarkdown(event: EVENT_TYPE, document: vscode.TextDocument, d
   diagnosticsCollection.set(document.uri, diagnostics);
 
   // 耗时久的另外执行
-  const diagnosticsLong = [...(await checkResourceExistence(document)), ...(await checkLinkValidity(document))];
+  const diagnosticsLong = [...(await checkResourceExistence(content, document)), ...(await checkLinkValidity(content, document))];
   if (diagnosticsLong.length > 0) {
     diagnostics.push(...diagnosticsLong);
     diagnosticsCollection.set(document.uri, diagnostics);
@@ -100,8 +106,8 @@ async function checkTocYaml(document: vscode.TextDocument, diagnosticsCollection
  */
 export function getCodeActions(document: vscode.TextDocument, context: vscode.CodeActionContext) {
   const actions: vscode.CodeAction[] = [
-    ...getCodespellCodeActions(document, context),
-    ...getTagClosedCodeActions(document, context),
+    ...getCodespellCodeActions(context, document),
+    ...getTagClosedCodeActions(context, document),
     ...getLinkValidityCodeActions(context),
     ...getResourceExistenceCodeActions(context),
   ];

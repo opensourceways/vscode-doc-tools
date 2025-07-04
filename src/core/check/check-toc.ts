@@ -8,6 +8,13 @@ import { isAccessibleLink } from '@/utils/request';
 
 const ALLOWED_KEYS = ['label', 'description', 'isManual', 'sections', 'href', 'upstream', 'path'];
 
+/**
+ * 收集错误提示
+ * @param {vscode.TextDocument} document 文档对象
+ * @param {string} text 错误文本
+ * @param {string} message 提示消息
+ * @returns {vscode.Diagnostic[]} 返回错误 Diagnostic 提示数组
+ */
 function collectInvalidDiagnostics(document: vscode.TextDocument, text: string, message: string) {
   const diagnostics: vscode.Diagnostic[] = [];
   for (const match of document.getText().matchAll(new RegExp(text, 'g'))) {
@@ -25,6 +32,13 @@ function collectInvalidDiagnostics(document: vscode.TextDocument, text: string, 
   return diagnostics;
 }
 
+/**
+ * 遍历收集 toc 错误
+ * @param {TocItem} item toc item
+ * @param {vscode.TextDocument} document 文档对象
+ * @param {vscode.Diagnostic[]} diagnostics 已收集的错误提示
+ * @param {Set<string>} handled 已处理的错误，首次调用无需传递，用于递归收集传参
+ */
 async function walkToc(item: TocItem, document: vscode.TextDocument, diagnostics: vscode.Diagnostic[], handled = new Set<string>()) {
   // 检查 key
   for (const key of Object.keys(item)) {
@@ -61,6 +75,11 @@ async function walkToc(item: TocItem, document: vscode.TextDocument, diagnostics
   }
 }
 
+/**
+ * 检查 _toc.yaml
+ * @param {vscode.TextDocument} document 文档对象
+ * @returns {vscode.Diagnostic[]} 返回错误 Diagnostic 提示数组
+ */
 export async function checkToc(document: vscode.TextDocument) {
   const diagnostics: vscode.Diagnostic[] = [];
   if (!isConfigEnabled('docTools.check.toc')) {

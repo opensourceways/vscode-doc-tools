@@ -3,6 +3,11 @@ import * as vscode from 'vscode';
 import { triggerCheck } from '@/core/check';
 import { EVENT_TYPE } from '@/@types/event';
 
+/**
+ * 执行 markdown 检查
+ * @param {vscode.DiagnosticCollection} diagnosticsCollection Diagnostic Collection
+ * @returns 
+ */
 export function checkMarkdown(diagnosticsCollection: vscode.DiagnosticCollection) {
   const editor = vscode.window.activeTextEditor;
   if (editor && editor.document.languageId === 'markdown') {

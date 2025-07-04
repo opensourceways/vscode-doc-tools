@@ -1,22 +1,26 @@
 import * as vscode from 'vscode';
 
 import { isConfigEnabled } from '@/utils/common';
-import { geFilterMdContent } from '@/utils/markdwon';
 
-export async function checkTagClosed(document: vscode.TextDocument) {
+/**
+ * 检查 html 标签是否闭合
+ * @param {string} content markdown 内容
+ * @param {vscode.TextDocument} document 文档对象
+ * @returns {vscode.Diagnostic[]} 返回错误 Diagnostic 提示数组
+ */
+export async function checkTagClosed(content: string, document: vscode.TextDocument) {
   const diagnostics: vscode.Diagnostic[] = [];
   if (!isConfigEnabled('docTools.check.tagClosed')) {
     return diagnostics;
   }
 
-  const text = geFilterMdContent(document.getText());
   const record: { tag: string; match: RegExpExecArray }[] = []; // 保存标签及其起始位置
   const selfClosedTags = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr']);
 
   // 正则表达式，匹配 HTML 标签、被转义的标签
   const REGEX_TAG = /(?<!\\)<\s*\/?\s*([a-zA-Z0-9\-]+)([^>]*)>|<\s*\/?\s*([a-zA-Z0-9\-]+)([^>]*?)\/>|\\<([^>]*)>|<([^>]*)\\>/g;
 
-  for (const match of text.matchAll(REGEX_TAG)) {
+  for (const match of content.matchAll(REGEX_TAG)) {
     // 跳过链接
     if (
       match[0].startsWith('<') &&
@@ -104,7 +108,13 @@ export async function checkTagClosed(document: vscode.TextDocument) {
   return diagnostics;
 }
 
-export function getTagClosedCodeActions(document: vscode.TextDocument, context: vscode.CodeActionContext) {
+/**
+ * 获取标签不闭合可执行的 action
+ * @param {vscode.CodeActionContext} context code action 上下文
+ * @param {vscode.TextDocument} document 文档对象
+ * @returns {vscode.CodeAction[]} 返回可以执行的 action
+ */
+export function getTagClosedCodeActions(context: vscode.CodeActionContext, document: vscode.TextDocument) {
   const actions: vscode.CodeAction[] = [];
   if (!isConfigEnabled('docTools.check.tagClosed')) {
     return actions;

@@ -1,5 +1,11 @@
 import * as vscode from 'vscode';
 
+/**
+ * 加入链接白名单
+ * @param {string} url 链接
+ * @param {vscode.DiagnosticCollection} diagnosticsCollection Diagnostic Collection
+ * @returns 
+ */
 export async function addUrlWhitelist(url: string, diagnosticsCollection: vscode.DiagnosticCollection) {
   if (!url) {
     return;

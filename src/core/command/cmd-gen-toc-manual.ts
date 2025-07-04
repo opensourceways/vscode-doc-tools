@@ -5,8 +5,15 @@ import yaml from 'js-yaml';
 
 import type { TocItem } from '@/@types/toc';
 import { getFileContent, getYamlContent } from '@/utils/file';
-import { getTitle } from '@/utils/markdwon';
+import { getMarkdownTitle } from '@/utils/markdwon';
 
+/**
+ * 获取已经加入 toc item 的 markdown 路径
+ * @param {TocItem[]} sections toc item数组
+ * @param {string} dirPath 目标路径
+ * @param {Map<string, TocItem>} map 已收集的map，首次调用无需传递，用于递归收集传参
+ * @returns {Map<string, TocItem>} 已收集的map
+ */
 function checkAndGetHrefMap(sections: TocItem[], dirPath: string, map = new Map<string, TocItem>()) {
   for (let i = sections.length - 1; i >= 0; i--) {
     const item = sections[i];
@@ -31,9 +38,14 @@ function checkAndGetHrefMap(sections: TocItem[], dirPath: string, map = new Map<
   return map;
 }
 
+/**
+ * 获取 toc item
+ * @param {string} dirPath 目标路径
+ * @returns {TocItem} 返回 toc item
+ */
 function getManualToc(dirPath: string) {
   // 获取原本的_toc.yaml
-  const toc = getYamlContent(path.join(dirPath, '_toc.yaml')) as TocItem;
+  const toc = getYamlContent<TocItem>(path.join(dirPath, '_toc.yaml'));
   toc.isManual = true;
   if (!toc.label) {
     toc.label = '';
@@ -63,7 +75,7 @@ function getManualToc(dirPath: string) {
       }
 
       // 跳过没有标题的md
-      const title = getTitle(getFileContent(completedPath));
+      const title = getMarkdownTitle(getFileContent(completedPath));
       if (!title) {
         vscode.window.showWarningMessage(`标题不存在：${name}`);
         return;
@@ -93,6 +105,11 @@ function getManualToc(dirPath: string) {
   return toc;
 }
 
+/**
+ * 生成指南 _toc.yaml
+ * @param {vscode.Uri} uri 目标目录 uri
+ * @returns 
+ */
 export async function genTocManual(uri: vscode.Uri) {
   const dirPath = uri.fsPath.replace(/\\/g, '/');
 

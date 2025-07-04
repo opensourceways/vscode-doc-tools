@@ -3,8 +3,9 @@ import path from 'path';
 
 /**
  * 创建 fetch 请求
- * @param url 请求地址
- * @param opts 配置项参数
+ * @param {string} url 请求地址
+ * @param {number} opts.timeout 超时时间，单位ms，默认 10 * 1000 ms，可空
+ * @param {AbortController} opts.controller 控制器，可空
  * @returns {Promise<Response>} 返回请求结果
  */
 export function createHeadRequest(
@@ -42,7 +43,7 @@ export function isPrivateIP(ip: string) {
 /**
  * 判断链接是否可访问
  * @param {string} link 链接地址
- * @param {string} prefixPath 文件前缀地址
+ * @param {string} prefixPath 文件前缀地址，可空
  * @returns {Promise<boolean>} 返回判断结果
  */
 export function isAccessibleLink(link: string, prefixPath = '', whitelist: string[] = []) {

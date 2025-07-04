@@ -12,7 +12,7 @@ const diagnosticsCollection = vscode.languages.createDiagnosticCollection('doc-t
 
 /**
  * 注册事件
- * @param context 上下文对象
+ * @param {vscode.ExtensionContext} context 上下文对象
  */
 function registerEvent(context: vscode.ExtensionContext) {
   // 监听文件打开
@@ -39,7 +39,7 @@ function registerEvent(context: vscode.ExtensionContext) {
 
 /**
  * 注册命令
- * @param context 上下文对象
+ * @param {vscode.ExtensionContext} context 上下文对象
  */
 function registerCommand(context: vscode.ExtensionContext) {
   // 注册 运行Markdown检查 命令
@@ -73,7 +73,7 @@ function registerCommand(context: vscode.ExtensionContext) {
 
 /**
  * 注册code action
- * @param context 上下文对象
+ * @param {vscode.ExtensionContext} context 上下文对象
  */
 function registerCodeAction(context: vscode.ExtensionContext) {
   // 注册 code action 菜单
@@ -88,7 +88,7 @@ function registerCodeAction(context: vscode.ExtensionContext) {
 
 /**
  * 激活插件
- * @param context 上下文对象
+ * @param {vscode.ExtensionContext} context 上下文对象
  */
 export function activate(context: vscode.ExtensionContext) {
   // 首次激活后检查

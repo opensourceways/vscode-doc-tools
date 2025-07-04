@@ -5,7 +5,12 @@ import { type Configuration, LintResults } from 'markdownlint';
 import mdLintConfig from '@/config/markdownlint';
 import { isConfigEnabled } from '@/utils/common';
 
-const parseLintResult = (result: LintResults): vscode.Diagnostic[] => {
+/**
+ * 转换 markdownlint 执行结果
+ * @param {LintResults} result markdownlint 执行结果
+ * @returns {vscode.Diagnostic[]} 返回错误 Diagnostic 提示数组
+ */
+function parseLintResult(result: LintResults) {
   const diagnostics: vscode.Diagnostic[] = [];
 
   // 遍历每个文件的结果
@@ -32,6 +37,11 @@ const parseLintResult = (result: LintResults): vscode.Diagnostic[] => {
   return diagnostics;
 };
 
+/**
+ * 执行 markdownlint
+ * @param {vscode.TextDocument} document 文档对象
+ * @returns {vscode.Diagnostic[]} 返回错误 Diagnostic 提示数组
+ */
 export function lintMarkdown(document: vscode.TextDocument) {
   if (!isConfigEnabled('docTools.markdownlint')) {
     return Promise.resolve([]);
