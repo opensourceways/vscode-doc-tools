@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { spellCheckDocument } from 'cspell-lib';
 
-import ignoreWords from '@/config/ignore-words';
+import defaultWhitelistWords from '@/config/whitelist-words';
 import { isConfigEnabled } from '@/utils/common';
 
 const wordsMap = new Map<string, string[]>();
@@ -26,7 +26,7 @@ export async function checkCodespell(document: vscode.TextDocument) {
     },
     {
       allowCompoundWords: true,
-      words: Array.isArray(whiteList) ? [...whiteList, ...ignoreWords] : ignoreWords,
+      words: Array.isArray(whiteList) ? [...whiteList, ...defaultWhitelistWords] : defaultWhitelistWords,
       suggestionsTimeout: 2000,
       ignoreRegExpList: [
         '/\\[.*?\\]\\(.*?\\)/g', // 匹配Markdown链接语法：[文本](URL)
@@ -78,10 +78,10 @@ export function getCodespellActions(document: vscode.TextDocument, context: vsco
       actions.push(action);
     });
 
-    const whiteListAction = new vscode.CodeAction('加入白名单', vscode.CodeActionKind.QuickFix);
+    const whiteListAction = new vscode.CodeAction('添加单词白名单', vscode.CodeActionKind.QuickFix);
     whiteListAction.command = {
       command: 'doc.tools.codespell.add.whitelist',
-      title: '加入白名单',
+      title: '添加单词白名单',
       arguments: [item.code],
     };
     actions.push(whiteListAction);
