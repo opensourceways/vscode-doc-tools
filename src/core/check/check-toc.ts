@@ -1,11 +1,20 @@
 import * as vscode from 'vscode';
+import path from 'path';
 import yaml from 'js-yaml';
 
 import { TocItem } from '@/@types/toc.js';
-import { isConfigEnabled, isValidLink } from '@/utils/common';
+import { isConfigEnabled } from '@/utils/common';
+import { isAccessibleLink } from '@/utils/request';
 
-const ALLOWED_KEYS = ['label', 'isManual', 'sections', 'href', 'upstream', 'path'];
+const ALLOWED_KEYS = ['label', 'description', 'isManual', 'sections', 'href', 'upstream', 'path'];
 
+/**
+ * 收集错误提示
+ * @param {vscode.TextDocument} document 文档对象
+ * @param {string} text 错误文本
+ * @param {string} message 提示消息
+ * @returns {vscode.Diagnostic[]} 返回错误 Diagnostic 提示数组
+ */
 function collectInvalidDiagnostics(document: vscode.TextDocument, text: string, message: string) {
   const diagnostics: vscode.Diagnostic[] = [];
   for (const match of document.getText().matchAll(new RegExp(text, 'g'))) {
@@ -23,6 +32,13 @@ function collectInvalidDiagnostics(document: vscode.TextDocument, text: string, 
   return diagnostics;
 }
 
+/**
+ * 遍历收集 toc 错误
+ * @param {TocItem} item toc item
+ * @param {vscode.TextDocument} document 文档对象
+ * @param {vscode.Diagnostic[]} diagnostics 已收集的错误提示
+ * @param {Set<string>} handled 已处理的错误，首次调用无需传递，用于递归收集传参
+ */
 async function walkToc(item: TocItem, document: vscode.TextDocument, diagnostics: vscode.Diagnostic[], handled = new Set<string>()) {
   // 检查 key
   for (const key of Object.keys(item)) {
@@ -42,7 +58,7 @@ async function walkToc(item: TocItem, document: vscode.TextDocument, diagnostics
   if (item.href) {
     const url = typeof item.href === 'string' ? item.href : item.href.upstream;
     if (url && !handled.has(`href:\\s+${url}`)) {
-      const valid = await isValidLink(url, document);
+      const valid = await isAccessibleLink(url, path.dirname(document.uri.fsPath));
       if (!valid) {
         diagnostics.push(...collectInvalidDiagnostics(document, `href:\\s+${url}`, `Non-existent doc in toc: ${url}.`));
       }
@@ -59,6 +75,11 @@ async function walkToc(item: TocItem, document: vscode.TextDocument, diagnostics
   }
 }
 
+/**
+ * 检查 _toc.yaml
+ * @param {vscode.TextDocument} document 文档对象
+ * @returns {vscode.Diagnostic[]} 返回错误 Diagnostic 提示数组
+ */
 export async function checkToc(document: vscode.TextDocument) {
   const diagnostics: vscode.Diagnostic[] = [];
   if (!isConfigEnabled('docTools.check.toc')) {

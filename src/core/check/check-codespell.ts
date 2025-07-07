@@ -1,22 +1,28 @@
 import * as vscode from 'vscode';
 import { spellCheckDocument } from 'cspell-lib';
 
-import ignoreWords from '@/config/ignore-words';
+import defaultWhitelistWords from '@/config/whitelist-words';
 import { isConfigEnabled } from '@/utils/common';
 
+// 错误单词提示记录
 const wordsMap = new Map<string, string[]>();
 
-export async function checkCodespell(document: vscode.TextDocument) {
+/**
+ * codespell 检查
+ * @param {string} content markdown 内容
+ * @param {vscode.TextDocument} document 文档对象
+ * @returns {vscode.Diagnostic[]} 返回错误 Diagnostic 提示数组
+ */
+export async function checkCodespell(content: string, document: vscode.TextDocument) {
   if (!isConfigEnabled('docTools.check.codespell')) {
     return [];
   }
 
-  const text = document.getText();
   const whiteList = vscode.workspace.getConfiguration('docTools.check.codespell').get<string[]>('whiteList', []);
   const result = await spellCheckDocument(
     {
       uri: 'text.txt',
-      text,
+      text: content,
       languageId: 'markdown',
       locale: 'en, en-US',
     },
@@ -26,12 +32,11 @@ export async function checkCodespell(document: vscode.TextDocument) {
     },
     {
       allowCompoundWords: true,
-      words: Array.isArray(whiteList) ? [...whiteList, ...ignoreWords] : ignoreWords,
+      words: Array.isArray(whiteList) ? [...whiteList, ...defaultWhitelistWords] : defaultWhitelistWords,
       suggestionsTimeout: 2000,
       ignoreRegExpList: [
         '/\\[.*?\\]\\(.*?\\)/g', // 匹配Markdown链接语法：[文本](URL)
         '/<[^>]*?>/g',  // 匹配HTML标签：<tag>content</tag> 或 <tag/>
-        '```[\\s\\S]*?```|`[^`]*`', // 匹配代码块和行内代码
         '[\\u4e00-\\u9fa5]',  // 匹配中文字符
       ],
     }
@@ -55,7 +60,13 @@ export async function checkCodespell(document: vscode.TextDocument) {
   return diagnostics;
 }
 
-export function getCodespellActions(document: vscode.TextDocument, context: vscode.CodeActionContext) {
+/**
+ * 获取 codespell 可执行的 action
+ * @param {vscode.CodeActionContext} context code action 上下文
+ * @param {vscode.TextDocument} document 文档对象
+ * @returns {vscode.CodeAction[]} 返回可以执行的 action
+ */
+export function getCodespellCodeActions(context: vscode.CodeActionContext, document: vscode.TextDocument) {
   const actions: vscode.CodeAction[] = [];
   if (!isConfigEnabled('docTools.check.codespell')) {
     return actions;
@@ -78,10 +89,10 @@ export function getCodespellActions(document: vscode.TextDocument, context: vsco
       actions.push(action);
     });
 
-    const whiteListAction = new vscode.CodeAction('加入白名单', vscode.CodeActionKind.QuickFix);
+    const whiteListAction = new vscode.CodeAction('添加单词白名单', vscode.CodeActionKind.QuickFix);
     whiteListAction.command = {
       command: 'doc.tools.codespell.add.whitelist',
-      title: '加入白名单',
+      title: '添加单词白名单',
       arguments: [item.code],
     };
     actions.push(whiteListAction);
