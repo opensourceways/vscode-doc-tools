@@ -45,3 +45,15 @@ All notable changes to the "docs-tools" extension will be documented in this fil
 
 - 优化 HTML 标签闭合检查
 - 优化目录文件检查
+
+## [0.0.6]
+
+### Feat
+
+- 链接检查/资源有效性检查增加白名单功能，用户可以将链接加入白名单
+- toc 检查增加对 key 的有效性检查
+
+### Fix
+
+- 优化 HTML 标签闭合检查
+- 优化链接检查/资源有效性检查
