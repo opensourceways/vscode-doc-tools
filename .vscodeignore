@@ -3,7 +3,6 @@
 out/**
 node_modules/**
 !node_modules/@cspell/**
-src/**
 .gitignore
 .yarnrc
 webpack.config.js
@@ -13,3 +12,4 @@ vsc-extension-quickstart.md
 **/*.map
 **/*.ts
 **/.vscode-test.*
+packages
