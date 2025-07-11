@@ -24,13 +24,13 @@
 - `docTools.scope`
   - 类型：`boolean`
   - 说明：是否检查范围仅限于 `docs/zh` 和 `docs/en` 目录
-  - 默认：`true`
+  - 默认：`false`
 
 #### 全局配置示例
 
 ```json
 {
-  "docTools.scope": true // 启用检查范围仅限于 docs/zh 和 docs/en 目录
+  "docTools.scope": false // 启用检查范围仅限于 docs/zh 和 docs/en 目录，默认检查项目全局文档
 }
 ```
 
