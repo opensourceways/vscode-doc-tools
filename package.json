@@ -60,7 +60,7 @@
       "properties": {
         "docTools.scope.enable": {
           "type": "boolean",
-          "default": true,
+          "default": false,
           "description": "启用检查范围仅限于 docs/zh 和 docs/en 目录"
         },
         "docTools.markdownlint.enable": {
