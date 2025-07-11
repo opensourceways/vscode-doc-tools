@@ -1,0 +1,6 @@
+.o-tag {
+  border-radius: var(--layout-pkg-radius);
+  &.o-tag-small {
+    --tag-padding: 0 4px;
+  }
+}

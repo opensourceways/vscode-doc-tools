@@ -1,0 +1,46 @@
+@use '../mixin/screen.scss' as *;
+
+.o-btn {
+  --btn-radius: var(--btn-height);
+}
+
+.o-btn-outline.o-btn-normal {
+  --btn-color: var(--o-color-info1);
+  --btn-color-hover: var(--o-color-info1-inverse);
+  --btn-color-active: var(--o-color-info1-inverse);
+
+  --btn-bd-color: var(--o-color-info1);
+  --btn-bd-color-hover: rgba(var(--o-mixedgray-14));
+  --btn-bd-color-active: rgba(var(--o-mixedgray-13));
+
+  --btn-bg-color-hover: rgba(var(--o-mixedgray-14));
+  --btn-bg-color-active: rgba(var(--o-mixedgray-13));
+
+  @include hover {
+    background-color: var(--btn-bg-color-hover);
+  }
+
+  &:active {
+    background-color: var(--btn-bg-color-active);
+  }
+}
+
+.o-btn-outline.o-btn-primary:not(.o-btn-disabled) {
+  --btn-color: var(--o-color-primary1);
+  --btn-color-hover: var(--o-color-white);
+  --btn-color-active: var(--o-color-white);
+
+  --btn-bd-color-hover: var(--o-color-primary1);
+  --btn-bd-color-active: var(--o-color-primary3);
+
+  --btn-bg-color-hover: var(--o-color-primary1);
+  --btn-bg-color-active: var(--o-color-primary3);
+
+  @include hover {
+    background-color: var(--btn-bg-color-hover);
+  }
+
+  &:active {
+    background-color: var(--btn-bg-color-active);
+  }
+}

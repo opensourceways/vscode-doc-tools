@@ -6,7 +6,7 @@
     {
       "label": "watch",
       "dependsOn": [
-        "npm: dev:extension"
+        "npm: dev:ext"
       ],
       "presentation": {
         "reveal": "never"
@@ -18,11 +18,11 @@
     },
     {
       "type": "npm",
-      "script": "dev:extension",
+      "script": "dev:ext",
       "group": "build",
       "problemMatcher": "$esbuild-watch",
       "isBackground": true,
-      "label": "npm: dev:extension",
+      "label": "npm: dev:ext",
       "presentation": {
         "group": "watch",
         "reveal": "never"

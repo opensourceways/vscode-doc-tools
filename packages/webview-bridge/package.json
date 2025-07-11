@@ -1,0 +1,12 @@
+{
+  "name": "webview-bridge",
+  "version": "0.0.1",
+  "author": "cctvcat",
+  "license": "MIT",
+  "main": "src/index.ts",
+  "browser": "src/client.ts",
+  "dependencies": {
+    "js-yaml": "^4.1.0",
+    "markdown": "*"
+  }
+}

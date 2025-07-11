@@ -1,0 +1,19 @@
+@use '../mixin/screen.scss' as *;
+
+.o-link {
+  --link-underline-color: var(--link-color-hover);
+}
+
+.o-link:active {
+  --link-underline-color: var(--link-color-active);
+}
+
+.o-link.o-link-hover-underline .o-link-label {
+  background: linear-gradient(0deg, var(--link-underline-color), var(--link-underline-color)) no-repeat var(--link-underline-x) bottom;
+  background-size: 0 1px;
+
+  @include hover {
+    background-size: var(--link-underline-x) 1px;
+    background-position-x: left;
+  }
+}

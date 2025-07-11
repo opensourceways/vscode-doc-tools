@@ -6,6 +6,7 @@ import { genTocManual } from '@/core/command/cmd-gen-toc-manual';
 import { checkMarkdown } from '@/core/command/cmd-check-markdown';
 import { addCodespellWhitelist } from '@/core/command/cmd-add-codespell-whitlist';
 import { addUrlWhitelist } from '@/core/command/cmd-add-url-whilelist';
+import { previewMarkdown } from './core/command/cmd-preview-markdown';
 
 // 用于存储错误信息
 const diagnosticsCollection = vscode.languages.createDiagnosticCollection('doc-tools');
@@ -67,6 +68,13 @@ function registerCommand(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.commands.registerCommand('doc.tools.url.add.whitelist', (url: string) => {
       addUrlWhitelist(url, diagnosticsCollection);
+    })
+  );
+
+  // 预览 markdown 命令
+  context.subscriptions.push(
+    vscode.commands.registerCommand('doc.tools.preview.markdown', (uri: vscode.Uri) => {
+      previewMarkdown(context, uri)
     })
   );
 }
