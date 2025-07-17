@@ -1,0 +1,15 @@
+@use '../mixin/screen.scss' as *;
+
+.o-textarea {
+  height: 126px;
+
+  @include respond-to('<=pad') {
+    height: 116px;
+  }
+}
+
+.o_textarea-textarea {
+  &::-webkit-input-placeholder {
+    color: var(--o-color-info4);
+  }
+}

@@ -5,7 +5,6 @@ node_modules/**
 !node_modules/@cspell/**
 .gitignore
 .yarnrc
-webpack.config.js
 vsc-extension-quickstart.md
 **/tsconfig.json
 **/eslint.config.mjs

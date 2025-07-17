@@ -6,7 +6,9 @@
   "icon": "icon.png",
   "version": "0.0.6",
   "private": true,
-  "workspaces": ["packages/*"],
+  "workspaces": [
+    "packages/*"
+  ],
   "engines": {
     "vscode": "^1.75.0"
   },
@@ -45,6 +47,14 @@
       {
         "command": "doc.tools.url.add.whitelist",
         "title": "Doc Tools：添加链接白名单"
+      },
+      {
+        "command": "doc.tools.preview.markdown",
+        "title": "Doc Tools：预览 markdown",
+        "icon": {
+          "light": "resources/icon-preview-light.svg",
+          "dark": "resources/icon-preview-dark.svg"
+        }
       }
     ],
     "menus": {
@@ -53,6 +63,13 @@
           "command": "doc.tools.gen.toc.manual",
           "when": "explorerResourceIsFolder",
           "group": "doc.tools.toc"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "doc.tools.preview.markdown",
+          "when": "resourceLangId == markdown",
+          "group": "navigation"
         }
       ]
     },
@@ -114,8 +131,10 @@
     }
   },
   "scripts": {
-    "dev:extension": "yarn workspace extension watch:esbuild",
-    "build:extension": "yarn workspace extension package"
+    "dev:webview": "yarn workspace webview dev",
+    "build:webview": "yarn workspace webview build",
+    "dev:ext": "yarn workspace extension watch:esbuild",
+    "build:ext": "yarn workspace extension package",
+    "build": "yarn build:ext && yarn build:webview && vsce package"
   }
 }
-

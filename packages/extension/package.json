@@ -17,6 +17,7 @@
     "test": "vscode-test"
   },
   "dependencies": {
+    "webview-bridge": "*",
     "cspell-lib": "^9.1.2",
     "js-yaml": "^4.1.0",
     "markdownlint": "^0.38.0"

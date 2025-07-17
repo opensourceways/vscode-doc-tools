@@ -35,3 +35,5 @@ npmcachae
 out
 .vscode-test/
 *.vsix
+
+tsconfig.tsbuildinfo

@@ -1,0 +1,16 @@
+.o-popup {
+  --popup-shadow: var(--o-shadow-2);
+  .o-popup-body {
+    border-radius: var(--popup-radius);
+  }
+  .global-feedback-popup {
+    border: none;
+
+    textarea::placeholder {
+      color: var(--o-color-info4);
+    }
+  }
+  .o-popup-anchor {
+    z-index: 2;
+  }
+}
