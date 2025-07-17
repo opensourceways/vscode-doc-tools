@@ -38,7 +38,7 @@
 
 基于 `markdownlint` 实现，帮助用户规范 Markdown 文档格式。
 
-![Markdown Lint](src/assets/gif/lint-markdown.gif)
+![Markdown Lint](resources/gif/lint-markdown.gif)
 
 #### 功能介绍
 
@@ -86,7 +86,7 @@
 
 检查 Markdown 文件中的 HTML 标签是否正确闭合，帮助用户避免因标签未闭合导致的渲染或语法错误。
 
-![tag closed check](src/assets/gif/check-tag-closed.gif)
+![tag closed check](resources/gif/check-tag-closed.gif)
 
 #### 功能介绍
 
@@ -126,7 +126,7 @@
 
 该插件用于在 VSCode 中检查 Markdown 文档中的链接有效性，帮助用户及时发现失效或错误的链接，提升文档质量。
 
-![Link Validity Check](src/assets/gif/check-link-validity.gif)
+![Link Validity Check](resources/gif/check-link-validity.gif)
 
 #### 功能介绍
 

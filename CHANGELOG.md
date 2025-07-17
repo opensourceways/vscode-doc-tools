@@ -58,3 +58,9 @@ All notable changes to the "docs-tools" extension will be documented in this fil
 - 优化 HTML 标签闭合检查
 - 优化链接检查/资源有效性检查
 - `docTools.scope`默认设置为`false`，即默认检查项目全局文档
+
+## [0.0.7]
+
+### Feat
+
+- 新增 markdown 预览功能
