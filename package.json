@@ -4,7 +4,7 @@
   "description": "tools for markdown docs",
   "publisher": "gzbang",
   "icon": "icon.png",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "private": true,
   "workspaces": [
     "packages/*"
