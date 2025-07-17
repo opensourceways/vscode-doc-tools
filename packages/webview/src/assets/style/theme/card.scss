@@ -1,0 +1,17 @@
+@use '../mixin/common.scss' as *;
+.o-card {
+  --card-cover-radius: var(--o-radius-xs);
+  --card-radius: var(--o-radius-xs);
+}
+.o-card-cover-h {
+  --card-cover-padding: 0;
+}
+a.o-card:hover .o-card-title {
+  color: var(--o-color-primary1);
+}
+
+@include in-dark {
+  .o-figure img {
+    @include img-in-dark;
+  }
+}

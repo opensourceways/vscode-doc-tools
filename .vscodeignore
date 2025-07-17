@@ -3,13 +3,12 @@
 out/**
 node_modules/**
 !node_modules/@cspell/**
-src/**
 .gitignore
 .yarnrc
-webpack.config.js
 vsc-extension-quickstart.md
 **/tsconfig.json
 **/eslint.config.mjs
 **/*.map
 **/*.ts
 **/.vscode-test.*
+packages

@@ -1,0 +1,26 @@
+<html>
+
+<head>
+  <base href="${baseHref}">
+  <style>
+    iframe {
+      width: 100%;
+      border: none;
+      height: 100vh;
+    }
+
+    body {
+      overflow: hidden;
+    }
+  </style>
+</head>
+
+<body style="padding: 0;">
+  <iframe id="dev" src="${iframeSrc}" frameborder="0"
+    sandbox="allow-same-origin allow-pointer-lock allow-scripts allow-downloads allow-forms allow-popups"
+    allow="clipboard-read; clipboard-write;"></iframe>
+
+  <script src="dev.js"></script>
+</body>
+
+</html>

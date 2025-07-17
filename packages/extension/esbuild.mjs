@@ -1,7 +1,20 @@
 import esbuild from 'esbuild';
+import fs from 'fs';
 
 const production = process.argv.includes('--production');
 const watch = process.argv.includes('--watch');
+
+function cleanCache() {
+  if (fs.existsSync('../../dist/')) {
+    fs.rmSync('../../dist/', { recursive: true, force: true, retryDelay: 300 });
+  }
+
+  fs.readdirSync('../../').forEach(name => {
+    if (name.endsWith('.vsix')) {
+      fs.rmSync(`../../${name}`, { force: true, retryDelay: 300 });
+    }
+  })
+}
 
 /**
  * @type {import('esbuild').Plugin}
@@ -24,6 +37,8 @@ const esbuildProblemMatcherPlugin = {
 };
 
 async function main() {
+  cleanCache();
+
   const ctx = await esbuild.context({
     entryPoints: ['src/extension.ts'],
     bundle: true,
@@ -32,7 +47,7 @@ async function main() {
     sourcemap: !production,
     sourcesContent: false,
     platform: 'node',
-    outfile: 'dist/extension.js',
+    outfile: '../../dist/extension.js',
     external: ['vscode'],
     logLevel: 'silent',
     plugins: [

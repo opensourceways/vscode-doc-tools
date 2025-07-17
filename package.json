@@ -5,6 +5,10 @@
   "publisher": "gzbang",
   "icon": "icon.png",
   "version": "0.0.6",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
   "engines": {
     "vscode": "^1.75.0"
   },
@@ -43,6 +47,14 @@
       {
         "command": "doc.tools.url.add.whitelist",
         "title": "Doc Tools：添加链接白名单"
+      },
+      {
+        "command": "doc.tools.preview.markdown",
+        "title": "Doc Tools：预览 markdown",
+        "icon": {
+          "light": "resources/icon-preview-light.svg",
+          "dark": "resources/icon-preview-dark.svg"
+        }
       }
     ],
     "menus": {
@@ -51,6 +63,13 @@
           "command": "doc.tools.gen.toc.manual",
           "when": "explorerResourceIsFolder",
           "group": "doc.tools.toc"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "doc.tools.preview.markdown",
+          "when": "resourceLangId == markdown",
+          "group": "navigation"
         }
       ]
     },
@@ -112,37 +131,10 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "yarn run package",
-    "compile": "node esbuild.mjs",
-    "watch": "npm-run-all -p watch:*",
-    "watch:esbuild": "node esbuild.mjs --watch",
-    "watch:tsc": "tsc --noEmit --watch --project tsconfig.json",
-    "package": "node esbuild.mjs --production",
-    "compile-tests": "tsc -p . --outDir out",
-    "watch-tests": "tsc -p . -w --outDir out",
-    "pretest": "yarn run compile-tests && yarn run compile && yarn run lint",
-    "check-types": "tsc --noEmit",
-    "lint": "eslint src",
-    "test": "vscode-test"
-  },
-  "dependencies": {
-    "cspell-lib": "^9.1.2",
-    "js-yaml": "^4.1.0",
-    "markdownlint": "^0.38.0"
-  },
-  "devDependencies": {
-    "@types/js-yaml": "^4.0.9",
-    "@types/mocha": "^10.0.10",
-    "@types/node": "^24.0.1",
-    "@types/vscode": "^1.75.0",
-    "@typescript-eslint/eslint-plugin": "^8.31.1",
-    "@typescript-eslint/parser": "^8.31.1",
-    "@vscode/test-cli": "^0.0.10",
-    "@vscode/test-electron": "^2.5.2",
-    "esbuild": "^0.25.3",
-    "eslint": "^9.25.1",
-    "npm-run-all": "^4.1.5",
-    "typescript": "^5.8.3"
+    "dev:webview": "yarn workspace webview dev",
+    "build:webview": "yarn workspace webview build",
+    "dev:ext": "yarn workspace extension watch:esbuild",
+    "build:ext": "yarn workspace extension package",
+    "build": "yarn build:ext && yarn build:webview && vsce package"
   }
 }
-

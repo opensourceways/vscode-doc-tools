@@ -1,0 +1,34 @@
+{
+  "name": "webview",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@opensig/opendesign": "0.0.68",
+    "@vue/compiler-dom": "^3.5.17",
+    "@vueuse/core": "^13.5.0",
+    "clipboard": "^2.0.11",
+    "github-markdown-css": "5.8.1",
+    "highlight.js": "11.11.1",
+    "markdown-it": "14.1.0",
+    "unplugin-icons": "^22.1.0",
+    "vue": "3.5.13",
+    "vue-i18n": "^11.1.9",
+    "vue-router": "4.5.1",
+    "webview-bridge": "*"
+  },
+  "devDependencies": {
+    "@types/markdown-it": "14.1.2",
+    "@vitejs/plugin-vue": "5.2.3",
+    "@vue/tsconfig": "0.7.0",
+    "sass": "1.62.0",
+    "typescript": "5.8.3",
+    "vite": "6.3.5",
+    "vue-tsc": "2.2.8"
+  }
+}
