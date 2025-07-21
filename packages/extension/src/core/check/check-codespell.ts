@@ -51,7 +51,7 @@ export async function checkCodespell(content: string, document: vscode.TextDocum
     const start = document.positionAt(issue.offset);
     const end = document.positionAt(issue.offset + issue.text.length);
     const range = new vscode.Range(start, end);
-    const diagnostic = new vscode.Diagnostic(range, `CodeSpell warning: ${issue.text}`, vscode.DiagnosticSeverity.Information);
+    const diagnostic = new vscode.Diagnostic(range, `单词拼写错误 (CodeSpell warning): ${issue.text}`, vscode.DiagnosticSeverity.Information);
     diagnostic.source = 'codespell-check';
     diagnostic.code = issue.text;
     diagnostics.push(diagnostic);

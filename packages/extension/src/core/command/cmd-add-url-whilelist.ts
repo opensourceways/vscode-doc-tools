@@ -24,7 +24,7 @@ export async function addUrlWhitelist(url: string, diagnosticsCollection: vscode
         return true;
       }
 
-      return item.message.replace('Invalid link: ', '').replace('Non-existent resource: ', '') !== url;
+      return item.message.split(': ')[1] !== url;
     });
 
     if (filterDiagnostics.length !== diagnostics.length) {

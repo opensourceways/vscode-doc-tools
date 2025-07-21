@@ -43,14 +43,14 @@ async function walkToc(item: TocItem, document: vscode.TextDocument, diagnostics
   // 检查 key
   for (const key of Object.keys(item)) {
     if (!ALLOWED_KEYS.includes(key) && !handled.has(`${key}:`)) {
-      diagnostics.push(...collectInvalidDiagnostics(document, `${key}:`, `Not allowed key: ${key}.`));
+      diagnostics.push(...collectInvalidDiagnostics(document, `${key}:`, `_toc.yaml 不允许该 key 值 (Not allowed key): ${key}.`));
       handled.add(`${key}:`);
     }
   }
 
   // 检查isManual，只能为 true 或 false
   if (item.isManual && typeof item.isManual !== 'boolean' && !handled.has(`isManual:\\s+${item.isManual}`)) {
-    diagnostics.push(...collectInvalidDiagnostics(document, `isManual:\\s+${item.isManual}`, `Not allowed value: ${item.isManual}. The value of isManual can only be true or false.`));
+    diagnostics.push(...collectInvalidDiagnostics(document, `isManual:\\s+${item.isManual}`, `isManual 只能为 true 或 false (Not allowed value: ${item.isManual}. The value of isManual can only be true or false.)`));
     handled.add(`isManual:\\s+${item.isManual}`);
   }
 
@@ -60,7 +60,7 @@ async function walkToc(item: TocItem, document: vscode.TextDocument, diagnostics
     if (url && !handled.has(`href:\\s+${url}`)) {
       const valid = await isAccessibleLink(url, path.dirname(document.uri.fsPath));
       if (!valid) {
-        diagnostics.push(...collectInvalidDiagnostics(document, `href:\\s+${url}`, `Non-existent doc in toc: ${url}.`));
+        diagnostics.push(...collectInvalidDiagnostics(document, `href:\\s+${url}`, `文档资源不存在 (Non-existent doc in toc): ${url}.`));
       }
 
       handled.add(`href:\\s+${url}`);

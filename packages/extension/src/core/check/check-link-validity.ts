@@ -65,14 +65,22 @@ export async function checkLinkValidity(content: string, document: vscode.TextDo
       item.link = item.link.split('#')[0];
     }
 
-    if (await isAccessibleLink(item.link, path.dirname(document.uri.fsPath), allWhiteList)) {
+    const result = await isAccessibleLink(item.link, path.dirname(document.uri.fsPath), allWhiteList);
+    if (result !== 'notFound') {
       continue;
     }
 
     const range = new vscode.Range(document.positionAt(item.startPos), document.positionAt(item.endPos));
-    const diagnostic = new vscode.Diagnostic(range, `Invalid link: ${item.link}`, vscode.DiagnosticSeverity.Warning);
-    diagnostic.source = 'link-validity-check';
-    diagnostics.push(diagnostic);
+
+    if (result === 'notFound') {
+      const diagnostic = new vscode.Diagnostic(range, `链接无法访问 (Invalid link): ${item.link}`, vscode.DiagnosticSeverity.Error);
+      diagnostic.source = 'link-validity-check';
+      diagnostics.push(diagnostic);
+    } else {
+      const diagnostic = new vscode.Diagnostic(range, `访问超时 (Invalid link): ${item.link}`, vscode.DiagnosticSeverity.Warning);
+      diagnostic.source = 'link-validity-check';
+      diagnostics.push(diagnostic);
+    }
   }
 
   return diagnostics;
@@ -94,7 +102,7 @@ export function getLinkValidityCodeActions(context: vscode.CodeActionContext) {
       return;
     }
 
-    const link = item.message.replace('Invalid link: ', '');
+    const link = item.message.split(': ')[1];
     if (!link.startsWith('http')) {
       return;
     }

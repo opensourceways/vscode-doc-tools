@@ -88,7 +88,7 @@ export async function checkTagClosed(content: string, document: vscode.TextDocum
 
     if (!tagMacthed) {
       const range = new vscode.Range(document.positionAt(match.index), document.positionAt(match.index + match[0].length));
-      const diagnostic = new vscode.Diagnostic(range, `Unclosed html tag: <${tag}>.`, vscode.DiagnosticSeverity.Error);
+      const diagnostic = new vscode.Diagnostic(range, `未闭合的 html 标签 (Unclosed html tag): <${tag}>.`, vscode.DiagnosticSeverity.Error);
       diagnostic.source = 'tag-closed-check';
       diagnostic.code = match[0];
       diagnostics.push(diagnostic);
@@ -99,7 +99,7 @@ export async function checkTagClosed(content: string, document: vscode.TextDocum
   while (record.length > 0) {
     const { tag, match } = record.pop()!;
     const range = new vscode.Range(document.positionAt(match.index), document.positionAt(match.index + match[0].length));
-    const diagnostic = new vscode.Diagnostic(range, `Unclosed html tag: <${tag}>.`, vscode.DiagnosticSeverity.Error);
+    const diagnostic = new vscode.Diagnostic(range, `未闭合的 html 标签 (Unclosed html tag): <${tag}>.`, vscode.DiagnosticSeverity.Error);
     diagnostic.source = 'tag-closed-check';
     diagnostic.code = match[0];
     diagnostics.push(diagnostic);

@@ -23,6 +23,9 @@ export function createHeadRequest(
 
   const response = fetch(url, {
     method: 'HEAD',
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36',
+    },
     signal: controller.signal,
   }).finally(() => {
     clearTimeout(timer);
@@ -44,23 +47,23 @@ export function isPrivateIP(ip: string) {
  * 判断链接是否可访问
  * @param {string} link 链接地址
  * @param {string} prefixPath 文件前缀地址，可空
- * @returns {Promise<boolean>} 返回判断结果
+ * @returns {Promise<'success' | 'notFound' | 'timeout'>} 返回判断结果 success 可访问 notFound 404 timeout 访问超时
  */
 export function isAccessibleLink(link: string, prefixPath = '', whitelist: string[] = []) {
   // localhost跳过
   const noHttpUrl = link.replace('http://', '').replace('https://', '');
   if (noHttpUrl.startsWith('localhost')) {
-    return Promise.resolve(true);
+    return Promise.resolve('success');
   }
 
   // 内网地址跳过
   if (isPrivateIP(noHttpUrl.split(':')?.[0]) || isPrivateIP(noHttpUrl.split('/')?.[0])) {
-    return Promise.resolve(true);
+    return Promise.resolve('success');
   }
 
   // 白名单跳过
-  if (whitelist.some(item => new RegExp(item).test(link))) {
-    return Promise.resolve(true);
+  if (whitelist.some((item) => new RegExp(item).test(link))) {
+    return Promise.resolve('success');
   }
 
   // 链接
@@ -69,21 +72,21 @@ export function isAccessibleLink(link: string, prefixPath = '', whitelist: strin
   }
 
   // 本地文件
-  return Promise.resolve(fs.existsSync(path.join(prefixPath, link)));
+  return Promise.resolve(fs.existsSync(path.join(prefixPath, link)) ? 'success' : 'notFound');
 }
 
 /**
  * 判断 http 链接是否可访问
  * @param {string} url 链接地址
- * @returns {Promise<boolean>} 返回判断结果
+ * @returns {Promise<'success' | 'notFound' | 'timeout'>} 返回判断结果 success 可访问 notFound 页面不存在 timeout 访问超时
  */
 export const isAccessibleHttpLink = (() => {
-  const map = new Map<string, boolean | number>();
+  const map = new Map<string, string | number>();
 
   return async (url: string) => {
     try {
-      if (typeof map.get(url) === 'boolean') {
-        return map.get(url) as boolean;
+      if (typeof map.get(url) === 'string') {
+        return map.get(url) as string;
       }
 
       const res = await createHeadRequest(url, {
@@ -91,13 +94,21 @@ export const isAccessibleHttpLink = (() => {
       });
 
       if (res.status === 200) {
-        map.set(url, true);
-        return true;
+        map.set(url, 'success');
+        return 'success';
+      } else if (res.status === 404) {
+        map.set(url, 'notFound');
+        return 'notFound';
       }
-    } catch {}
+    } catch (err) {
+      if (err instanceof Error && err.name !== 'AbortError') {
+        map.set(url, 'notFound');
+        return 'notFound';
+      }
+    }
 
     let record = map.get(url);
-    if (typeof record === 'boolean') {
+    if (typeof record === 'string') {
       return record;
     }
 
@@ -106,8 +117,8 @@ export const isAccessibleHttpLink = (() => {
     }
 
     record++;
-    map.set(url, record >= 3 ? false : record);
+    map.set(url, record >= 3 ? 'timeout' : record);
 
-    return false;
+    return 'timeout';
   };
 })();

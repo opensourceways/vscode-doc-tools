@@ -56,14 +56,21 @@ export async function checkResourceExistence(content: string, document: vscode.T
   const whiteList = vscode.workspace.getConfiguration('docTools.check.url').get<string[]>('whiteList', []);
   const allWhiteList = Array.isArray(whiteList) ? [...whiteList, ...defaultWhitelistUrls] : defaultWhitelistUrls;
   for (const item of extractLinks(content)) {
-    if (await isAccessibleLink(item.link, path.dirname(document.uri.fsPath), allWhiteList)) {
+    const result = await isAccessibleLink(item.link, path.dirname(document.uri.fsPath), allWhiteList);
+    if (result !== 'notFound') {
       continue;
     }
 
     const range = new vscode.Range(document.positionAt(item.startPos), document.positionAt(item.endPos));
-    const diagnostic = new vscode.Diagnostic(range, `Non-existent resource: ${item.link}`, vscode.DiagnosticSeverity.Warning);
-    diagnostic.source = 'resource-existence-check';
-    diagnostics.push(diagnostic);
+    if (result === 'notFound') {
+      const diagnostic = new vscode.Diagnostic(range, `资源链接无法访问 (Non-existent resource): ${item.link}`, vscode.DiagnosticSeverity.Error);
+      diagnostic.source = 'resource-existence-check';
+      diagnostics.push(diagnostic);
+    } else {
+      const diagnostic = new vscode.Diagnostic(range, `访问超时 (Non-existent resource): ${item.link}`, vscode.DiagnosticSeverity.Warning);
+      diagnostic.source = 'resource-existence-check';
+      diagnostics.push(diagnostic);
+    }
   }
 
   return diagnostics;
@@ -85,7 +92,7 @@ export function getResourceExistenceCodeActions(context: vscode.CodeActionContex
       return;
     }
 
-    const link = item.message.replace('Non-existent resource: ', '');
+    const link = item.message.split(': ')[1];
     if (!link.startsWith('http')) {
       return;
     }
@@ -96,6 +103,7 @@ export function getResourceExistenceCodeActions(context: vscode.CodeActionContex
       title: '添加地址白名单',
       arguments: [link],
     };
+
     actions.push(whiteListAction);
   });
 

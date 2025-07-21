@@ -5,7 +5,7 @@ import yaml from 'js-yaml';
 
 import type { TocItem } from '@/@types/toc';
 import { getFileContent, getYamlContent } from '@/utils/file';
-import { getMarkdownTitle } from '@/utils/markdwon';
+import { getMarkdownTitle } from 'shared';
 
 /**
  * 获取已经加入 toc item 的 markdown 路径

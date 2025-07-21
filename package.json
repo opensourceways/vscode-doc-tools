@@ -55,6 +55,10 @@
           "light": "resources/icon-preview-light.svg",
           "dark": "resources/icon-preview-dark.svg"
         }
+      },
+      {
+        "command": "doc.tools.markdownlint.fix",
+        "title": "Doc Tools：修复 markdown-lint 错误"
       }
     ],
     "menus": {
@@ -126,6 +130,16 @@
           "type": "boolean",
           "default": true,
           "description": "启用 _toc.yaml 检查（包含：1.目录中引用的文件需要存在；2.md 文件是否加入 _toc.yaml）"
+        },
+        "docTools.check.punctuationBlankSpace.enable": {
+          "type": "boolean",
+          "default": false,
+          "description": "启用中文标点符号前后无空格检查（因语句含义复杂，可能存在误报）"
+        },
+        "docTools.check.punctuationMixing.enable": {
+          "type": "boolean",
+          "default": false,
+          "description": "启用中英文标点符号混用检查（因语句含义复杂，可能存在误报）"
         }
       }
     }

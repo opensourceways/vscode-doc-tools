@@ -2107,4 +2107,12 @@ export default [
   'grpcio',
   'absl',
   'gast',
+  'netfilte',
+  'tcmalloc',
+  'ptmalloc',
+  'kmalloc',
+  'vmemmap',
+  'mbytes',
+  'pipefs',
+  'relayfs',
 ];
