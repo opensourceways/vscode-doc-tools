@@ -1,0 +1,7 @@
+{
+  "name": "shared",
+  "version": "0.0.1",
+  "author": "cctvcat",
+  "license": "MIT",
+  "main": "src/index.ts"
+}
