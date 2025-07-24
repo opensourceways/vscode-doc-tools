@@ -12,6 +12,7 @@ export interface DocMenuNodeT {
   upstream: string;
   path: string;
   children: Array<DocMenuNodeT>;
+  nonexistent: boolean;
 }
 
 export class DocMenuTree {
@@ -29,6 +30,7 @@ export class DocMenuTree {
       upstream: '',
       path: '',
       children: [],
+      nonexistent: false,
     };
 
     this.buildTree(this.root, data);
@@ -55,6 +57,7 @@ export class DocMenuTree {
         upstream: info.upstream || '',
         path: info.path || '',
         children: [],
+        nonexistent: info.nonexistent || false,
       };
 
       parent.children.push(node);

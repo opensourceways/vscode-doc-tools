@@ -59,7 +59,7 @@ async function walkToc(item: TocItem, document: vscode.TextDocument, diagnostics
     const url = typeof item.href === 'string' ? item.href : item.href.upstream;
     if (url && !handled.has(`href:\\s+${url}`)) {
       const valid = await isAccessibleLink(url, path.dirname(document.uri.fsPath));
-      if (!valid) {
+      if (valid !== 'success') {
         diagnostics.push(...collectInvalidDiagnostics(document, `href:\\s+${url}`, `文档资源不存在 (Non-existent doc in toc): ${url}.`));
       }
 

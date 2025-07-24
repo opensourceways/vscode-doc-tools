@@ -23,7 +23,7 @@ export default defineConfig({
     outDir: path.resolve(__dirname, '../../dist/webview'),
   },
   esbuild: {
-    drop: ['console', 'debugger'],
+    //drop: ['console', 'debugger'],
   },
   resolve: {
     alias: {

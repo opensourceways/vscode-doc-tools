@@ -172,8 +172,9 @@ const config = computed(() => {
 }
 
 .title-text {
+  @include text-truncate(1);
+
   @include respond-to('phone') {
-    @include text-truncate(1);
     @include text2;
   }
 }

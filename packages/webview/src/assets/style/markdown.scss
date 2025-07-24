@@ -68,7 +68,7 @@ html:not(.dark) code span {
   min-height: auto;
   @include text1;
 
-  & > div *:first-child {
+  &>div *:first-child {
     margin-top: 0 !important;
   }
 
@@ -111,7 +111,7 @@ html:not(.dark) code span {
     margin-top: var(--o-gap-2);
   }
 
-  li + li {
+  li+li {
     margin-top: 0;
   }
 
@@ -288,10 +288,10 @@ html:not(.dark) code span {
       border: 1px solid var(--o-color-control4);
     }
 
-    > *:last-child {
+    >*:last-child {
       margin-bottom: 0;
 
-      > *:last-child {
+      >*:last-child {
         margin-bottom: 0;
       }
     }
@@ -338,6 +338,23 @@ html:not(.dark) code span {
     border-spacing: 0;
     border-radius: var(--table-radius);
 
+    &::-webkit-scrollbar-track {
+      border-radius: 0 0 var(--layout-pkg-radius) var(--layout-pkg-radius);
+      background-color: var(--o-color-fill3);
+    }
+
+    &::-webkit-scrollbar {
+      border-radius: 0 0 var(--layout-pkg-radius) var(--layout-pkg-radius);
+      width: 10px;
+      height: 10px;
+      background-color: var(--o-color-fill1);
+    }
+
+    &::-webkit-scrollbar-thumb {
+      border-radius: 16px;
+      background: var(--o-color-control1);
+    }
+
     @include respond-to('<=laptop') {
       --table-head-cell-padding: 8px 16px;
     }
@@ -380,7 +397,7 @@ html:not(.dark) code span {
       margin-bottom: 0;
     }
 
-    * + * {
+    *+* {
       margin-top: var(--o-gap-2);
     }
 
@@ -481,7 +498,7 @@ html:not(.dark) code span {
       }
     }
 
-    > *:not(.custom-block-title) {
+    >*:not(.custom-block-title) {
       margin-left: 32px;
 
       @include respond-to('laptop') {
@@ -501,7 +518,7 @@ html:not(.dark) code span {
       }
     }
 
-    > *:not(.custom-block-title):last-child {
+    >*:not(.custom-block-title):last-child {
       margin-bottom: 0;
     }
 

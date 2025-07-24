@@ -6,21 +6,23 @@ import { createInvokeMessage } from '../utils/message';
 import { createDocMarkdownRenderer } from '../utils/markdown';
 
 async function getMarkdownContent(webviewPanel: vscode.WebviewPanel, message: MessageT<InvokeT>) {
-  const { args } = message.data;
-  let result = '';
+  const { id, name, args } = message.data;
+  let result: string | null = null;
 
   try {
-    result = fs.readFileSync(args![0], 'utf-8');
+    if (typeof args?.[0] === 'string' && fs.existsSync(args[0])) {
+      result = fs.readFileSync(args[0], 'utf-8');
+    }
   } catch (error) {
     // nothing
   }
 
   webviewPanel.webview.postMessage(
-    createInvokeMessage<string>({
-      id: message.id,
+    createInvokeMessage<string | null>({
       source: SOURCE_TYPE.server,
       data: {
-        name: message.data.name,
+        id,
+        name,
         result,
       },
     })
@@ -28,23 +30,24 @@ async function getMarkdownContent(webviewPanel: vscode.WebviewPanel, message: Me
 }
 
 async function getMarkdownHtml(webviewPanel: vscode.WebviewPanel, message: MessageT<InvokeT>) {
-  const { args } = message.data;
-  let result = '';
+  const { id, name, args } = message.data;
+  let result: string | null = null;
 
   try {
-    const md = await createDocMarkdownRenderer(args![0]);
-    result = await md.renderAsync(fs.readFileSync(args![0], 'utf-8'));
+    if (typeof args?.[0] === 'string' && fs.existsSync(args[0])) {
+      const md = await createDocMarkdownRenderer(args[0]);
+      result = await md.renderAsync(fs.readFileSync(args[0], 'utf-8'));
+    }
   } catch (error) {
     // nothing
   }
 
-  
   webviewPanel.webview.postMessage(
-    createInvokeMessage<string>({
-      id: message.id,
+    createInvokeMessage<string | null>({
       source: SOURCE_TYPE.server,
       data: {
-        name: message.data.name,
+        id,
+        name,
         result,
       },
     })

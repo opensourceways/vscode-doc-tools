@@ -28,10 +28,6 @@ window.addEventListener('message', async (evt) => {
   if (message.source === 'client') {
     vscode.postMessage(message);
   } else if (message.source === 'server') {
-    if (message.operation === 'invoke' && message.data.name === 'getMediaResource') {
-      message.data.result = await fetchResource(message.data.result);
-    }
-    
     dev.postMessage(message, '*');
   }
 });

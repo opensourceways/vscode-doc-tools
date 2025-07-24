@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, reactive, onMounted, onUnmounted, nextTick } from 'vue';
+import { ref, reactive, onMounted, nextTick, onBeforeUnmount } from 'vue';
 
 import { useScreen } from '@/composables/useScreen';
 
@@ -141,125 +141,121 @@ const onWheel = (el: WheelEvent) => {
 };
 
 const onMouseStart = async (e: MouseEvent) => {
-  cursor.value = 'grabbing';
-  if (e.button === 0) {
-    state.startX = e.clientX;
-    state.startY = e.clientY;
-    state.isDown = true;
-
-    const [tWidth, tHeight, tLeft, tTop] = await getSize(targetRef.value);
-    const [zWidth, zHeight, zLeft, zTop] = await getSize(zoomRef.value);
-
-    const widthDiff = tWidth - zWidth;
-    const heightDiff = tHeight - zHeight;
-
-    state.startDiffLeft = tLeft - zLeft;
-    state.startDiffTop = tTop - zTop;
-    state.startDiffRight = widthDiff - Math.abs(state.startDiffLeft);
-    state.startDiffBottom = heightDiff - Math.abs(state.startDiffTop);
-
-    // 回弹
-    state.limitRight = false;
-    state.limitBottom = false;
-    state.limitLeft = false;
-    state.limitTop = false;
+  if (e.button !== 0) {
+    return;
   }
+
+  const [tWidth, tHeight, tLeft, tTop] = await getSize(targetRef.value);
+  const [zWidth, zHeight, zLeft, zTop] = await getSize(zoomRef.value);
+
+  if (tWidth === zWidth && tHeight === zHeight) {
+    return;
+  }
+
+  cursor.value = 'grabbing';
+  state.startX = e.clientX;
+  state.startY = e.clientY;
+  state.isDown = true;
+
+  const widthDiff = tWidth - zWidth;
+  const heightDiff = tHeight - zHeight;
+
+  state.startDiffLeft = tLeft - zLeft;
+  state.startDiffTop = tTop - zTop;
+  state.startDiffRight = widthDiff - Math.abs(state.startDiffLeft);
+  state.startDiffBottom = heightDiff - Math.abs(state.startDiffTop);
+
+  // 回弹
+  state.limitRight = false;
+  state.limitBottom = false;
+  state.limitLeft = false;
+  state.limitTop = false;
 };
+
 const onMousemove = async (e: MouseEvent) => {
-  if (state.isDown) {
-    const [tWidth, tHeight, tLeft, tTop] = await getSize(targetRef.value);
-    const [zWidth, zHeight, zLeft, zTop] = await getSize(zoomRef.value);
+  if (!state.isDown) {
+    return;
+  }
 
-    const widthDiff = tWidth - zWidth;
-    const heightDiff = tHeight - zHeight;
+  const [tWidth, tHeight, tLeft, tTop] = await getSize(targetRef.value);
+  const [zWidth, zHeight, zLeft, zTop] = await getSize(zoomRef.value);
 
-    const diffLeft = tLeft - zLeft;
-    const diffTop = tTop - zTop;
-    const diffRight = widthDiff - Math.abs(diffLeft);
-    const diffBottom = heightDiff - Math.abs(diffTop);
+  const widthDiff = tWidth - zWidth;
+  const heightDiff = tHeight - zHeight;
 
-    // 鼠标移动距离
-    let moveX = e.clientX - state.startX;
-    let moveY = e.clientY - state.startY;
+  const diffLeft = tLeft - zLeft;
+  const diffTop = tTop - zTop;
+  const diffRight = widthDiff - Math.abs(diffLeft);
+  const diffBottom = heightDiff - Math.abs(diffTop);
 
+  // 鼠标移动距离
+  let moveX = e.clientX - state.startX;
+  let moveY = e.clientY - state.startY;
+
+  if (tWidth > zWidth) {
     // 左移到侧边
     if (moveX < 0 && diffRight <= 0) {
       let x = Math.abs(e.clientX - state.startX) - Math.abs(state.startDiffRight);
-      x = x > 30 ? 30 : x;
+      x = x > 0 ? 0 : x;
       moveX = -state.startDiffRight - x;
       state.limitRight = true;
-    }
-
-    // 上移到侧边
-    if (moveY < 0 && diffBottom <= 0) {
-      let x = Math.abs(e.clientY - state.startY) - Math.abs(state.startDiffBottom);
-      x = x > 30 ? 30 : x;
-      moveY = -state.startDiffBottom - x;
-      state.limitBottom = true;
     }
 
     // 右移到侧边
     if (moveX > 0 && diffLeft >= 0) {
       let x = Math.abs(e.clientX - state.startX) - Math.abs(state.startDiffLeft);
-      x = x > 30 ? 30 : x;
+      x = x > 0 ? 0 : x;
       moveX = -state.startDiffLeft + x;
       state.limitLeft = true;
+    }
+
+    left.value = state.lastLeft + moveX;
+  }
+
+  if (tHeight > zHeight) {
+    // 上移到侧边
+    if (moveY < 0 && diffBottom <= 0) {
+      let x = Math.abs(e.clientY - state.startY) - Math.abs(state.startDiffBottom);
+      x = x > 0 ? 0 : x;
+      moveY = -state.startDiffBottom - x;
+      state.limitBottom = true;
     }
 
     // 下移到侧边
     if (moveY > 0 && diffTop >= 0) {
       let x = Math.abs(e.clientY - state.startY) - Math.abs(state.startDiffTop);
-      x = x > 30 ? 30 : x;
+      x = x > 0 ? 0 : x;
       moveY = -state.startDiffTop + x;
       state.limitTop = true;
     }
 
     top.value = state.lastTop + moveY;
-    left.value = state.lastLeft + moveX;
   }
 };
+
 const onMouseEnd = () => {
+  if (state.isDown) {
+    state.lastLeft = left.value;
+    state.lastTop = top.value;
+  }
+
   cursor.value = 'grab';
   state.isDown = false;
-
-  if (state.limitRight) {
-    left.value = left.value + 30;
-  }
-
-  if (state.limitBottom) {
-    top.value = top.value + 30;
-  }
-
-  if (state.limitLeft) {
-    left.value = left.value - 30;
-  }
-
-  if (state.limitTop) {
-    top.value = top.value - 30;
-  }
-
-  state.lastLeft = left.value;
-  state.lastTop = top.value;
 };
 
 onMounted(() => {
-  if (isPhone.value) {
+  if (isPhone.value || !targetRef.value) {
     return;
   }
-  const resizeObserver = new ResizeObserver(async () => {
-    if (!targetRef.value) {
-      return;
-    }
-    targetRef.value.addEventListener('wheel', onWheel);
-    targetRef.value.addEventListener('mousedown', onMouseStart);
-    targetRef.value.addEventListener('mousemove', onMousemove);
-    targetRef.value.addEventListener('mouseup', onMouseEnd);
-    targetRef.value.addEventListener('mouseleave', onMouseEnd);
-  });
-  resizeObserver.observe(targetRef.value);
+
+  targetRef.value.addEventListener('wheel', onWheel);
+  targetRef.value.addEventListener('mousedown', onMouseStart);
+  targetRef.value.addEventListener('mousemove', onMousemove);
+  targetRef.value.addEventListener('mouseup', onMouseEnd);
+  targetRef.value.addEventListener('mouseleave', onMouseEnd);
 });
 
-onUnmounted(() => {
+onBeforeUnmount(() => {
   if (targetRef.value) {
     targetRef.value.removeEventListener('wheel', onWheel);
     targetRef.value.removeEventListener('mousedown', onMouseStart);

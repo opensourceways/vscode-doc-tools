@@ -6,7 +6,7 @@ import { genTocManual } from '@/core/command/cmd-gen-toc-manual';
 import { checkMarkdown } from '@/core/command/cmd-check-markdown';
 import { addCodespellWhitelist } from '@/core/command/cmd-add-codespell-whitlist';
 import { addUrlWhitelist } from '@/core/command/cmd-add-url-whilelist';
-import { disposePreviewMarkdown, previewMarkdown } from '@/core/command/cmd-preview-markdown';
+import { disposePreviewMarkdown, previewMarkdown, triggerPreviewMarkdownContentChange } from '@/core/command/cmd-preview-markdown';
 import { fixMarkdownlint } from '@/core/command/cmd-fix-markdownlint';
 
 // 用于存储错误信息
@@ -28,6 +28,7 @@ function registerEvent(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.workspace.onDidSaveTextDocument((document) => {
       triggerCheck(EVENT_TYPE.EVENT_SAVE_TEXT_DOC, document, diagnosticsCollection);
+      triggerPreviewMarkdownContentChange(document);
     })
   );
 

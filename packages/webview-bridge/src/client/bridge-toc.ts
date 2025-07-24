@@ -6,7 +6,13 @@ export class TocBridge {
    * @param {string} mdPath markdown 文件路径
    * @returns 返回一个包含 manual toc 内容的 Promise
    */
-  static getManualToc(mdPath: string): Promise<Record<string, any> | null> {
-    return Bridge.getInstance().invoke<Record<string, any> | null>('getToc', mdPath);
+  static getManualToc(mdPath: string): Promise<{
+    tocPath: string | null;
+    tocObj: Record<string, any> | null;
+  } | null> {
+    return Bridge.getInstance().invoke<{
+      tocPath: string | null;
+      tocObj: Record<string, any> | null;
+    } | null>('getToc', mdPath);
   }
 }

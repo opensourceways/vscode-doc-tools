@@ -1,4 +1,4 @@
-import { Bridge } from "./bridge";
+import { Bridge } from './bridge';
 
 export class MarkdownBridge {
   /**
@@ -6,8 +6,8 @@ export class MarkdownBridge {
    * @param {string} mdPath markdown 文件路径
    * @returns 返回一个包含 markdown 内容的 Promise
    */
-  static getMarkdownContent(mdPath: string): Promise<string> {
-    return Bridge.getInstance().invoke<string>('getMarkdownContent', mdPath);
+  static getMarkdownContent(mdPath: string): Promise<string | null> {
+    return Bridge.getInstance().invoke<string | null>('getMarkdownContent', mdPath);
   }
 
   /**
@@ -15,7 +15,7 @@ export class MarkdownBridge {
    * @param {string} mdPath markdown 文件路径
    * @returns 返回一个包含 html 内容的 Promise
    */
-  static getMarkdownHtml(mdPath: string): Promise<string> {
-    return Bridge.getInstance().invoke<string>('getMarkdownHtml', mdPath);
+  static getMarkdownHtml(mdPath: string): Promise<string | null> {
+    return Bridge.getInstance().invoke<string | null>('getMarkdownHtml', mdPath);
   }
 }

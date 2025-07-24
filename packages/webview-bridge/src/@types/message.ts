@@ -4,18 +4,23 @@ export enum SOURCE_TYPE {
 }
 
 export enum OPERATION_TYPE {
-  postMessage = 'postMessage',
+  broadcast = 'broadcast',
   invoke = 'invoke',
 }
 
 export interface InvokeT<R = any> {
+  id: string;
   name: string;
   args?: any[];
   result?: R;
 }
 
+export interface BroadcastT<E = any> {
+  name: string;
+  extras?: E;
+}
+
 export interface MessageT<T = any> {
-  id: string;
   source: SOURCE_TYPE;
   operation?: OPERATION_TYPE;
   data: T;

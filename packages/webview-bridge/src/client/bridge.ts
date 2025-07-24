@@ -1,9 +1,11 @@
-import { MessageT, OPERATION_TYPE, SOURCE_TYPE } from '../@types/message';
-import { createInvokeMessage } from '../utils/message';
+import { BroadcastT, MessageT, OPERATION_TYPE, SOURCE_TYPE } from '../@types/message';
+import { createInvokeMessage, createInvokeIdBuilder } from '../utils/message';
 
+const [createMessageId, removeMessageId] = createInvokeIdBuilder();
 const symbolInstance = Symbol('symbolInstance');
 const symbolResolveMap = Symbol('symbolResolveMap');
 const symbolParent = Symbol('symbolParent');
+const symbolBroadcastListener = Symbol('symbolBroadcastListener');
 
 export class Bridge {
   private static [symbolInstance]: Bridge;
@@ -11,6 +13,7 @@ export class Bridge {
   // @ts-expect-error iframe下不存在acquireVsCodeApi
   private [symbolParent] = window?.acquireVsCodeApi ? acquireVsCodeApi() : window?.parent;
   private [symbolResolveMap] = new Map<string, (value: any) => void>();
+  private [symbolBroadcastListener] = new Set<(message: BroadcastT) => void>();
 
   /**
    * 获取实例
@@ -35,12 +38,29 @@ export class Bridge {
 
     // 监听插件返回的消息
     window.addEventListener('message', (evt: MessageEvent<MessageT>) => {
-      const { id, operation, source, data } = evt.data;
-      if (source !== SOURCE_TYPE.server || operation !== OPERATION_TYPE.invoke || !this[symbolResolveMap].get(id)) {
+      const { operation, source, data } = evt.data;
+      if (source !== SOURCE_TYPE.server) {
         return;
       }
 
-      this[symbolResolveMap].get(id)!!(data.result);
+      // invoke
+      if (operation === OPERATION_TYPE.invoke && this[symbolResolveMap].get(data?.id)) {
+        this[symbolResolveMap].get(data.id)!(data.result);
+        removeMessageId(data.id);
+        return;
+      }
+
+      // broadcast
+      if (operation === OPERATION_TYPE.broadcast) {
+        for (const listener of this[symbolBroadcastListener].values()) {
+          try {
+            listener(data);
+          } catch {
+            // nothing
+          }
+        }
+        return;
+      }
     });
 
     Bridge[symbolInstance] = this;
@@ -62,17 +82,35 @@ export class Bridge {
    */
   invoke<T = unknown>(functionName: string, ...args: any[]) {
     return new Promise<T>((resolve) => {
-      const id = `${new Date().getTime()}-${Math.random()}-${Math.random()}`;
+      const id = createMessageId();
       this[symbolResolveMap].set(id, resolve);
 
-      this.postMessage(createInvokeMessage({
-        id,
-        source: SOURCE_TYPE.client,
-        data: {
-          name: functionName,
-          args,
-        },
-      }));
+      this.postMessage(
+        createInvokeMessage({
+          source: SOURCE_TYPE.client,
+          data: {
+            id,
+            name: functionName,
+            args,
+          },
+        })
+      );
     });
+  }
+
+  /**
+   * 添加广播监听
+   * @param {Function} callback 监听回调
+   */
+  addBroadcastListener(callback: (message: BroadcastT) => void) {
+    this[symbolBroadcastListener].add(callback);
+  }
+
+  /**
+   * 移除广播监听
+   * @param {Function} callback 监听回调
+   */
+  removeBroadcastListener(callback: (message: BroadcastT) => void) {
+    this[symbolBroadcastListener].delete(callback);
   }
 }
