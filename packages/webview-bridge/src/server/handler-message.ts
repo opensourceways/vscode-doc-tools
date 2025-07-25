@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+
 import { createBroadcastMessage } from '../utils/message';
 import { SOURCE_TYPE } from '../@types/message';
 import { handlePageMessage } from './handler-page';
@@ -11,11 +12,11 @@ const symbolWebviewPanel = Symbol('ServerMessageHandler');
 export class ServerMessageHandler {
   static [symbolWebviewPanel]: vscode.WebviewPanel;
 
-  static bind(webviewPanel: vscode.WebviewPanel) {
+  static bind(webviewPanel: vscode.WebviewPanel, isDev: boolean) {
     this[symbolWebviewPanel] = webviewPanel;
     handlePageMessage(webviewPanel);
     handleResourceMessage(webviewPanel);
-    handleMarkdownMessage(webviewPanel);
+    handleMarkdownMessage(webviewPanel, isDev);
     handleTocMessage(webviewPanel);
   }
 

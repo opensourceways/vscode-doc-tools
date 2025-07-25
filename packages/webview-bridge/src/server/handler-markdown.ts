@@ -29,13 +29,13 @@ async function getMarkdownContent(webviewPanel: vscode.WebviewPanel, message: Me
   );
 }
 
-async function getMarkdownHtml(webviewPanel: vscode.WebviewPanel, message: MessageT<InvokeT>) {
+async function getMarkdownHtml(webviewPanel: vscode.WebviewPanel, isDev: boolean, message: MessageT<InvokeT>) {
   const { id, name, args } = message.data;
   let result: string | null = null;
 
   try {
     if (typeof args?.[0] === 'string' && fs.existsSync(args[0])) {
-      const md = await createDocMarkdownRenderer(args[0]);
+      const md = await createDocMarkdownRenderer(args[0], webviewPanel.webview, isDev);
       result = await md.renderAsync(fs.readFileSync(args[0], 'utf-8'));
     }
   } catch (error) {
@@ -54,7 +54,7 @@ async function getMarkdownHtml(webviewPanel: vscode.WebviewPanel, message: Messa
   );
 }
 
-export function handleMarkdownMessage(webviewPanel: vscode.WebviewPanel) {
+export function handleMarkdownMessage(webviewPanel: vscode.WebviewPanel, isDev: boolean) {
   webviewPanel.webview.onDidReceiveMessage((message: MessageT<InvokeT>) => {
     if (message.source !== SOURCE_TYPE.client || message.operation !== OPERATION_TYPE.invoke) {
       return;
@@ -67,7 +67,7 @@ export function handleMarkdownMessage(webviewPanel: vscode.WebviewPanel) {
         getMarkdownContent(webviewPanel, message);
         break;
       case 'getMarkdownHtml':
-        getMarkdownHtml(webviewPanel, message);
+        getMarkdownHtml(webviewPanel, isDev, message);
         break;
     }
   });

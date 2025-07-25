@@ -34,7 +34,7 @@ export function previewMarkdown(context: vscode.ExtensionContext, uri: vscode.Ur
   );
 
   panel.iconPath = vscode.Uri.file(path.join(context.extensionPath, 'resources', isDarkTheme ? 'icon-preview-dark.svg' : 'icon-preview-light.svg'));
-  ServerMessageHandler.bind(panel);
+  ServerMessageHandler.bind(panel, isDev);
 
   const fsPath = uri.fsPath.replace(/\\/g, '/');
   const injectData = {
@@ -84,7 +84,7 @@ export function triggerPreviewMarkdownContentChange(document: vscode.TextDocumen
       clearTimeout(timerTriggerTocContentChange);
     }
 
-    timerTriggerTocContentChange = setTimeout(() => { 
+    timerTriggerTocContentChange = setTimeout(() => {
       ServerMessageHandler.broadcast('onTocContentChange', document.uri.fsPath.replace(/\\/g, '/'));
       timerTriggerTocContentChange = null;
     }, 1000);

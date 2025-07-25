@@ -2,12 +2,20 @@
 import { OResult } from '@opensig/opendesign';
 
 import ContentWrapper from '@/components/ContentWrapper.vue';
+
+import notFoundImage from '@/assets/category/common/404.png';
+import notFoundImageDark from '@/assets/category/common/404-dark.png';
+import { injectData } from '@/utils/inject';
 </script>
 
 <template>
   <ContentWrapper class="result-404">
     <OResult>
-      <!-- <template #image></template> -->
+      <template #image>
+        <slot name="image">
+          <img class="not-found-image" :src="injectData.theme === 'dark' ? notFoundImageDark : notFoundImage" />
+        </slot>
+      </template>
       <template #extra>
         <p class="text404">{{ $t('common.nonexistentDoc') }}</p>
       </template>
@@ -23,7 +31,7 @@ import ContentWrapper from '@/components/ContentWrapper.vue';
   justify-content: center;
   align-items: center;
 
-  @include respond-to('<=pad') { 
+  @include respond-to('<=pad') {
     height: calc(100vh - var(--layout-header-height) - var(--layout-doc-padding-top) - var(--layout-doc-padding-bottom) - 24px);
   }
 }

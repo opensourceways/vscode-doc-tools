@@ -1,3 +1,4 @@
+import * as vscode from 'vscode';
 import path from 'path';
 import fs from 'fs';
 
@@ -6,7 +7,12 @@ import { getBase64Image } from './resource';
 
 const REG_IMG_TAG = /<img\s+[^>]*src="([^"]+)"[^>]*>/;
 
-export function createDocMarkdownRenderer(srcDir: string) {
+function parseImageUrl(srcPath: string, basePath: string, webview: vscode.Webview, base64Image = false) {
+  const completePath = path.join(basePath, srcPath);
+  return base64Image ? getBase64Image(completePath) : webview.asWebviewUri(vscode.Uri.file(completePath)).toString();
+}
+
+export function createDocMarkdownRenderer(srcDir: string, webview: vscode.Webview, base64Image = false) {
   const fsDir = path.dirname(srcDir);
   return createMarkdownRenderer(fsDir, {
     math: true,
@@ -52,7 +58,7 @@ export function createDocMarkdownRenderer(srcDir: string) {
       md.renderer.rules.image = (tokens, idx, options, env, self) => {
         const srcIndex = tokens[idx].attrIndex('src');
         if (tokens[idx]?.attrs?.[srcIndex]?.[1]) {
-          tokens[idx].attrs[srcIndex][1] = getBase64Image(path.join(fsDir, decodeURIComponent(tokens[idx].attrs[srcIndex][1])));
+          tokens[idx].attrs[srcIndex][1] = parseImageUrl(decodeURIComponent(tokens[idx].attrs[srcIndex][1]), fsDir, webview, base64Image);
         }
 
         return `<MarkdownImage>${imageRender!(tokens, idx, options, env, self)}</MarkdownImage>`;
@@ -68,7 +74,8 @@ export function createDocMarkdownRenderer(srcDir: string) {
         if (content.includes('<img')) {
           const match = renderContent.match(REG_IMG_TAG);
           if (match) {
-            renderContent = renderContent.replace(match[1], getBase64Image(path.join(fsDir, decodeURIComponent(match[1]))));
+            const src = parseImageUrl(decodeURIComponent(match[1]), fsDir, webview, base64Image);
+            renderContent = renderContent.replace(match[1], src);
           }
 
           return `<MarkdownImage>${renderContent.replace(/(width|height)=['|"](.*?)['|"]/g, '')}</MarkdownImage>`;
@@ -99,7 +106,8 @@ export function createDocMarkdownRenderer(srcDir: string) {
         if (content.includes('<img')) {
           const match = renderContent.match(REG_IMG_TAG);
           if (match) {
-            renderContent = renderContent.replace(match[1], getBase64Image(path.join(fsDir, match[1])));
+            const src = parseImageUrl(decodeURIComponent(match[1]), fsDir, webview, base64Image);
+            renderContent = renderContent.replace(match[1], src);
           }
 
           return `<MarkdownImage>${renderContent.replace(/(width|height)=['|"](.*?)['|"]/g, '')}</MarkdownImage>`;
