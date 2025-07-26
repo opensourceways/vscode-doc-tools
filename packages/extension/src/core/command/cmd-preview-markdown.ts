@@ -8,10 +8,18 @@ let panel: vscode.WebviewPanel | null = null;
 let timerTriggerMdContentChange: NodeJS.Timeout | null = null;
 let timerTriggerTocContentChange: NodeJS.Timeout | null = null;
 
+/**
+ * 释放 webview panel
+ */
 export function disposePreviewMarkdown() {
   panel?.dispose();
 }
 
+/**
+ * 预览 markdown
+ * @param {vscode.ExtensionContext} context 上下文
+ * @param {vscode.Uri} uri 文档 uri
+ */
 export function previewMarkdown(context: vscode.ExtensionContext, uri: vscode.Uri) {
   if (panel) {
     panel.dispose();
@@ -61,6 +69,10 @@ export function previewMarkdown(context: vscode.ExtensionContext, uri: vscode.Ur
   context.subscriptions.push(panel);
 }
 
+/**
+ * 触发 markdown/_toc.yaml 内容改变
+ * @param {vscode.TextDocument} document 文档对象
+ */
 export function triggerPreviewMarkdownContentChange(document: vscode.TextDocument) {
   if (document.languageId !== 'markdown' && document.languageId !== 'yaml') {
     return;

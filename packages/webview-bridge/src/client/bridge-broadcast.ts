@@ -12,11 +12,14 @@ export class BroadcastBridge {
   private static [symbolIsInit] = false;
   private static [symbolListenerMap] = new Map<string, Set<(...args: any[]) => void>>();
 
-  static [symbolIInit]() {
+  /**
+   * 私有方法：初始化添加 message 监听
+   */
+  private static [symbolIInit]() {
     if (this[symbolIsInit]) {
       return;
     }
-
+    
     this[symbolIsInit] = true;
     Bridge.getInstance().addBroadcastListener((data: BroadcastT) => {
       const { name, extras } = data;
@@ -24,7 +27,12 @@ export class BroadcastBridge {
     });
   }
 
-  static [symbolAddListener](name: string, callback: (...args: any[]) => void) {
+  /**
+   * 私有方法：添加广播回调
+   * @param {string} name 广播名称
+   * @param {Function} callback 回调函数
+   */
+  private static [symbolAddListener](name: string, callback: (...args: any[]) => void) {
     if (!this[symbolIsInit]) {
       this[symbolIInit]();
     }
@@ -36,7 +44,12 @@ export class BroadcastBridge {
     this[symbolListenerMap].get(name)!.add(callback);
   }
 
-  static [symbolRemoveListener](name: string, callback: (...args: any[]) => void) {
+  /**
+   * 私有方法：移除广播回调
+   * @param {string} name 广播名称
+   * @param {Function} callback 回调函数
+   */
+  private static [symbolRemoveListener](name: string, callback: (...args: any[]) => void) {
     if (!(this[symbolListenerMap].get(name) instanceof Set)) {
       return;
     }
@@ -44,7 +57,12 @@ export class BroadcastBridge {
     this[symbolListenerMap].get(name)!.delete(callback);
   }
 
-  static [symbolCallback](name: string, extras: any[]) {
+  /**
+   * 私有方法：触发回调
+   * @param {string} name 广播名称
+   * @param {any[]} extras 回调参数
+   */
+  private static [symbolCallback](name: string, extras: any[]) {
     const callbacks = this[symbolListenerMap].get(name);
     if (!callbacks) {
       return;
@@ -53,18 +71,34 @@ export class BroadcastBridge {
     callbacks.forEach((callback) => callback(...extras));
   }
 
+  /**
+   * 添加 markdown change 监听
+   * @param {Function} callback 回调方法
+   */
   static addMarkdownContentChangeListener(callback: (mdPath: string) => void) {
     this[symbolAddListener]('onMarkdownContentChange', callback);
   }
 
+  /**
+   * 移除 markdown change 监听
+   * @param {Function} callback 回调方法
+   */
   static removeMarkdownContentChangeListener(callback: (mdPath: string) => void) {
     this[symbolRemoveListener]('onMarkdownContentChange', callback);
   }
 
+  /**
+   * 添加 _toc.yaml change 监听
+   * @param {Function} callback 回调方法
+   */
   static addTocContentChangeListener(callback: (tocPath: string) => void) {
     this[symbolAddListener]('onTocContentChange', callback);
   }
 
+  /**
+   * 移除 _toc.yaml change 监听
+   * @param {Function} callback 回调方法
+   */
   static removeTocContentChangeListener(callback: (tocPath: string) => void) {
     this[symbolRemoveListener]('onTocContentChange', callback);
   }

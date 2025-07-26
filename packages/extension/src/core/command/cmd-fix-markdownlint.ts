@@ -6,7 +6,6 @@ import { lintHistory } from '@/core/check/lint-markdown';
 /**
  * 修复所有 markdown-lint 错误
  * @param {vscode.TextDocument} document 文档对象
- * @returns
  */
 export function fixMarkdownlint(document: vscode.TextDocument) {
   if (!document) {

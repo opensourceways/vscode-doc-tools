@@ -1,24 +1,12 @@
 import path from 'path';
 import fs from 'fs';
 import yaml from 'js-yaml';
-import { getMarkdownLevelTitles, getMarkdownTitleId } from './markdown';
-
-function getGitUrlInfo(gitUrl: string) {
-  const url = new URL(gitUrl);
-  const [owner, repo, __, branch, ...locations] = url.pathname.replace('/', '').split('/');
-
-  return {
-    url: `${url.origin}/${owner}/${repo}`,
-    owner,
-    repo,
-    branch,
-    locations,
-  };
-}
+import { getFileContentAsync, getGitUrlInfo, getMarkdownLevelTitles, getMarkdownTitleId } from 'shared';
 
 /**
- * git clone
+ * 转换 upstream
  * @param {object} item item
+ * @returns {boolean} 返回转换是否成功
  */
 function parseUpstream(item: Record<string, any>) {
   let result = false;
@@ -45,6 +33,7 @@ function parseUpstream(item: Record<string, any>) {
 /**
  * 获取 id
  * @param {object} item 菜单项
+ * @returns {string} 返回id
  */
 function getId(item: Record<string, any>, recordIds: Set<string>) {
   if (item.href && !recordIds.has(item.href)) {
@@ -96,6 +85,12 @@ function isMdInToc(toc: Record<string, any>, dirPath: string, mdPath: string) {
   return false;
 }
 
+/**
+ * 转换 toc
+ * @param {Record<string, any>} toc toc
+ * @param {string} tocDirPath toc 目录
+ * @param {Set<string>} recordIds 记录的 id
+ */
 function parseToc(toc: Record<string, any>, tocDirPath: string, recordIds = new Set<string>()) {
   if (!toc) {
     return;
@@ -136,7 +131,12 @@ function parseToc(toc: Record<string, any>, tocDirPath: string, recordIds = new 
   }
 }
 
-export function getTocByMdPath(fsPath: string) {
+/**
+ * 通过 markdown 路径获取相关的 toc
+ * @param {string} fsPath md 路径
+ * @returns {Record<string, any>} 返回 toc
+ */
+export async function getTocByMdPath(fsPath: string) {
   if (!fs.existsSync(fsPath)) {
     return null;
   }
@@ -153,7 +153,8 @@ export function getTocByMdPath(fsPath: string) {
     tocPath = path.join(dirPath, '_toc.yaml');
     if (fs.existsSync(tocPath)) {
       try {
-        tocObj = yaml.load(fs.readFileSync(tocPath, 'utf8')) as Record<string, any>;
+        const content = await getFileContentAsync(tocPath);
+        tocObj = yaml.load(content) as Record<string, any>;
         if (isMdInToc(tocObj, dirPath, mdPath)) {
           found = true;
           break;

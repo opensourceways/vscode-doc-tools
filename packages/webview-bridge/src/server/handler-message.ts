@@ -12,6 +12,11 @@ const symbolWebviewPanel = Symbol('ServerMessageHandler');
 export class ServerMessageHandler {
   static [symbolWebviewPanel]: vscode.WebviewPanel;
 
+  /**
+   * 绑定webviewPanel
+   * @param {vscode.WebviewPanel} webviewPanel webviewPanel
+   * @param {boolean} isDev 是否处于开发环境
+   */
   static bind(webviewPanel: vscode.WebviewPanel, isDev: boolean) {
     this[symbolWebviewPanel] = webviewPanel;
     handlePageMessage(webviewPanel);
@@ -20,6 +25,11 @@ export class ServerMessageHandler {
     handleTocMessage(webviewPanel);
   }
 
+  /**
+   * 广播消息
+   * @param {string} name 消息名称
+   * @param {any[]} arg 附带参数
+   */
   static broadcast(name: string, ...arg: any[]) {
     if (!this[symbolWebviewPanel]) {
       return;

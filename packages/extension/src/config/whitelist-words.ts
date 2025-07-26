@@ -1,3 +1,4 @@
+// 单词白名单
 export default [
   'isula',
   'sulad',

@@ -4,9 +4,16 @@
   "author": "cctvcat",
   "license": "MIT",
   "main": "src/index.ts",
-  "browser": "src/client.ts",
+  "exports": {
+    ".": {
+      "browser": "./src/client/index.ts",
+      "node": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
   "dependencies": {
     "js-yaml": "^4.1.0",
-    "markdown": "*"
+    "markdown": "*",
+    "shared": "*"
   }
 }

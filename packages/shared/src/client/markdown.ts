@@ -31,6 +31,63 @@ export function getMarkdownTitle(content: string) {
 }
 
 /**
+ * 去除一些 md 符号，只保留标题文本
+ * @param {string} title 标题
+ * @returns {string} 返回标题
+ */
+export function getMarkdownPureTitle(title: string) {
+  return title
+    .replace(/\*\*([^*]+)\*\*/g, '$1') // 去除加粗（**）
+    .replace(/\*([^*]+)\*/g, '$1') // 去除斜体（*）
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // 去除链接
+    .replace(/<[^>]+>/g, '') // 去除 HTML 标签
+    .replace(/`/g, ''); // 去除反引号
+}
+
+/**
+ * 获取指定等级的标题
+ * @param {string} content markdown 内容
+ * @param {number} level 标题等级 h1-h6
+ * @returns {string[]} 返回匹配的标题
+ */
+export function getMarkdownLevelTitles(content: string, level = 1) {
+  if (!content || isNaN(level) || level < 1 || level > 6) {
+    return [];
+  }
+
+  const result: string[] = [];
+  const titlePrefix = `${Array(level).fill('#').join('')} `;
+  content.split('\n').forEach((line) => {
+    const tirmStr = line.trim();
+    if (tirmStr.startsWith(titlePrefix)) {
+      const title = line.replace(titlePrefix, '').trim();
+      if (title) {
+        result.push(getMarkdownPureTitle(title));
+      }
+    }
+  });
+
+  return result;
+}
+
+/**
+ * 去除一些 md 符号，只保留文本
+ * @param {string} title 标题
+ * @returns {string} 返回标题 id
+ */
+export function getMarkdownTitleId(title: string) {
+  return title
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036F]/g, '')
+    .replace(/[\u0000-\u001f]/g, '')
+    .replace(/[\s~`!@#$%^&*()\-_+=[\]{}|\\;:"'“”‘’<>,.?/]+/g, '-')
+    .replace(/-{2,}/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .replace(/^(\d)/, '_$1')
+    .toLowerCase();
+}
+
+/**
  * 获取屏蔽某些 markdown 语法后的内容
  * @param {string} content markdown 内容
  * @returns {string} 返回过滤后的内容

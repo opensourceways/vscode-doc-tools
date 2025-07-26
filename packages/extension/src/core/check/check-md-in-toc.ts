@@ -1,8 +1,8 @@
 import * as vscode from 'vscode';
 import path from 'path';
 import fs from 'fs';
+import { getYamlAsync } from 'shared';
 
-import { getYamlContent } from '@/utils/file';
 import { TocItem } from '@/@types/toc';
 import { isConfigEnabled } from '@/utils/common';
 
@@ -32,7 +32,6 @@ function isMdInToc(toc: TocItem, dirPath: string, mdPath: string) {
 /**
  * 检查 markdown 是否加入 _toc.yaml
  * @param document 文档对象
- * @returns 
  */
 export async function checkMdInToc(document: vscode.TextDocument) {
   if (!isConfigEnabled('docTools.check.toc')) {
@@ -46,7 +45,7 @@ export async function checkMdInToc(document: vscode.TextDocument) {
     const dirPath = dirArr.join('/');
     const tocPath = path.join(dirPath, '_toc.yaml');
     if (fs.existsSync(tocPath)) {
-      const yamlObj = getYamlContent<TocItem>(tocPath);
+      const yamlObj = await getYamlAsync<TocItem>(tocPath);
       if (isMdInToc(yamlObj, dirPath, mdPath)) {
         return;
       }

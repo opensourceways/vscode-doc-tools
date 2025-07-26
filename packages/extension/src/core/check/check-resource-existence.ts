@@ -1,9 +1,8 @@
 import * as vscode from 'vscode';
 import path from 'path';
+import { isAccessibleLink } from 'shared';
 
 import { isConfigEnabled } from '@/utils/common';
-import { isAccessibleLink } from '@/utils/request';
-
 import defaultWhitelistUrls from '@/config/whitelist-urls';
 
 const REGEX = [

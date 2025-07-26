@@ -17,7 +17,7 @@ export class Bridge {
 
   /**
    * 获取实例
-   * @returns ClientBridge
+   * @returns {Bridge} 返回 Bridge 实例
    */
   static getInstance() {
     if (!Bridge[symbolInstance]) {
@@ -78,7 +78,7 @@ export class Bridge {
    * 调用插件暴露的方法
    * @param {string} functionName 调用函数名
    * @param {any[]} args 传递参数
-   * @returns 返回一个执行结果的 promise
+   * @returns {Promise<T>} 返回一个执行结果的 promise
    */
   invoke<T = unknown>(functionName: string, ...args: any[]) {
     return new Promise<T>((resolve) => {

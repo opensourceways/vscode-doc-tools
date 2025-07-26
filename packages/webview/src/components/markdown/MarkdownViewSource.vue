@@ -3,7 +3,7 @@ import { nextTick, onMounted, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { useWindowSize } from '@vueuse/core';
 import { OIcon } from '@opensig/opendesign';
-import { ResourceBridge } from 'webview-bridge/src/client';
+import { ResourceBridge, } from 'webview-bridge';
 
 import IconOutLink from '~icons/app/icon-outlink.svg';
 

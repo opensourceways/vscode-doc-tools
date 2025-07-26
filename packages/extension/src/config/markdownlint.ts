@@ -1,5 +1,6 @@
 import { type Configuration } from 'markdownlint';
 
+// markdown-lint 内置默认配置
 export const MD_DEFAULT_CONFIG: Configuration = {
   default: true,
   MD003: { style: 'atx' },
@@ -29,6 +30,7 @@ export const MD_DEFAULT_CONFIG: Configuration = {
   MD057: false,
 };
 
+// markdown-lint 报错中文描述
 export const MD_DESC: Record<string, string> = {
   MD001: `标题等级只能每次扩大一个。{expected_actual}`,
   MD003: `标题格式要统一，请去除标题下多余的 === 或 ---。{expected_actual}`,

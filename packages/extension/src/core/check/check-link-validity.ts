@@ -1,9 +1,9 @@
 import * as vscode from 'vscode';
 import path from 'path';
+import { isAccessibleLink } from 'shared';
 
 import defaultWhitelistUrls from '@/config/whitelist-urls';
 import { isConfigEnabled } from '@/utils/common';
-import { isAccessibleLink } from '@/utils/request';
 
 const REGEX = [
   /(?<!\!)\[.*?\]\((.+?)\)/g, // 匹配 [xx](xxx) 链接

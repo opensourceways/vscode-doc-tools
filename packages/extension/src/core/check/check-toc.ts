@@ -1,10 +1,10 @@
 import * as vscode from 'vscode';
 import path from 'path';
 import yaml from 'js-yaml';
+import { isAccessibleLink } from 'shared';
 
 import { TocItem } from '@/@types/toc.js';
 import { isConfigEnabled } from '@/utils/common';
-import { isAccessibleLink } from '@/utils/request';
 
 const ALLOWED_KEYS = ['label', 'description', 'isManual', 'sections', 'href', 'upstream', 'path'];
 

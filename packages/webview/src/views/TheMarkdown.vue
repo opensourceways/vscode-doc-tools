@@ -11,7 +11,7 @@ import MarkdownViewSource from '@/components/markdown/MarkdownViewSource.vue';
 
 import IconExpand from '~icons/app/icon-expand.svg';
 
-import { BroadcastBridge, MarkdownBridge, PageBridge, ResourceBridge, TocBridge } from 'webview-bridge/src/client';
+import { BroadcastBridge, MarkdownBridge, PageBridge, ResourceBridge, TocBridge } from 'webview-bridge';
 import { useScreen } from '@/composables/useScreen';
 import { DocMenuTree, type DocMenuNodeT } from '@/utils/tree';
 import type { DocMenuT } from '@/@types/type-doc-menu';
@@ -282,22 +282,28 @@ const onMarkdownClick = (evt: MouseEvent) => {
   }
 
   evt.preventDefault();
+  const href = el.getAttribute('href') || '';
 
-  if (el.href.startsWith('doctools://markdown?fsPath=')) {
+  if (href.startsWith('doctools://markdown?fsPath=')) {
     router.replace({
       query: {
-        fsPath: decodeURIComponent(el.href.replace('doctools://markdown?fsPath=', '')),
+        fsPath: decodeURIComponent(href.replace('doctools://markdown?fsPath=', '')),
         refreshExpanded: 1,
       },
     });
     return;
   }
 
-  if (el.href.startsWith('doctools://tip?type=non-exists')) {
+  if (href.startsWith('doctools://tip?type=non-exists')) {
     message.danger({
       content: t('docs.invalidLink'),
     });
 
+    return;
+  }
+
+  if (href.startsWith('#')) {
+    scrollIntoTitle(decodeURIComponent(href.slice(1)));
     return;
   }
 };

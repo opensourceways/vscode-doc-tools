@@ -2,10 +2,9 @@ import * as vscode from 'vscode';
 import fs from 'fs';
 import path from 'path';
 import yaml from 'js-yaml';
+import { getFileContentAsync, getMarkdownTitle, getYamlAsync } from 'shared';
 
 import type { TocItem } from '@/@types/toc';
-import { getFileContent, getYamlContent } from '@/utils/file';
-import { getMarkdownTitle } from 'shared';
 
 /**
  * 获取已经加入 toc item 的 markdown 路径
@@ -43,9 +42,9 @@ function checkAndGetHrefMap(sections: TocItem[], dirPath: string, map = new Map<
  * @param {string} dirPath 目标路径
  * @returns {TocItem} 返回 toc item
  */
-function getManualToc(dirPath: string) {
+async function getManualToc(dirPath: string) {
   // 获取原本的_toc.yaml
-  const toc = getYamlContent<TocItem>(path.join(dirPath, '_toc.yaml'));
+  const toc = await getYamlAsync<TocItem>(path.join(dirPath, '_toc.yaml'), {});
   toc.isManual = true;
   if (!toc.label) {
     toc.label = '';
@@ -59,26 +58,27 @@ function getManualToc(dirPath: string) {
   const hrefMap = checkAndGetHrefMap(toc.sections, dirPath);
 
   // 遍历目录加入sections
-  const walkDir = (targetPath: string) => {
-    fs.readdirSync(targetPath).forEach((name) => {
+  const walkDir = async (targetPath: string) => {
+    for (const name of fs.readdirSync(targetPath)) {
       const completedPath = path.join(targetPath, name).replace(/\\/g, '/');
 
       // 目录继续处理
       if (fs.statSync(completedPath).isDirectory()) {
         walkDir(completedPath);
-        return;
+        continue;
       }
 
       // 跳过非md文件
       if (!name.endsWith('.md')) {
-        return;
+        continue;
       }
 
       // 跳过没有标题的md
-      const title = getMarkdownTitle(getFileContent(completedPath));
+      const content = await getFileContentAsync(completedPath);
+      const title = getMarkdownTitle(content);
       if (!title) {
         vscode.window.showWarningMessage(`标题不存在：${name}`);
-        return;
+        continue;
       }
 
       // 跳过已有的md
@@ -90,17 +90,17 @@ function getManualToc(dirPath: string) {
           item.label = title;
         }
 
-        return;
+        continue;
       }
 
       toc.sections!!.push({
         label: title,
         href: relativePath,
       });
-    });
+    }
   };
 
-  walkDir(dirPath);
+  await walkDir(dirPath);
 
   return toc;
 }
@@ -108,7 +108,6 @@ function getManualToc(dirPath: string) {
 /**
  * 生成指南 _toc.yaml
  * @param {vscode.Uri} uri 目标目录 uri
- * @returns 
  */
 export async function genTocManual(uri: vscode.Uri) {
   const dirPath = uri.fsPath.replace(/\\/g, '/');
@@ -128,7 +127,7 @@ export async function genTocManual(uri: vscode.Uri) {
     return;
   }
 
-  const toc = getManualToc(dirPath);
+  const toc = await getManualToc(dirPath);
   if (toc.sections?.length === 0) {
     vscode.window.showErrorMessage(`未收集到有效的 markdown 信息，请检查当前目录下是否存在 markdown，或 markdown 是否存在标题。目录路径：（${dirPath}）`);
     return;

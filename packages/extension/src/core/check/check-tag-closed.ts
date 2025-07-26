@@ -126,10 +126,15 @@ export function getTagClosedCodeActions(context: vscode.CodeActionContext, docum
     }
 
     const code = String(item.code);
-    const escapeAction = new vscode.CodeAction('转义字符替换', vscode.CodeActionKind.QuickFix);
-    escapeAction.edit = new vscode.WorkspaceEdit();
-    escapeAction.edit.replace(document.uri, item.range, code.replace('\\<', '<').replace('\\>', '>').replace('<', '&lt;').replace('>', '&gt;'));
-    actions.push(escapeAction);
+    const escapeAction1 = new vscode.CodeAction('\\字符替换 (适用于非 Html 标签嵌套的情况)', vscode.CodeActionKind.QuickFix);
+    escapeAction1.edit = new vscode.WorkspaceEdit();
+    escapeAction1.edit.replace(document.uri, item.range, code.replace('<', '\\<'));
+    actions.push(escapeAction1);
+
+    const escapeAction2 = new vscode.CodeAction('&lt;和&gt;字符替换 (适用于 Html 标签嵌套的情况)', vscode.CodeActionKind.QuickFix);
+    escapeAction2.edit = new vscode.WorkspaceEdit();
+    escapeAction2.edit.replace(document.uri, item.range, code.replace('\\<', '<').replace('\\>', '>').replace('<', '&lt;').replace('>', '&gt;'));
+    actions.push(escapeAction2);
 
     const match = code.match(/<\s*\/?\s*([a-zA-Z0-9\-]+)([^>]*)>/);
     if (match) {

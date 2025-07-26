@@ -4,7 +4,12 @@ import { hasChinese, SET_CHINESE_PUNCTUATION } from 'shared';
 import { SearchResultT } from '@/@types/search';
 import { isConfigEnabled } from '@/utils/common';
 
-function searchPunctuationBlankSpace(content: string) {
+/**
+ * 获取中文标点符号前后是否有多余空格
+ * @param {string} content 文本内容
+ * @returns {SearchResultT[]} 返回错误信息结果集
+ */
+function getPunctuationBlankSpace(content: string) {
   const result: SearchResultT[] = [];
   if (!hasChinese(content)) {
     return result;
@@ -63,7 +68,7 @@ export async function checkPunctuationBlankSpace(content: string, document: vsco
     return [];
   }
 
-  return searchPunctuationBlankSpace(content).map((item) => {
+  return getPunctuationBlankSpace(content).map((item) => {
     const range = new vscode.Range(document.positionAt(item.start), document.positionAt(item.end));
     const diagnostic = new vscode.Diagnostic(range, `存在多余的空格 (Extra blank spaces)`, vscode.DiagnosticSeverity.Information);
     diagnostic.source = 'punctuation-blank-space-check';
@@ -72,7 +77,7 @@ export async function checkPunctuationBlankSpace(content: string, document: vsco
 }
 
 /**
- * 获取标签不闭合可执行的 action
+ * 获取中文标点符号前后是否有多余空格可执行的 action
  * @param {vscode.CodeActionContext} context code action 上下文
  * @param {vscode.TextDocument} document 文档对象
  * @returns {vscode.CodeAction[]} 返回可以执行的 action
