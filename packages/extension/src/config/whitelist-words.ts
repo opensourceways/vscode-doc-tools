@@ -2116,4 +2116,5 @@ export default [
   'mbytes',
   'pipefs',
   'relayfs',
+  'markdwonlint',
 ];

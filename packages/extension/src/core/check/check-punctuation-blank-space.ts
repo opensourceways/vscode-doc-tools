@@ -1,61 +1,7 @@
 import * as vscode from 'vscode';
-import { hasChinese, SET_CHINESE_PUNCTUATION } from 'shared';
+import { execPunctuationBlankSpaceCheck } from 'checkers';
 
-import { SearchResultT } from '@/@types/search';
 import { isConfigEnabled } from '@/utils/common';
-
-/**
- * 获取中文标点符号前后是否有多余空格
- * @param {string} content 文本内容
- * @returns {SearchResultT[]} 返回错误信息结果集
- */
-function getPunctuationBlankSpace(content: string) {
-  const result: SearchResultT[] = [];
-  if (!hasChinese(content)) {
-    return result;
-  }
-
-  for (let i = 0; i < content.length; i++) {
-
-    if (content[i] === '\u200B' || !SET_CHINESE_PUNCTUATION.has(content[i]) ) {
-      continue;
-    }
-
-    if (content[i + 1] === ' ' && content[i + 2] === '|') {
-      continue;
-    }
-
-    if (content[i + 1] === ' ') {
-      let start = i + 1;
-      let end = i + 2;
-      while (content[end] === ' ') {
-        end++;
-      }
-
-      result.push({
-        content: ' ',
-        start,
-        end,
-      });
-    }
-
-    if (content[i - 1] === ' ') {
-      let start = i - 1;
-      let end = i;
-      while (content[start - 1] === ' ') {
-        start--;
-      }
-
-      result.push({
-        content: ' ',
-        start,
-        end,
-      });
-    }
-  }
-
-  return result;
-}
 
 /**
  * 检查中文标点符号前后是否有多余空格
@@ -68,9 +14,9 @@ export async function checkPunctuationBlankSpace(content: string, document: vsco
     return [];
   }
 
-  return getPunctuationBlankSpace(content).map((item) => {
+  return execPunctuationBlankSpaceCheck(content).map((item) => {
     const range = new vscode.Range(document.positionAt(item.start), document.positionAt(item.end));
-    const diagnostic = new vscode.Diagnostic(range, `存在多余的空格 (Extra blank spaces)`, vscode.DiagnosticSeverity.Information);
+    const diagnostic = new vscode.Diagnostic(range, item.message, vscode.DiagnosticSeverity.Information);
     diagnostic.source = 'punctuation-blank-space-check';
     return diagnostic;
   });

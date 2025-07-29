@@ -1,8 +1,9 @@
 import * as vscode from 'vscode';
-import { spellCheckDocument } from 'cspell-lib';
+import { execCodespellCheck } from 'checkers';
 
 import defaultWhitelistWords from '@/config/whitelist-words';
 import { isConfigEnabled } from '@/utils/common';
+
 
 // 错误单词提示记录
 const wordsMap = new Map<string, string[]>();
@@ -18,46 +19,22 @@ export async function checkCodespell(content: string, document: vscode.TextDocum
     return [];
   }
 
-  const whiteList = vscode.workspace.getConfiguration('docTools.check.codespell').get<string[]>('whiteList', []);
-  const result = await spellCheckDocument(
-    {
-      uri: 'text.txt',
-      text: content,
-      languageId: 'markdown',
-      locale: 'en, en-US',
-    },
-    {
-      generateSuggestions: true,
-      noConfigSearch: true,
-    },
-    {
-      allowCompoundWords: true,
-      words: Array.isArray(whiteList) ? [...whiteList, ...defaultWhitelistWords] : defaultWhitelistWords,
-      suggestionsTimeout: 2000,
-      ignoreRegExpList: [
-        '/\\[.*?\\]\\(.*?\\)/g', // 匹配Markdown链接语法：[文本](URL)
-        '/<[^>]*?>/g',  // 匹配HTML标签：<tag>content</tag> 或 <tag/>
-        '[\\u4e00-\\u9fa5]',  // 匹配中文字符
-      ],
-    }
-  );
+  const whiteListConfig = vscode.workspace.getConfiguration('docTools.check.codespell').get<string[]>('whiteList', []);
+  const whiteList = Array.isArray(whiteListConfig) ? [...whiteListConfig, ...defaultWhitelistWords] : defaultWhitelistWords;
+  const results = await execCodespellCheck(content, whiteList);
 
-  const diagnostics: vscode.Diagnostic[] = [];
-  result.issues.forEach((issue: any) => {
-    if (Array.isArray(issue.suggestions)) {
-      wordsMap.set(issue.text, issue.suggestions);
+  return results.map(item => { 
+    if (Array.isArray(item.extras)) {
+      wordsMap.set(item.content, item.extras);
     }
 
-    const start = document.positionAt(issue.offset);
-    const end = document.positionAt(issue.offset + issue.text.length);
-    const range = new vscode.Range(start, end);
-    const diagnostic = new vscode.Diagnostic(range, `单词拼写错误 (CodeSpell warning): ${issue.text}`, vscode.DiagnosticSeverity.Information);
+    const range = new vscode.Range(document.positionAt(item.start), document.positionAt(item.end));
+    const diagnostic = new vscode.Diagnostic(range, item.message, vscode.DiagnosticSeverity.Information);
     diagnostic.source = 'codespell-check';
-    diagnostic.code = issue.text;
-    diagnostics.push(diagnostic);
+    diagnostic.code = item.content;
+    
+    return diagnostic;
   });
-
-  return diagnostics;
 }
 
 /**
