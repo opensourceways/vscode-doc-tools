@@ -1,12 +1,33 @@
+import * as vscode from 'vscode';
 import path from 'path';
 import fs from 'fs';
+import { getBase64Image } from 'shared';
 
 import { createMarkdownRenderer } from 'markdown';
-import { getBase64Image } from './resource';
 
 const REG_IMG_TAG = /<img\s+[^>]*src="([^"]+)"[^>]*>/;
 
-export function createDocMarkdownRenderer(srcDir: string) {
+/**
+ * 转换图片地址
+ * @param {string} srcPath 图片路径
+ * @param {string} basePath base路径
+ * @param {string} webview webview
+ * @param {vscode.Webview} base64Image 是否图片都使用 base64 图片
+ * @returns {string} 图片地址
+ */
+function parseImageUrl(srcPath: string, basePath: string, webview: vscode.Webview, base64Image = false) {
+  const completePath = path.join(basePath, srcPath);
+  return base64Image ? getBase64Image(completePath) : webview.asWebviewUri(vscode.Uri.file(completePath)).toString();
+}
+
+/**
+ * 创建 markdown 文档渲染器
+ * @param {string} srcDir 文档的源目录
+ * @param {vscode.Webview} webview webview
+ * @param {boolean} base64Image 是否图片都使用 base64 图片
+ * @returns {Promise<MarkdownItAsync>} 返回 MarkdownItAsync 实例
+ */
+export function createDocMarkdownRenderer(srcDir: string, webview: vscode.Webview, base64Image = false) {
   const fsDir = path.dirname(srcDir);
   return createMarkdownRenderer(fsDir, {
     math: true,
@@ -52,7 +73,7 @@ export function createDocMarkdownRenderer(srcDir: string) {
       md.renderer.rules.image = (tokens, idx, options, env, self) => {
         const srcIndex = tokens[idx].attrIndex('src');
         if (tokens[idx]?.attrs?.[srcIndex]?.[1]) {
-          tokens[idx].attrs[srcIndex][1] = getBase64Image(path.join(fsDir, decodeURIComponent(tokens[idx].attrs[srcIndex][1])));
+          tokens[idx].attrs[srcIndex][1] = parseImageUrl(decodeURIComponent(tokens[idx].attrs[srcIndex][1]), fsDir, webview, base64Image);
         }
 
         return `<MarkdownImage>${imageRender!(tokens, idx, options, env, self)}</MarkdownImage>`;
@@ -68,7 +89,8 @@ export function createDocMarkdownRenderer(srcDir: string) {
         if (content.includes('<img')) {
           const match = renderContent.match(REG_IMG_TAG);
           if (match) {
-            renderContent = renderContent.replace(match[1], getBase64Image(path.join(fsDir, decodeURIComponent(match[1]))));
+            const src = parseImageUrl(decodeURIComponent(match[1]), fsDir, webview, base64Image);
+            renderContent = renderContent.replace(match[1], src);
           }
 
           return `<MarkdownImage>${renderContent.replace(/(width|height)=['|"](.*?)['|"]/g, '')}</MarkdownImage>`;
@@ -79,7 +101,9 @@ export function createDocMarkdownRenderer(srcDir: string) {
           renderContent = renderContent.replace(/<a\s+([^>]*)href="([^"]*)"([^>]*)>/g, (match, before, url, after) => {
             if (url.startsWith('.')) {
               const [filePath] = url.split('#');
-              const newUrl = fs.existsSync(path.join(fsDir, filePath)) ? `doctools://markdown?fsPath=${path.join(fsDir, url).replace(/\\/g, '/')}` : 'doctools://tip?type=non-exists';
+              const newUrl = fs.existsSync(path.join(fsDir, filePath))
+                ? `doctools://markdown?fsPath=${path.join(fsDir, url).replace(/\\/g, '/')}`
+                : 'doctools://tip?type=non-exists';
               return `<a ${before}href="${newUrl}"${after}>`;
             }
 
@@ -99,7 +123,8 @@ export function createDocMarkdownRenderer(srcDir: string) {
         if (content.includes('<img')) {
           const match = renderContent.match(REG_IMG_TAG);
           if (match) {
-            renderContent = renderContent.replace(match[1], getBase64Image(path.join(fsDir, match[1])));
+            const src = parseImageUrl(decodeURIComponent(match[1]), fsDir, webview, base64Image);
+            renderContent = renderContent.replace(match[1], src);
           }
 
           return `<MarkdownImage>${renderContent.replace(/(width|height)=['|"](.*?)['|"]/g, '')}</MarkdownImage>`;
@@ -110,7 +135,9 @@ export function createDocMarkdownRenderer(srcDir: string) {
           renderContent = renderContent.replace(/<a\s+([^>]*)href="([^"]*)"([^>]*)>/g, (match, before, url, after) => {
             if (url.startsWith('.')) {
               const [filePath] = url.split('#');
-              const newUrl = fs.existsSync(path.join(fsDir, filePath)) ? `doctools://markdown?fsPath=${path.join(fsDir, url).replace(/\\/g, '/')}` : 'doctools://tip?type=non-exists';
+              const newUrl = fs.existsSync(path.join(fsDir, filePath))
+                ? `doctools://markdown?fsPath=${path.join(fsDir, url).replace(/\\/g, '/')}`
+                : 'doctools://tip?type=non-exists';
               return `<a ${before}href="${newUrl}"${after}>`;
             }
             return match;
@@ -128,7 +155,9 @@ export function createDocMarkdownRenderer(srcDir: string) {
           const href = tokens[idx].attrs![hrefIndex][1];
           if (href.startsWith('.')) {
             const [filePath] = href.split('#');
-            tokens[idx].attrs![hrefIndex][1] = fs.existsSync(path.join(fsDir, filePath)) ? `doctools://markdown?fsPath=${path.join(fsDir, href).replace(/\\/g, '/')}` : 'doctools://tip?type=non-exists';
+            tokens[idx].attrs![hrefIndex][1] = fs.existsSync(path.join(fsDir, filePath))
+              ? `doctools://markdown?fsPath=${path.join(fsDir, href).replace(/\\/g, '/')}`
+              : 'doctools://tip?type=non-exists';
           }
         }
 
@@ -136,53 +165,4 @@ export function createDocMarkdownRenderer(srcDir: string) {
       };
     },
   });
-}
-
-/**
- * 去除一些 md 符号，只保留标题
- * @param {string} title 标题
- */
-export function getMarkdownPureTitle(title: string) {
-  return title
-    .replace(/\*\*([^*]+)\*\*/g, '$1') // 去除加粗（**）
-    .replace(/\*([^*]+)\*/g, '$1') // 去除斜体（*）
-    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // 去除链接
-    .replace(/<[^>]+>/g, '') // 去除 HTML 标签
-    .replace(/`/g, ''); // 去除反引号
-}
-
-/**
- * 去除一些 md 符号，只保留文本
- * @param {string} title 标题
- */
-export function getMarkdownTitleId(title: string) {
-  return title
-    .normalize('NFKD')
-    .replace(/[\u0300-\u036F]/g, '')
-    .replace(/[\u0000-\u001f]/g, '')
-    .replace(/[\s~`!@#$%^&*()\-_+=[\]{}|\\;:"'“”‘’<>,.?/]+/g, '-')
-    .replace(/-{2,}/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .replace(/^(\d)/, '_$1')
-    .toLowerCase();
-}
-
-export function getMarkdownLevelTitles(content: string, level = 1) {
-  if (!content || isNaN(level) || level < 1 || level > 6) {
-    return [];
-  }
-
-  const result: string[] = [];
-  const titlePrefix = `${Array(level).fill('#').join('')} `;
-  content.split('\n').forEach((line) => {
-    const tirmStr = line.trim();
-    if (tirmStr.startsWith(titlePrefix)) {
-      const title = line.replace(titlePrefix, '').trim();
-      if (title) {
-        result.push(getMarkdownPureTitle(title));
-      }
-    }
-  });
-
-  return result;
 }

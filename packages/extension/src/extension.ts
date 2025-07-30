@@ -6,7 +6,8 @@ import { genTocManual } from '@/core/command/cmd-gen-toc-manual';
 import { checkMarkdown } from '@/core/command/cmd-check-markdown';
 import { addCodespellWhitelist } from '@/core/command/cmd-add-codespell-whitlist';
 import { addUrlWhitelist } from '@/core/command/cmd-add-url-whilelist';
-import { disposePreviewMarkdown, previewMarkdown } from '@/core/command/cmd-preview-markdown';
+import { disposePreviewMarkdown, previewMarkdown, triggerPreviewMarkdownContentChange } from '@/core/command/cmd-preview-markdown';
+import { fixMarkdownlint } from '@/core/command/cmd-fix-markdownlint';
 
 // 用于存储错误信息
 const diagnosticsCollection = vscode.languages.createDiagnosticCollection('doc-tools');
@@ -27,6 +28,7 @@ function registerEvent(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.workspace.onDidSaveTextDocument((document) => {
       triggerCheck(EVENT_TYPE.EVENT_SAVE_TEXT_DOC, document, diagnosticsCollection);
+      triggerPreviewMarkdownContentChange(document);
     })
   );
 
@@ -71,10 +73,17 @@ function registerCommand(context: vscode.ExtensionContext) {
     })
   );
 
-  // 预览 markdown 命令
+  // 注册预览 markdown 命令
   context.subscriptions.push(
     vscode.commands.registerCommand('doc.tools.preview.markdown', (uri: vscode.Uri) => {
-      previewMarkdown(context, uri)
+      previewMarkdown(context, uri);
+    })
+  );
+
+  // 注册 修复 markdown-lint 错误 命令
+  context.subscriptions.push(
+    vscode.commands.registerCommand('doc.tools.markdownlint.fix', (document: vscode.TextDocument) => {
+      fixMarkdownlint(document);
     })
   );
 }
@@ -115,5 +124,5 @@ export function activate(context: vscode.ExtensionContext) {
  */
 export function deactivate() {
   diagnosticsCollection.dispose();
-  disposePreviewMarkdown()
+  disposePreviewMarkdown();
 }

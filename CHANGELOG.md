@@ -64,3 +64,20 @@ All notable changes to the "docs-tools" extension will be documented in this fil
 ### Feat
 
 - 新增 markdown 预览功能
+
+## [0.0.8]
+
+### Feat
+
+- 新增中文标点符号前后无空格检查（默认关闭，可到设置中开启）
+- 新增段落中英文标点符号混用检查（默认关闭，可到设置中开启）
+- 新增一键修复 markdownlint 错误的功能
+- 新增保存后自动更新文档预览页面
+- 文档预览页面新增跳转对应的 markdown/_toc.yaml 文件的功能
+- HTML 标签闭合修复增加使用\转义选项（非 HTML 标签嵌套的未闭合标签错误请使用此功能修复）
+
+### Fix
+
+- 优化文档预览图片加载
+- 优化提示内容
+- 优化链接检查、资源是否存在检查（链接 404 调整为 error 提示，访问超时调整为 warning 提示）

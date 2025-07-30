@@ -5,11 +5,21 @@ import path from 'path';
 import { ServerMessageHandler } from 'webview-bridge';
 
 let panel: vscode.WebviewPanel | null = null;
+let timerTriggerMdContentChange: NodeJS.Timeout | null = null;
+let timerTriggerTocContentChange: NodeJS.Timeout | null = null;
 
+/**
+ * 释放 webview panel
+ */
 export function disposePreviewMarkdown() {
   panel?.dispose();
 }
 
+/**
+ * 预览 markdown
+ * @param {vscode.ExtensionContext} context 上下文
+ * @param {vscode.Uri} uri 文档 uri
+ */
 export function previewMarkdown(context: vscode.ExtensionContext, uri: vscode.Uri) {
   if (panel) {
     panel.dispose();
@@ -28,12 +38,11 @@ export function previewMarkdown(context: vscode.ExtensionContext, uri: vscode.Ur
       retainContextWhenHidden: true,
       enableScripts: true,
       enableCommandUris: true,
-      localResourceRoots: [context.extensionUri, vscode.Uri.file(basePath), ...(vscode.workspace.workspaceFolders?.map((folder) => folder.uri) || [])],
     }
   );
 
   panel.iconPath = vscode.Uri.file(path.join(context.extensionPath, 'resources', isDarkTheme ? 'icon-preview-dark.svg' : 'icon-preview-light.svg'));
-  ServerMessageHandler.bind(panel);
+  ServerMessageHandler.bind(panel, isDev);
 
   const fsPath = uri.fsPath.replace(/\\/g, '/');
   const injectData = {
@@ -58,4 +67,39 @@ export function previewMarkdown(context: vscode.ExtensionContext, uri: vscode.Ur
   }
 
   context.subscriptions.push(panel);
+}
+
+/**
+ * 触发 markdown/_toc.yaml 内容改变
+ * @param {vscode.TextDocument} document 文档对象
+ */
+export function triggerPreviewMarkdownContentChange(document: vscode.TextDocument) {
+  if (document.languageId !== 'markdown' && document.languageId !== 'yaml') {
+    return;
+  }
+
+  if (document.languageId === 'markdown') {
+    if (timerTriggerMdContentChange) {
+      clearTimeout(timerTriggerMdContentChange);
+    }
+
+    timerTriggerMdContentChange = setTimeout(() => {
+      ServerMessageHandler.broadcast('onMarkdownContentChange', document.uri.fsPath.replace(/\\/g, '/'));
+      timerTriggerMdContentChange = null;
+    }, 1000);
+
+    return;
+  }
+
+  if (document.languageId === 'yaml' && document.uri.path.split('/').pop() === '_toc.yaml') {
+    if (timerTriggerTocContentChange) {
+      clearTimeout(timerTriggerTocContentChange);
+    }
+
+    timerTriggerTocContentChange = setTimeout(() => {
+      ServerMessageHandler.broadcast('onTocContentChange', document.uri.fsPath.replace(/\\/g, '/'));
+      timerTriggerTocContentChange = null;
+    }, 1000);
+    return;
+  }
 }

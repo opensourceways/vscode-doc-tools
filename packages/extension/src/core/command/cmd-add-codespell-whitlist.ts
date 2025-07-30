@@ -4,7 +4,6 @@ import * as vscode from 'vscode';
  * 加入单词白名单
  * @param {string} word 错误单词
  * @param {vscode.DiagnosticCollection} diagnosticsCollection Diagnostic Collection
- * @returns 
  */
 export async function addCodespellWhitelist(word: string, diagnosticsCollection: vscode.DiagnosticCollection) {
   if (!word) {

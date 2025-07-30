@@ -8,4 +8,5 @@ export interface DocMenuT {
   upstream?: string;
   path?: string;
   sections?: Array<DocMenuT>;
+  nonexistent?: boolean;
 }

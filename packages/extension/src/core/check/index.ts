@@ -1,14 +1,18 @@
 import * as vscode from 'vscode';
-import { lintMarkdown } from '@/core/check/lint-markdown';
-import { checkTagClosed, getTagClosedCodeActions } from '@/core/check/check-tag-closed';
-import { checkCodespell, getCodespellCodeActions } from '@/core/check/check-codespell';
-import { checkResourceExistence, getResourceExistenceCodeActions } from '@/core/check/check-resource-existence';
-import { checkLinkValidity, getLinkValidityCodeActions } from '@/core/check/check-link-validity';
-import { checkToc } from '@/core/check/check-toc';
-import { checkMdInToc } from '@/core/check/check-md-in-toc';
+import { getMarkdownFilterContent } from 'shared';
+
 import { EVENT_TYPE } from '@/@types/event';
 import { isConfigEnabled } from '@/utils/common';
-import { getMarkdownFilterContent } from '@/utils/markdwon';
+
+import { getMarkdownlintCodeActions, lintMarkdown } from './lint-markdown';
+import { checkTagClosed, getTagClosedCodeActions } from './check-tag-closed';
+import { checkCodespell, getCodespellCodeActions } from './check-codespell';
+import { checkResourceExistence, getResourceExistenceCodeActions } from './check-resource-existence';
+import { checkLinkValidity, getLinkValidityCodeActions } from './check-link-validity';
+import { checkToc } from './check-toc';
+import { checkMdInToc } from './check-md-in-toc';
+import { checkPunctuationBlankSpace, getPunctuationBlankSpaceCodeActions } from './check-punctuation-blank-space';
+import { checkPunctuationMixing } from './check-punctuation-mixing';
 
 // 用于存储延迟任务记录
 const timerMap = new Map<string, NodeJS.Timeout>();
@@ -62,9 +66,15 @@ export function triggerCheck(event: EVENT_TYPE, document: vscode.TextDocument, d
  * @param {vscode.DiagnosticCollection} diagnosticsCollection 提示收集
  */
 async function checkMarkdown(event: EVENT_TYPE, document: vscode.TextDocument, diagnosticsCollection: vscode.DiagnosticCollection) {
-  const content = getMarkdownFilterContent(document.getText());
+  const content = getMarkdownFilterContent(document.getText(), {
+    disableHtmlComment: true,
+    disableCode: true,
+  });
+
   // 先执行不耗时的检查
   const diagnostics: vscode.Diagnostic[] = await Promise.all([
+    checkPunctuationBlankSpace(content, document),
+    checkPunctuationMixing(content, document),
     checkTagClosed(content, document),
     checkCodespell(content, document),
     lintMarkdown(document),
@@ -106,10 +116,12 @@ async function checkTocYaml(document: vscode.TextDocument, diagnosticsCollection
  */
 export function getCodeActions(document: vscode.TextDocument, context: vscode.CodeActionContext) {
   const actions: vscode.CodeAction[] = [
+    ...getPunctuationBlankSpaceCodeActions(context, document),
     ...getCodespellCodeActions(context, document),
     ...getTagClosedCodeActions(context, document),
     ...getLinkValidityCodeActions(context),
     ...getResourceExistenceCodeActions(context),
+    ...getMarkdownlintCodeActions(context, document),
   ];
   return actions;
 }

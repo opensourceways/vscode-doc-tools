@@ -1,43 +1,9 @@
 import * as vscode from 'vscode';
 import path from 'path';
+import { execLinkValidityCheck } from 'checkers';
 
 import defaultWhitelistUrls from '@/config/whitelist-urls';
 import { isConfigEnabled } from '@/utils/common';
-import { isAccessibleLink } from '@/utils/request';
-
-const REGEX = [
-  /(?<!\!)\[.*?\]\((.+?)\)/g, // 匹配 [xx](xxx) 链接
-  /<(http[^>]+)>/g, // 匹配 <链接地址> 格式的链接
-  /<a[^>]*href=["']([^"]+?)["'][^>]*>/gi, // 匹配 <a> 标签链接
-];
-
-/**
- * 提取链接
- * @param {string} text 文本
- * @returns {{ link: string; startPos: number; endPos: number }[]} 返回提取的链接数组
- */
-function extractLinks(text: string) {
-  const links: { link: string; startPos: number; endPos: number }[] = [];
-  for (const reg of REGEX) {
-    for (const match of text.matchAll(reg)) {
-      if (!match[1]) {
-        continue;
-      }
-
-      const link = match[1];
-      const startPos = match.index + match[0].indexOf(link);
-      const endPos = startPos + link.length;
-
-      links.push({
-        link,
-        startPos,
-        endPos,
-      });
-    }
-  }
-
-  return links;
-}
 
 /**
  * 检查链接有效性
@@ -46,36 +12,25 @@ function extractLinks(text: string) {
  * @returns {vscode.Diagnostic[]} 返回错误 Diagnostic 提示数组
  */
 export async function checkLinkValidity(content: string, document: vscode.TextDocument) {
-  const diagnostics: vscode.Diagnostic[] = [];
   if (!isConfigEnabled('docTools.check.linkValidity')) {
-    return diagnostics;
+    return [];
   }
 
-  const whiteList = vscode.workspace.getConfiguration('docTools.check.url').get<string[]>('whiteList', []);
-  const allWhiteList = Array.isArray(whiteList) ? [...whiteList, ...defaultWhitelistUrls] : defaultWhitelistUrls;
-  const links = extractLinks(content);
-  for (const item of links) {
-    // 跳过锚点
-    if (item.link.startsWith('#')) {
-      continue;
-    }
+  const whiteListConfig = vscode.workspace.getConfiguration('docTools.check.url').get<string[]>('whiteList', []);
+  const whiteList = Array.isArray(whiteListConfig) ? [...whiteListConfig, ...defaultWhitelistUrls] : defaultWhitelistUrls;
+  const results = await execLinkValidityCheck(content, path.dirname(document.uri.fsPath), whiteList);
 
-    // 去除锚点
-    if (item.link.includes('#')) {
-      item.link = item.link.split('#')[0];
-    }
-
-    if (await isAccessibleLink(item.link, path.dirname(document.uri.fsPath), allWhiteList)) {
-      continue;
-    }
-
-    const range = new vscode.Range(document.positionAt(item.startPos), document.positionAt(item.endPos));
-    const diagnostic = new vscode.Diagnostic(range, `Invalid link: ${item.link}`, vscode.DiagnosticSeverity.Warning);
+  return results.map((item) => {
+    const range = new vscode.Range(document.positionAt(item.start), document.positionAt(item.end));
+    const diagnostic = new vscode.Diagnostic(
+      range,
+      item.message,
+      item.extras === 'notFound' ? vscode.DiagnosticSeverity.Error : vscode.DiagnosticSeverity.Warning
+    );
     diagnostic.source = 'link-validity-check';
-    diagnostics.push(diagnostic);
-  }
-
-  return diagnostics;
+    
+    return diagnostic;
+  });
 }
 
 /**
@@ -94,7 +49,7 @@ export function getLinkValidityCodeActions(context: vscode.CodeActionContext) {
       return;
     }
 
-    const link = item.message.replace('Invalid link: ', '');
+    const link = item.message.split(': ')[1];
     if (!link.startsWith('http')) {
       return;
     }

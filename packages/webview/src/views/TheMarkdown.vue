@@ -1,15 +1,17 @@
 <script setup lang="ts">
-import { nextTick, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue';
+import { nextTick, onMounted, onBeforeUnmount, ref, shallowRef, watch, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { OIcon, OSkeleton, OSkeletonText, useMessage } from '@opensig/opendesign';
 
+import NotFound from '@/components/NotFound.vue';
 import DocMenu from '@/components/doc/DocMenu.vue';
 import DocPagination from '@/components/doc/DocPagination.vue';
 import MarkdownContent from '@/components/markdown/MarkdownContent.vue';
+import MarkdownViewSource from '@/components/markdown/MarkdownViewSource.vue';
 
 import IconExpand from '~icons/app/icon-expand.svg';
 
-import { MarkdownBridge, TocBridge } from 'webview-bridge/src/client';
+import { BroadcastBridge, MarkdownBridge, PageBridge, ResourceBridge, TocBridge } from 'webview-bridge';
 import { useScreen } from '@/composables/useScreen';
 import { DocMenuTree, type DocMenuNodeT } from '@/utils/tree';
 import type { DocMenuT } from '@/@types/type-doc-menu';
@@ -165,7 +167,7 @@ onMounted(() => {
   }
 });
 
-onUnmounted(() => {
+onBeforeUnmount(() => {
   const scrollContainer = document.querySelector<HTMLElement>('#app > .o-scroller > .o-scroller-container');
   if (scrollContainer) {
     scrollContainer.removeEventListener('scroll', onScrollUpdateAnchor);
@@ -193,23 +195,38 @@ const scrollIntoTitle = async (titleId: string) => {
 
 // -------------------- 获取数据 --------------------
 let initData = true;
+let lastTocPath = '';
 const loading = ref(false);
 const content = ref('');
+const showContent = ref(true);
 
-const getData = async (mdPath: string, loadMenuData = false) => {
-  loading.value = true;
-  content.value = await MarkdownBridge.getMarkdownHtml(mdPath);
-
-  if (loadMenuData) {
-    const menuData = await TocBridge.getManualToc(mdPath);
-    if (menuData) {
-      tree = new DocMenuTree([menuData] as DocMenuT[]);
-      menuItems.value = tree.root.children;
-      manualNode.value = tree.root.children?.[0];
-    }
+const getToc = async (mdPath: string) => {
+  const tocData = await TocBridge.getManualToc(mdPath);
+  if (!tocData) {
+    return;
   }
 
-  await nextTick();
+  tree = new DocMenuTree([tocData.tocObj] as DocMenuT[]);
+  menuItems.value = tree.root.children;
+  manualNode.value = tree.root.children?.[0];
+  lastTocPath = tocData.tocPath!;
+};
+
+const getData = async (mdPath: string, loadMenuData = false, showLoading = true) => {
+  loading.value = showLoading;
+  const mdContent = await MarkdownBridge.getMarkdownHtml(mdPath);
+  showContent.value = mdContent !== null;
+  if (mdContent === null) {
+    PageBridge.setWebviewTitle(t('common.nonexistentDoc'));
+  } else {
+    content.value = mdContent;
+    if (loadMenuData) {
+      await getToc(mdPath);
+    }
+
+    PageBridge.setWebviewTitle(mdPath.split('/').pop() || '404');
+    await nextTick();
+  }
   loading.value = false;
 };
 
@@ -247,6 +264,7 @@ watch(
     initData = false;
 
     if (hash) {
+      await nextTick();
       scrollIntoTitle(hash);
     }
   },
@@ -264,23 +282,63 @@ const onMarkdownClick = (evt: MouseEvent) => {
   }
 
   evt.preventDefault();
+  const href = el.getAttribute('href') || '';
 
-  if (el.href.startsWith('doctools://markdown?fsPath=')) {
+  if (href.startsWith('doctools://markdown?fsPath=')) {
     router.replace({
       query: {
-        fsPath: decodeURIComponent(el.href.replace('doctools://markdown?fsPath=', '')),
+        fsPath: decodeURIComponent(href.replace('doctools://markdown?fsPath=', '')),
         refreshExpanded: 1,
       },
     });
     return;
   }
 
-  if (el.href.startsWith('doctools://tip?type=non-exists')) {
+  if (href.startsWith('doctools://tip?type=non-exists')) {
     message.danger({
       content: t('docs.invalidLink'),
     });
 
     return;
+  }
+
+  if (href.startsWith('#')) {
+    scrollIntoTitle(decodeURIComponent(href.slice(1)));
+    return;
+  }
+};
+
+// -------------------- 监听 vscode 内容变化 --------------------
+const onMarkdownContentChange = (mdPath: string) => {
+  if (mdPath !== route.query.fsPath) {
+    return;
+  }
+
+  getData(mdPath, true, false);
+};
+
+const onTocConetentChange = async (tocPath: string) => {
+  if (lastTocPath !== tocPath || typeof route.query.fsPath !== 'string') {
+    return;
+  }
+
+  await getToc(route.query.fsPath.split('#')[0]);
+};
+
+onMounted(() => {
+  BroadcastBridge.addMarkdownContentChangeListener(onMarkdownContentChange);
+  BroadcastBridge.addTocContentChangeListener(onTocConetentChange);
+});
+
+onUnmounted(() => {
+  BroadcastBridge.removeMarkdownContentChangeListener(onMarkdownContentChange);
+  BroadcastBridge.removeTocContentChangeListener(onTocConetentChange);
+});
+
+// -------------------- 查看 _toc.yaml 源文件 --------------------
+const viewTocFile = () => {
+  if (lastTocPath) {
+    ResourceBridge.viewSource(lastTocPath);
   }
 };
 </script>
@@ -289,7 +347,7 @@ const onMarkdownClick = (evt: MouseEvent) => {
   <div class="ly-container">
     <template v-if="menuItems.length > 0">
       <div v-if="!isPhone" class="doc-sidebar" :class="{ 'is-closed': lePad && isSidebarHidden }">
-        <DocMenu v-model="menuVal" v-model:expanded="menuExpandedKeys" :items="menuItems" recursion @click="onChangeItem" />
+        <DocMenu v-model="menuVal" v-model:expanded="menuExpandedKeys" :items="menuItems" recursion @click="onChangeItem" @view-toc-source="viewTocFile" />
         <div class="menu-opener" @click="switchMenu">
           <div class="opener-thumb"></div>
         </div>
@@ -298,16 +356,17 @@ const onMarkdownClick = (evt: MouseEvent) => {
         <div class="sidebar-top">
           <div class="menu-opener-mb" :class="{ 'menu-opener-mb-active': !isSidebarHidden }">
             <OIcon @click="switchMenu"><IconExpand /></OIcon>
+            <span class="mb-title">{{ $t('docs.preview') }}</span>
           </div>
         </div>
       </div>
       <div v-if="isPhone" class="doc-menu-mb" :class="[isSidebarHidden ? 'is-closed' : '']">
-        <DocMenu v-model="menuVal" v-model:expanded="menuExpandedKeys" :items="menuItems" recursion @click="onChangeItem" />
+        <DocMenu v-model="menuVal" v-model:expanded="menuExpandedKeys" :items="menuItems" recursion @click="onChangeItem" @view-toc-source="viewTocFile" />
       </div>
       <div ref="maskRef" class="aside-mask" @click="switchMenu"></div>
     </template>
 
-    <div class="ly-doc" :class="{ 'ly-doc-no-menu': false }">
+    <div class="ly-doc" :class="{ 'ly-doc-no-menu': menuItems.length === 0 }">
       <div class="doc-body">
         <OSkeleton :animation="true" :loading="loading">
           <template #template>
@@ -317,8 +376,12 @@ const onMarkdownClick = (evt: MouseEvent) => {
             </div>
           </template>
 
-          <MarkdownContent :html="content" @click="onMarkdownClick" />
-          <DocPagination :manual-node="manualNode" :page-node="pageNode" @page-change="onPageChange" />
+          <template v-if="showContent">
+            <MarkdownViewSource />
+            <MarkdownContent :html="content" @click="onMarkdownClick" />
+            <DocPagination :manual-node="manualNode" :page-node="pageNode" @page-change="onPageChange" />
+          </template>
+          <NotFound v-else />
         </OSkeleton>
       </div>
     </div>
@@ -346,6 +409,7 @@ const onMarkdownClick = (evt: MouseEvent) => {
     --layout-doc-menu-offset-left: max(calc(40px + (var(--vw100) - 1920px) / 2), 40px);
     --layout-doc-menu-width: 206px;
     --layout-doc-menu-gap: 24px;
+    --layout-doc-width: min(1200px, calc(var(--vw100) - var(--layout-doc-menu-offset-left) - var(--layout-doc-offset-right)));
   }
 
   @include respond-to('<=pad') {
@@ -353,8 +417,8 @@ const onMarkdownClick = (evt: MouseEvent) => {
     --layout-doc-menu-offset-left: max(calc(2px + (var(--vw100) - 1920px) / 2), 32px);
     --layout-doc-menu-gap: 32px;
     --layout-doc-offset-left: var(--layout-doc-menu-gap);
-    --layout-doc-width: min(1200px, calc(var(--vw100) - var(--layout-doc-menu-offset-left) - var(--layout-doc-offset-right)));
   }
+
   @include respond-to('phone') {
     --layout-doc-content-padding: 12px;
     --layout-doc-menu-offset-left: max(calc(24px + (var(--vw100) - 1920px) / 2), 24px);
@@ -542,15 +606,25 @@ const onMarkdownClick = (evt: MouseEvent) => {
 .ly-doc-no-menu {
   max-width: var(--layout-content-max-width);
   margin: 0 auto;
+  padding-top: var(--layout-doc-padding-top);
 }
 
 .doc-body {
   position: relative;
-  min-height: calc(100vh - var(--layout-header-height) - var(--layout-doc-padding-top) - var(--layout-doc-padding-bottom));
+  min-height: calc(100vh - var(--layout-header-height) - var(--layout-doc-padding-top) - var(--layout-doc-padding-bottom) - 48px);
   padding: var(--layout-doc-content-padding);
   border-radius: var(--o-radius-xs);
   background: var(--o-color-fill2);
   display: flex;
   flex-direction: column;
+
+  @include respond-to('<=pad') {
+    min-height: calc(100vh - var(--layout-header-height) - var(--layout-doc-padding-top) - var(--layout-doc-padding-bottom) - 24px);
+  }
+}
+
+.mb-title {
+  margin-left: 8px;
+  @include h2;
 }
 </style>

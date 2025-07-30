@@ -1,0 +1,13 @@
+{
+  "name": "checkers",
+  "version": "0.0.8",
+  "author": "cctvcat",
+  "license": "MIT",
+  "main": "src/index.ts",
+  "dependencies": {
+    "cspell-lib": "9.2.0",
+    "js-yaml": "4.1.0",
+    "markdownlint": "0.38.0",
+    "shared": "*"
+  }
+}

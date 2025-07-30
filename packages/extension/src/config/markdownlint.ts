@@ -1,9 +1,11 @@
-import { type Configuration } from "markdownlint";
+import { type Configuration } from 'markdownlint';
 
-export default {
+// markdown-lint 内置默认配置
+export const MD_DEFAULT_CONFIG: Configuration = {
   default: true,
   MD003: { style: 'atx' },
   MD029: { style: 'ordered' },
+  MD004: false,
   MD007: false,
   MD009: false,
   MD013: false,
@@ -18,6 +20,7 @@ export default {
   MD043: false,
   MD044: false,
   MD045: false,
+  MD046: false,
   MD048: false,
   MD049: false,
   MD050: false,
@@ -27,4 +30,4 @@ export default {
   MD055: false,
   MD056: false,
   MD057: false,
-} as Configuration;
+};

@@ -54,11 +54,14 @@ onBeforeUnmount(() => {
     v-if="isArray(node.children) && node.children.length > 0"
     ref="itemRef"
     class="recursion-sub-menu"
-    :class="{ 'recursion-sub-menu-anchor': node.children.length && node.children.every(item => item.type === 'anchor') }"
+    :class="{
+      'recursion-sub-menu-anchor': node.children.length && node.children.every((item) => item.type === 'anchor'),
+      'recursion-menu-nonexistent': node.nonexistent,
+    }"
     :id="node.id === parentProps?.modelValue ? 'rec-active-menu-item' : undefined"
     :value="node.id"
     :selectable="node.type === 'page'"
-    :title="node.label"
+    :title="node.nonexistent ? $t('common.nonexistentDoc') : node.label"
     @click="emits('click', node)"
   >
     <template #title>
@@ -72,9 +75,12 @@ onBeforeUnmount(() => {
     ref="itemRef"
     :id="node.id === parentProps?.modelValue ? 'rec-active-menu-item' : undefined"
     class="recursion-menu-item"
+    :class="{
+      'recursion-menu-nonexistent': node.nonexistent,
+    }"
     :value="node.id"
     @click="emits('click', node)"
-    :title="node.label"
+    :title="node.nonexistent ? $t('common.nonexistentDoc') : node.label"
   >
     <a v-if="node.href" :href="node.href" @click.prevent>{{ node.label }}</a>
     <span v-else>{{ node.label }}</span>
@@ -142,7 +148,9 @@ onBeforeUnmount(() => {
   }
 }
 
-.o-menu-item + .o-sub-menu,  .o-sub-menu, .o-menu-item {
+.o-menu-item + .o-sub-menu,
+.o-sub-menu,
+.o-menu-item {
   margin-top: 2px;
 }
 
@@ -175,5 +183,10 @@ a {
     color: inherit;
     outline: none;
   }
+}
+
+.recursion-menu-nonexistent {
+  text-decoration: line-through;
+  color: red !important;
 }
 </style>

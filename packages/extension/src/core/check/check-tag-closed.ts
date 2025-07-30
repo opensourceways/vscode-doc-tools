@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { execTagClosedCheck } from 'checkers';
 
 import { isConfigEnabled } from '@/utils/common';
 
@@ -14,98 +15,15 @@ export async function checkTagClosed(content: string, document: vscode.TextDocum
     return diagnostics;
   }
 
-  const record: { tag: string; match: RegExpExecArray }[] = []; // 保存标签及其起始位置
-  const selfClosedTags = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr']);
-
-  // 正则表达式，匹配 HTML 标签、被转义的标签
-  const REGEX_TAG = /(?<!\\)<\s*\/?\s*([a-zA-Z0-9\-]+)([^>]*)>|<\s*\/?\s*([a-zA-Z0-9\-]+)([^>]*?)\/>|\\<([^>]*)>|<([^>]*)\\>/g;
-
-  for (const match of content.matchAll(REGEX_TAG)) {
-    // 跳过链接
-    if (
-      match[0].startsWith('<') &&
-      match[0].endsWith('>') &&
-      !match[0].includes('href=') &&
-      !match[0].includes('src=') &&
-      (match[0].includes('://') || match[0].includes('@'))
-    ) {
-      continue;
-    }
-
-    // 转义的标签
-    if (match[0].startsWith('\\<') || match[0].endsWith('\\>')) {
-      // 处于 html 标签中不允许使用 \<xx\> \<xx> <xx\> 写法
-      if (record.length > 0) {
-        const range = new vscode.Range(document.positionAt(match.index), document.positionAt(match.index + match[0].length));
-        const diagnostic = new vscode.Diagnostic(
-          range,
-          `Unclosed html tag: ${match[0]}.\\<或\\>的转义写法不允许在标签嵌套中使用`,
-          vscode.DiagnosticSeverity.Error
-        );
-        diagnostic.source = 'tag-closed-check';
-        diagnostic.code = match[0];
-        diagnostics.push(diagnostic);
-      }
-      continue;
-    }
-
-    // 跳过已闭合标签
-    if (match[0].startsWith('<') && match[0].endsWith('/>')) {
-      continue;
-    }
-
-    // 跳过自闭合标签
-    if (match[1] && selfClosedTags.has(match[1]?.toLowerCase())) {
-      continue;
-    }
-
-    // 跳过tag非字母开头
-    if (match[1] && !/^[a-zA-Z]/.test(match[1])) {
-      continue;
-    }
-
-    const tag = match[1]?.toLowerCase();
-    const isEndTag = tag && match[0].startsWith('</');
-
-    // 非 </xx> 结束标签保存记录
-    if (!isEndTag) {
-      record.push({
-        tag,
-        match,
-      });
-      continue;
-    }
-
-    // </xx> 寻找对应的 <xx>
-    let tagMacthed = false;
-    for (let i = record.length - 1; i >= 0; i--) {
-      if (record[i].tag === tag) {
-        tagMacthed = true;
-        record.splice(i, 1);
-        break;
-      }
-    }
-
-    if (!tagMacthed) {
-      const range = new vscode.Range(document.positionAt(match.index), document.positionAt(match.index + match[0].length));
-      const diagnostic = new vscode.Diagnostic(range, `Unclosed html tag: <${tag}>.`, vscode.DiagnosticSeverity.Error);
-      diagnostic.source = 'tag-closed-check';
-      diagnostic.code = match[0];
-      diagnostics.push(diagnostic);
-    }
-  }
-
-  // 检查剩余的标签
-  while (record.length > 0) {
-    const { tag, match } = record.pop()!;
-    const range = new vscode.Range(document.positionAt(match.index), document.positionAt(match.index + match[0].length));
-    const diagnostic = new vscode.Diagnostic(range, `Unclosed html tag: <${tag}>.`, vscode.DiagnosticSeverity.Error);
+  return execTagClosedCheck(content).map((item) => {
+    const range = new vscode.Range(document.positionAt(item.start), document.positionAt(item.end));
+    const diagnostic = new vscode.Diagnostic(range, item.message, vscode.DiagnosticSeverity.Error);
     diagnostic.source = 'tag-closed-check';
-    diagnostic.code = match[0];
+    diagnostic.code = item.content;
     diagnostics.push(diagnostic);
-  }
 
-  return diagnostics;
+    return diagnostic;
+  });
 }
 
 /**
@@ -126,10 +44,15 @@ export function getTagClosedCodeActions(context: vscode.CodeActionContext, docum
     }
 
     const code = String(item.code);
-    const escapeAction = new vscode.CodeAction('转义字符替换', vscode.CodeActionKind.QuickFix);
-    escapeAction.edit = new vscode.WorkspaceEdit();
-    escapeAction.edit.replace(document.uri, item.range, code.replace('\\<', '<').replace('\\>', '>').replace('<', '&lt;').replace('>', '&gt;'));
-    actions.push(escapeAction);
+    const escapeAction1 = new vscode.CodeAction('\\字符替换 (适用于非 Html 标签嵌套的情况)', vscode.CodeActionKind.QuickFix);
+    escapeAction1.edit = new vscode.WorkspaceEdit();
+    escapeAction1.edit.replace(document.uri, item.range, code.replace('<', '\\<'));
+    actions.push(escapeAction1);
+
+    const escapeAction2 = new vscode.CodeAction('&lt;和&gt;字符替换 (适用于 Html 标签嵌套的情况)', vscode.CodeActionKind.QuickFix);
+    escapeAction2.edit = new vscode.WorkspaceEdit();
+    escapeAction2.edit.replace(document.uri, item.range, code.replace('\\<', '<').replace('\\>', '>').replace('<', '&lt;').replace('>', '&gt;'));
+    actions.push(escapeAction2);
 
     const match = code.match(/<\s*\/?\s*([a-zA-Z0-9\-]+)([^>]*)>/);
     if (match) {

@@ -1,45 +1,9 @@
 import * as vscode from 'vscode';
 import path from 'path';
+import { execResourceExistenceCheck } from 'checkers';
 
 import { isConfigEnabled } from '@/utils/common';
-import { isAccessibleLink } from '@/utils/request';
-
 import defaultWhitelistUrls from '@/config/whitelist-urls';
-
-const REGEX = [
-  /!\[.*?\]\((.*?)\)/g, // 提取 ![xxx](xxx) 语法的链接
-  /<img\s+[^>]*src="([^"]+)"[^>]*>/gi, // 提取 img 标签的链接
-  /<image\s+[^>]*src="([^"]+)"[^>]*>/gi, // 提取 image 标签的链接
-  /<video\s+[^>]*src="([^"]+)"[^>]*>/gi, // 提取 video 标签的链接
-];
-
-/**
- * 提取链接
- * @param {string} text 文本
- * @returns {{ link: string; startPos: number; endPos: number }[]} 返回提取的链接数组
- */
-function extractLinks(text: string) {
-  const links: { link: string; startPos: number; endPos: number }[] = [];
-  for (const reg of REGEX) {
-    for (const match of text.matchAll(reg)) {
-      if (!match[1]) {
-        continue;
-      }
-
-      const link = match[1];
-      const startPos = match.index + match[0].indexOf(link);
-      const endPos = startPos + link.length;
-
-      links.push({
-        link,
-        startPos,
-        endPos,
-      });
-    }
-  }
-
-  return links;
-}
 
 /**
  * 检查资源链接有效性
@@ -53,20 +17,21 @@ export async function checkResourceExistence(content: string, document: vscode.T
     return diagnostics;
   }
 
-  const whiteList = vscode.workspace.getConfiguration('docTools.check.url').get<string[]>('whiteList', []);
-  const allWhiteList = Array.isArray(whiteList) ? [...whiteList, ...defaultWhitelistUrls] : defaultWhitelistUrls;
-  for (const item of extractLinks(content)) {
-    if (await isAccessibleLink(item.link, path.dirname(document.uri.fsPath), allWhiteList)) {
-      continue;
-    }
+  const whiteListConfig = vscode.workspace.getConfiguration('docTools.check.url').get<string[]>('whiteList', []);
+  const whiteList = Array.isArray(whiteListConfig) ? [...whiteListConfig, ...defaultWhitelistUrls] : defaultWhitelistUrls;
+  const results = await execResourceExistenceCheck(content, path.dirname(document.uri.fsPath), whiteList);
 
-    const range = new vscode.Range(document.positionAt(item.startPos), document.positionAt(item.endPos));
-    const diagnostic = new vscode.Diagnostic(range, `Non-existent resource: ${item.link}`, vscode.DiagnosticSeverity.Warning);
+  return results.map((item) => {
+    const range = new vscode.Range(document.positionAt(item.start), document.positionAt(item.end));
+    const diagnostic = new vscode.Diagnostic(
+      range,
+      item.message,
+      item.extras === 'notFound' ? vscode.DiagnosticSeverity.Error : vscode.DiagnosticSeverity.Warning
+    );
     diagnostic.source = 'resource-existence-check';
-    diagnostics.push(diagnostic);
-  }
 
-  return diagnostics;
+    return diagnostic;
+  });
 }
 
 /**
@@ -85,7 +50,7 @@ export function getResourceExistenceCodeActions(context: vscode.CodeActionContex
       return;
     }
 
-    const link = item.message.replace('Non-existent resource: ', '');
+    const link = item.message.split(': ')[1];
     if (!link.startsWith('http')) {
       return;
     }
@@ -96,6 +61,7 @@ export function getResourceExistenceCodeActions(context: vscode.CodeActionContex
       title: '添加地址白名单',
       arguments: [link],
     };
+
     actions.push(whiteListAction);
   });
 

@@ -4,7 +4,6 @@ import * as vscode from 'vscode';
  * 加入链接白名单
  * @param {string} url 链接
  * @param {vscode.DiagnosticCollection} diagnosticsCollection Diagnostic Collection
- * @returns 
  */
 export async function addUrlWhitelist(url: string, diagnosticsCollection: vscode.DiagnosticCollection) {
   if (!url) {
@@ -24,7 +23,7 @@ export async function addUrlWhitelist(url: string, diagnosticsCollection: vscode
         return true;
       }
 
-      return item.message.replace('Invalid link: ', '').replace('Non-existent resource: ', '') !== url;
+      return item.message.split(': ')[1] !== url;
     });
 
     if (filterDiagnostics.length !== diagnostics.length) {

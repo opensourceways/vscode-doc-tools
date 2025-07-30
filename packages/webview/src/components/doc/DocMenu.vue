@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { type PropType } from 'vue';
 import { useVModel } from '@vueuse/core';
-import { OScroller, OMenuItem } from '@opensig/opendesign';
+import { OScroller, OIcon, OPopover } from '@opensig/opendesign';
 
 import RecursionMenu from '@/components/menu/RecursionMenu.vue';
 import RecursionMenuItem from '@/components/menu/RecursionMenuItem.vue';
+
+import IconOutLink from '~icons/app/icon-outlink.svg';
 
 import { type DocMenuNodeT } from '@/utils/tree';
 
@@ -36,6 +38,7 @@ const emits = defineEmits<{
   (evt: 'update:expanded', value: string): void;
   (evt: 'click', item: DocMenuNodeT, newOpener?: boolean): void;
   (evt: 'click-title', item: DocMenuNodeT): void;
+  (evt: 'view-toc-source'): void;
 }>();
 
 const menuValue = useVModel(props, 'modelValue', emits);
@@ -47,7 +50,17 @@ const expanded = useVModel(props, 'expanded', emits);
     <OScroller id="menuScrollDom" show-type="hover" size="small" disabled-x>
       <RecursionMenu v-model="menuValue" v-model:expanded="expanded" :default-expanded="defaultExpanded">
         <template v-if="items.length > 0">
-          <OMenuItem class="menu-title">{{ items[0].label }}</OMenuItem>
+          <div class="menu-title">
+            <span class="title" :title="items[0].label">{{ items[0].label }}</span>
+
+            <OPopover position="right" trigger="hover" wrap-class="popover-copy">
+              <template #target>
+                <OIcon class="view-source-link" @click="emits('view-toc-source')"> <IconOutLink /> </OIcon>
+              </template>
+
+              {{ $t('docs.viewTocSource') }}
+            </OPopover>
+          </div>
           <!-- 手册只有一篇文章且和手册名相同 -->
           <template v-if="items[0].children.length === 1 && items[0].children[0].label === items[0].label">
             <RecursionMenuItem
@@ -79,6 +92,8 @@ const expanded = useVModel(props, 'expanded', emits);
   .menu-title {
     --menu-padding-v: 0;
     --menu-padding-h: 0;
+    display: flex;
+    align-items: center;
     font-weight: 500;
     margin-bottom: 16px;
     cursor: auto;
@@ -90,6 +105,20 @@ const expanded = useVModel(props, 'expanded', emits);
 
     @include respond-to('<=laptop') {
       margin-bottom: 12px;
+    }
+
+    .title {
+      @include text-truncate(1);
+    }
+  }
+
+  .view-source-link {
+    margin-left: 8px;
+    @include text2;
+
+    @include hover {
+      cursor: pointer;
+      color: var(--o-color-primary1);
     }
   }
 

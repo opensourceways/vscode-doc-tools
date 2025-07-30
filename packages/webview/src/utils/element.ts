@@ -30,3 +30,20 @@ export const getScrollRemainingBottom = (container: HTMLElement) => {
 
   return distance > 0 ? distance : 0;
 };
+
+/**
+ * 判断两个元素是否重叠
+ * @param a - 第一个元素
+ * @param b - 第二个元素
+ * @returns 是否重叠
+ */
+export function isOverlap(a: Element, b: Element): boolean {
+  // 如果当前环境没有 DOM，直接返回 false
+  if (typeof document === 'undefined') {
+    return false;
+  }
+
+  const rect1 = a.getBoundingClientRect();
+  const rect2 = b.getBoundingClientRect();
+  return !(rect1.right <= rect2.left || rect2.right <= rect1.left || rect1.bottom <= rect2.top || rect2.bottom <= rect1.top);
+}
