@@ -7,3 +7,4 @@ export * from './core/resource-existence';
 export * from './core/tag-closed';
 export * from './core/toc';
 export * from './core/markdownlint';
+export * from './core/punctuation-manual-link';

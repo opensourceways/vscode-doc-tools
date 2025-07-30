@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
+import { execPunctuationMixingCheck } from 'checkers';
 
 import { isConfigEnabled } from '@/utils/common';
-import { execPunctuationMixingCheck } from 'checkers';
 
 /**
  * 检查中英文标点符号是否混用

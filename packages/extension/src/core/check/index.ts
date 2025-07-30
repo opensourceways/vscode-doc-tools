@@ -13,6 +13,7 @@ import { checkToc } from './check-toc';
 import { checkMdInToc } from './check-md-in-toc';
 import { checkPunctuationBlankSpace, getPunctuationBlankSpaceCodeActions } from './check-punctuation-blank-space';
 import { checkPunctuationMixing } from './check-punctuation-mixing';
+import { checkPunctuationManualLink, getPunctuationMauanlLinkActions } from './check-punctuation-manual-link';
 
 // 用于存储延迟任务记录
 const timerMap = new Map<string, NodeJS.Timeout>();
@@ -75,6 +76,7 @@ async function checkMarkdown(event: EVENT_TYPE, document: vscode.TextDocument, d
   const diagnostics: vscode.Diagnostic[] = await Promise.all([
     checkPunctuationBlankSpace(content, document),
     checkPunctuationMixing(content, document),
+    checkPunctuationManualLink(content, document),
     checkTagClosed(content, document),
     checkCodespell(content, document),
     lintMarkdown(document),
@@ -117,6 +119,7 @@ async function checkTocYaml(document: vscode.TextDocument, diagnosticsCollection
 export function getCodeActions(document: vscode.TextDocument, context: vscode.CodeActionContext) {
   const actions: vscode.CodeAction[] = [
     ...getPunctuationBlankSpaceCodeActions(context, document),
+    ...getPunctuationMauanlLinkActions(context, document),
     ...getCodespellCodeActions(context, document),
     ...getTagClosedCodeActions(context, document),
     ...getLinkValidityCodeActions(context),
