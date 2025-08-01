@@ -9,3 +9,4 @@ export * from './core/toc';
 export * from './core/markdownlint';
 export * from './core/punctuation-manual-link';
 export * from './core/name';
+export * from './core/name-consistency';

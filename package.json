@@ -63,6 +63,10 @@
       {
         "command": "doc.tools.check.name",
         "title": "检查目录、文件是否符合命名规范"
+      },
+      {
+        "command": "doc.tools.check.nameConsistency",
+        "title": "检查中英文档名称一致性"
       }
     ],
     "menus": {
@@ -86,6 +90,9 @@
         },
         {
           "command": "doc.tools.check.name"
+        },
+        {
+          "command": "doc.tools.check.nameConsistency"
         }
       ]
     },
@@ -173,6 +180,11 @@
           "type": "array",
           "default": [],
           "description": "文件/目录命名规范白名单（添加后忽略对该名称的检查）"
+        },
+        "docTools.check.nameConsistency.enable": {
+          "type": "boolean",
+          "default": true,
+          "description": "启用中英文文档名称一致性检查"
         }
       }
     }

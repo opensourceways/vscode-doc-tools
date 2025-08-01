@@ -60,7 +60,20 @@ export async function getYamlAsync<T>(fsPath: string, defaultVal: any = null, en
 export function getBase64Image(fsPath: string) {
   try {
     return `data:image/png;base64,${fs.readFileSync(fsPath, { encoding: 'base64' })}`;
-  } catch (error) {
+  } catch {
     return `data:image/png;base64,`;
+  }
+}
+
+/**
+ * 枚举目录
+ * @param targetPath 路径
+ * @returns {Promise<string[]>} 返回枚举结果
+ */
+export async function readdirAsync(targetPath: string) { 
+  try {
+    return await fsAsnyc.readdir(targetPath);
+  } catch {
+    return [];
   }
 }

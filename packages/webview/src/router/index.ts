@@ -22,6 +22,13 @@ const routes = [
       return import('@/views/TheCheckNameResult.vue')
     },
   },
+  {
+    path: '/check-name-consistency-result',
+    name: 'check-name-consistency-result',
+    component: () => {
+      return import('@/views/TheCheckNameConsistencyResult.vue')
+    },
+  },
 ]
 
 export default createRouter({

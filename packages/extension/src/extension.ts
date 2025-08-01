@@ -10,6 +10,7 @@ import { addUrlWhitelist } from '@/core/command/cmd-add-url-whilelist';
 import { previewMarkdown, triggerPreviewMarkdownContentChange } from '@/core/command/cmd-preview-markdown';
 import { fixMarkdownlint } from '@/core/command/cmd-fix-markdownlint';
 import { checkName } from './core/command/cmd-check-name';
+import { checkNameConsistency } from './core/command/cmd-check-name-consistency';
 
 // 用于存储错误信息
 const diagnosticsCollection = vscode.languages.createDiagnosticCollection('doc-tools');
@@ -93,6 +94,13 @@ function registerCommand(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.commands.registerCommand('doc.tools.check.name', (uri: vscode.Uri) => {
       checkName(context, uri);
+    })
+  );
+
+  // 注册 中英文文档名称一致性 命令
+  context.subscriptions.push(
+    vscode.commands.registerCommand('doc.tools.check.nameConsistency', (uri: vscode.Uri) => {
+      checkNameConsistency(context, uri);
     })
   );
 }
