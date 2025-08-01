@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { rename } from 'fs/promises';
 
 import { InvokeT, MessageT, OPERATION_TYPE, SOURCE_TYPE } from '../@types/message';
 import { createInvokeMessage } from '../utils/message';
@@ -18,6 +19,12 @@ export function handleResourceMessage(webviewPanel: vscode.WebviewPanel) {
     switch (name) {
       case 'viewSource':
         viewSource(webviewPanel, message);
+        break;
+      case 'revealInExplorer':
+        revealInExplorer(webviewPanel, message);
+        break;
+      case 'renameFilenameOrDirname':
+        renameFilenameOrDirname(webviewPanel, message);
         break;
     }
   });
@@ -48,6 +55,58 @@ async function viewSource(webviewPanel: vscode.WebviewPanel, message: MessageT<I
       data: {
         id,
         name,
+      },
+    })
+  );
+}
+
+/**
+ * 处理 invoke 消息：viewSource - 在资源管理器中选中
+ * @param {vscode.WebviewPanel} webviewPanel WebviewPanel
+ * @param {MessageT<InvokeT>} message 消息
+ */
+async function revealInExplorer(webviewPanel: vscode.WebviewPanel, message: MessageT<InvokeT>) {
+  const { id, name, args } = message.data;
+  if (typeof args?.[0] === 'string') {
+    const uri = vscode.Uri.file(args[0]);
+    await vscode.commands.executeCommand('revealInExplorer', uri);
+  }
+
+  webviewPanel.webview.postMessage(
+    createInvokeMessage({
+      source: SOURCE_TYPE.server,
+      data: {
+        id,
+        name,
+      },
+    })
+  );
+}
+
+/**
+ * 处理 invoke 消息：rename - 修改文件/目录名称
+ * @param {vscode.WebviewPanel} webviewPanel WebviewPanel
+ * @param {MessageT<InvokeT>} message 消息
+ */
+async function renameFilenameOrDirname(webviewPanel: vscode.WebviewPanel, message: MessageT<InvokeT>) {
+  const { id, name, args } = message.data;
+  let result = false;
+  if (typeof args?.[0] === 'string' && typeof args?.[1] === 'string') {
+    try {
+      await rename(args[0], args[1]);
+      result = true;
+    } catch {
+      // nothing
+    }
+  }
+
+  webviewPanel.webview.postMessage(
+    createInvokeMessage({
+      source: SOURCE_TYPE.server,
+      data: {
+        id,
+        name,
+        result,
       },
     })
   );

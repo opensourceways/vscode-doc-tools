@@ -6,3 +6,4 @@ export * from './bridge-resource';
 export * from './bridge-broadcast';
 export * from './bridge-markdown';
 export * from './bridge-toc';
+export * from './bridge-config';

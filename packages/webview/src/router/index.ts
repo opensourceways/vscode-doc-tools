@@ -15,6 +15,13 @@ const routes = [
       return import('@/views/TheMarkdown.vue')
     },
   },
+  {
+    path: '/check-name-result',
+    name: 'check-name-result',
+    component: () => {
+      return import('@/views/TheCheckNameResult.vue')
+    },
+  },
 ]
 
 export default createRouter({

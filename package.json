@@ -34,23 +34,23 @@
     "commands": [
       {
         "command": "doc.tools.check",
-        "title": "Doc Tools：运行Markdown检查"
+        "title": "运行Markdown检查"
       },
       {
         "command": "doc.tools.gen.toc.manual",
-        "title": "Doc Tools：生成指南 _toc.yaml"
+        "title": "生成指南 _toc.yaml"
       },
       {
         "command": "doc.tools.codespell.add.whitelist",
-        "title": "Doc Tools：添加单词白名单"
+        "title": "添加单词白名单"
       },
       {
         "command": "doc.tools.url.add.whitelist",
-        "title": "Doc Tools：添加链接白名单"
+        "title": "添加链接白名单"
       },
       {
         "command": "doc.tools.preview.markdown",
-        "title": "Doc Tools：预览 markdown",
+        "title": "预览Markdown",
         "icon": {
           "light": "resources/icon-preview-light.svg",
           "dark": "resources/icon-preview-dark.svg"
@@ -58,13 +58,17 @@
       },
       {
         "command": "doc.tools.markdownlint.fix",
-        "title": "Doc Tools：修复 markdown-lint 错误"
+        "title": "修复MarkdownLint错误"
+      },
+      {
+        "command": "doc.tools.check.name",
+        "title": "检查目录、文件是否符合命名规范"
       }
     ],
     "menus": {
       "explorer/context": [
         {
-          "command": "doc.tools.gen.toc.manual",
+          "submenu": "doc.tools.folder",
           "when": "explorerResourceIsFolder",
           "group": "doc.tools.toc"
         }
@@ -75,8 +79,22 @@
           "when": "resourceLangId == markdown",
           "group": "navigation"
         }
+      ],
+      "doc.tools.folder": [
+        {
+          "command": "doc.tools.gen.toc.manual"
+        },
+        {
+          "command": "doc.tools.check.name"
+        }
       ]
     },
+    "submenus": [
+      {
+        "id": "doc.tools.folder",
+        "label": "Doc Tools"
+      }
+    ],
     "configuration": {
       "type": "object",
       "title": "Doc Tools配置",
@@ -145,6 +163,16 @@
           "type": "boolean",
           "default": true,
           "description": "启用手册/指南链接是否被书名号包裹检查"
+        },
+        "docTools.check.name.enable": {
+          "type": "boolean",
+          "default": true,
+          "description": "启用文件/目录命名规范检查"
+        },
+        "docTools.check.name.whiteList": {
+          "type": "array",
+          "default": [],
+          "description": "文件/目录命名规范白名单（添加后忽略对该名称的检查）"
         }
       }
     }

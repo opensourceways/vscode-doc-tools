@@ -14,6 +14,7 @@ import { checkMdInToc } from './check-md-in-toc';
 import { checkPunctuationBlankSpace, getPunctuationBlankSpaceCodeActions } from './check-punctuation-blank-space';
 import { checkPunctuationMixing } from './check-punctuation-mixing';
 import { checkPunctuationManualLink, getPunctuationMauanlLinkActions } from './check-punctuation-manual-link';
+import { checkName } from './check-name';
 
 // 用于存储延迟任务记录
 const timerMap = new Map<string, NodeJS.Timeout>();
@@ -94,9 +95,10 @@ async function checkMarkdown(event: EVENT_TYPE, document: vscode.TextDocument, d
     diagnosticsCollection.set(document.uri, diagnostics);
   }
 
-  // 检查 md 是否在 _toc.yaml 中
+  // 弹窗提示的检查
   if (event === EVENT_TYPE.EVENT_ACTIVE || event === EVENT_TYPE.EVENT_OPEN_TEXT_DOC) {
     checkMdInToc(document);
+    checkName(document);
   }
 }
 

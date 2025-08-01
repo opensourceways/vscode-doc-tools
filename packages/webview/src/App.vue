@@ -19,7 +19,7 @@ const setTheme = (theme: 'dark' | 'light') => {
 setTheme(injectData?.theme || 'light');
 router.replace({
   path: injectData.path,
-  query: injectData.query,
+  query: injectData?.query,
 });
 </script>
 

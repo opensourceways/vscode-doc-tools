@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { ServerMessageHandler } from 'webview-bridge';
 
 import { EVENT_TYPE } from '@/@types/event';
 import { getCodeActions, triggerCheck } from '@/core/check';
@@ -6,8 +7,9 @@ import { genTocManual } from '@/core/command/cmd-gen-toc-manual';
 import { checkMarkdown } from '@/core/command/cmd-check-markdown';
 import { addCodespellWhitelist } from '@/core/command/cmd-add-codespell-whitlist';
 import { addUrlWhitelist } from '@/core/command/cmd-add-url-whilelist';
-import { disposePreviewMarkdown, previewMarkdown, triggerPreviewMarkdownContentChange } from '@/core/command/cmd-preview-markdown';
+import { previewMarkdown, triggerPreviewMarkdownContentChange } from '@/core/command/cmd-preview-markdown';
 import { fixMarkdownlint } from '@/core/command/cmd-fix-markdownlint';
+import { checkName } from './core/command/cmd-check-name';
 
 // 用于存储错误信息
 const diagnosticsCollection = vscode.languages.createDiagnosticCollection('doc-tools');
@@ -86,6 +88,13 @@ function registerCommand(context: vscode.ExtensionContext) {
       fixMarkdownlint(document);
     })
   );
+
+  // 注册 检查目录名、文件名命名规范 命令
+  context.subscriptions.push(
+    vscode.commands.registerCommand('doc.tools.check.name', (uri: vscode.Uri) => {
+      checkName(context, uri);
+    })
+  );
 }
 
 /**
@@ -123,6 +132,6 @@ export function activate(context: vscode.ExtensionContext) {
  * 失活插件
  */
 export function deactivate() {
+  ServerMessageHandler.unbind();
   diagnosticsCollection.dispose();
-  disposePreviewMarkdown();
 }
