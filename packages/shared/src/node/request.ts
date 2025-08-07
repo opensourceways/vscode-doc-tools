@@ -7,8 +7,9 @@ import path from 'path';
  * @param {number} opts.timeout 超时时间，单位ms，默认 10 * 1000 ms，可空
  * @returns {Promise<Response>} 返回请求结果
  */
-export function createHeadRequest(
+export function createRequest(
   url: string,
+  method: string,
   opts?: {
     timeout: number;
     signal?: AbortSignal;
@@ -25,7 +26,7 @@ export function createHeadRequest(
   const timer = setTimeout(abortFunc, timeout);
 
   const response = fetch(url, {
-    method: 'HEAD',
+    method,
     headers: {
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36',
     },
@@ -72,13 +73,18 @@ export function getLinkStatus(link: string, prefixPath = '', whitelist: string[]
     return Promise.resolve(200);
   }
 
+  // 跳过某些协议的检查
+  if (link.startsWith('mailto:') || link.startsWith('file://') || link.startsWith('ftp://')) {
+    return Promise.resolve(200);
+  }
+
   // 链接
   if (link.startsWith('http')) {
     return getUrlStatus(link, signal);
   }
 
   // 本地文件
-  return Promise.resolve(fs.existsSync(path.join(prefixPath, link)) ? 200 : 404);
+  return Promise.resolve(fs.existsSync(path.join(prefixPath, decodeURI(link.replace('.html', '.md')))) ? 200 : 404);
 }
 
 /**
@@ -96,17 +102,20 @@ export const getUrlStatus = (() => {
         return map.get(url)!;
       }
 
-      const res = await createHeadRequest(url, {
+      const res = await createRequest(url, 'GET', {
         timeout: 5 * 1000,
         signal,
       });
 
       map.set(url, res.status);
       return res.status;
-    } catch (err) {
-      if (err instanceof Error && err.name !== 'AbortError') {
-        map.set(url, 404);
-        return 404;
+    } catch (err: any) {
+      if (err instanceof Error) {
+        const code = (err.cause as any).code as string;
+        if (code === 'ENOTFOUND' || code === 'EHOSTUNREACH' || code === 'ENETUNREACH') {
+          map.set(url, 404);
+          return 404;
+        }
       }
     }
 

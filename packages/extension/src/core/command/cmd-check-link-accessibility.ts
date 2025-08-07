@@ -29,7 +29,19 @@ async function walkDir(dir: string, whiteList: string[], signal: AbortSignal) {
         disableCode: true,
       });
 
-      const results = await Promise.all([execLinkValidityCheck(content, dir, whiteList, signal), execResourceExistenceCheck(content, dir, whiteList, signal)]);
+      const results = await Promise.all([
+        execLinkValidityCheck(content, {
+          whiteList, 
+          signal,
+          prefixPath: dir,
+        }), 
+        execResourceExistenceCheck(content, {
+          whiteList, 
+          signal,
+          prefixPath: dir, 
+        })
+      ]);
+
       if (signal.aborted) {
         throw new Error('aborted');
       }

@@ -14,6 +14,7 @@ import { checkMdInToc } from './check-md-in-toc';
 import { checkPunctuationBlankSpace, getPunctuationBlankSpaceCodeActions } from './check-punctuation-blank-space';
 import { checkPunctuationMixing } from './check-punctuation-mixing';
 import { checkPunctuationManualLink, getPunctuationMauanlLinkActions } from './check-punctuation-manual-link';
+import { checkPunctuationConsecutive } from './check-punctuation-consecutive';
 import { checkName } from './check-name';
 import { checkNameConsistency } from './check-name-consistency';
 
@@ -79,6 +80,7 @@ async function checkMarkdown(event: EVENT_TYPE, document: vscode.TextDocument, d
     checkPunctuationBlankSpace(content, document),
     checkPunctuationMixing(content, document),
     checkPunctuationManualLink(content, document),
+    checkPunctuationConsecutive(content, document),
     checkTagClosed(content, document),
     checkCodespell(content, document),
     lintMarkdown(document),

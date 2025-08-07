@@ -183,14 +183,19 @@
           "default": false,
           "description": "启用中英文标点符号混用检查（因语句含义复杂，可能存在误报）"
         },
+        "docTools.check.punctuationConsecutive.enable": {
+          "type": "boolean",
+          "default": false,
+          "description": "启用连续标点符号检查（因语句含义复杂，可能存在误报）"
+        },
         "docTools.check.punctuationManualLink.enable": {
           "type": "boolean",
-          "default": true,
+          "default": false,
           "description": "启用手册/指南链接是否被书名号包裹检查"
         },
         "docTools.check.name.enable": {
           "type": "boolean",
-          "default": true,
+          "default": false,
           "description": "启用文件/目录命名规范检查"
         },
         "docTools.check.name.whiteList": {
@@ -200,7 +205,7 @@
         },
         "docTools.check.nameConsistency.enable": {
           "type": "boolean",
-          "default": true,
+          "default": false,
           "description": "启用中英文文档名称一致性检查"
         }
       }

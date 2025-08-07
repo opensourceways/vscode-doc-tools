@@ -18,7 +18,10 @@ export async function checkLinkValidity(content: string, document: vscode.TextDo
 
   const whiteListConfig = vscode.workspace.getConfiguration('docTools.check.url').get<string[]>('whiteList', []);
   const whiteList = Array.isArray(whiteListConfig) ? [...whiteListConfig, ...defaultWhitelistUrls] : defaultWhitelistUrls;
-  let results = await execLinkValidityCheck(content, path.dirname(document.uri.fsPath), whiteList);
+  let results = await execLinkValidityCheck(content, {
+    whiteList,
+    prefixPath: path.dirname(document.uri.fsPath),
+  });
 
   if (isConfigEnabled('docTools.check.linkValidity.only404')) {
     results = results.filter((item) => item.extras === 404);

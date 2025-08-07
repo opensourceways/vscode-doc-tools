@@ -12,12 +12,30 @@ const REGEX = [
 /**
  * 提取链接
  * @param {string} content 内容
- * @param {string} prefixPath 文件前缀地址
- * @param {string[]} whiteList 地址白名单
- * @param {AbortSignal} signal 中断信号
+ * @param {string} opts.prefixPath 文件前缀地址
+ * @param {string[]} opts.whiteList 地址白名单
+ * @param {boolean} opts.disableCheckExternalUrl 禁止检测外链
+ * @param {boolean} opts.disableCheckInternalUrl 禁止检测内链
+ * @param {AbortSignal} opts.signal 中断信号
  * @returns {CheckResultT<number>[]} 返回检查结果
  */
-export async function execResourceExistenceCheck(content: string, prefixPath: string, whiteList: string[], signal?: AbortSignal) {
+export async function execResourceExistenceCheck(
+  content: string,
+  opts: {
+    prefixPath: string;
+    whiteList?: string[];
+    disableCheckExternalUrl?: boolean;
+    disableCheckInternalUrl?: boolean;
+    signal?: AbortSignal;
+  }
+) {
+  const { 
+    prefixPath, 
+    whiteList = [], 
+    disableCheckExternalUrl = false, 
+    disableCheckInternalUrl = false,
+    signal, 
+  } = opts;
   const results: CheckResultT<number>[] = [];
   const set = new Set(whiteList);
 
@@ -38,6 +56,12 @@ export async function execResourceExistenceCheck(content: string, prefixPath: st
       }
 
       const link = match[1];
+      if (disableCheckExternalUrl && link.startsWith('http')) {
+        continue;
+      } else if (disableCheckInternalUrl && !link.startsWith('http')) {
+        continue;
+      }
+
       const status = await getLinkStatus(link, prefixPath, whiteList, signal);
 
       // 跳过100 - 400之间的状态码

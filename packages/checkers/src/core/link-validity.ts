@@ -11,12 +11,30 @@ const REGEX = [
 /**
  * 检查链接有效性
  * @param {string} content 内容
- * @param {string} prefixPath 文件前缀地址
- * @param {string[]} whiteList 地址白名单
- * @param {AbortSignal} signal 中断信号
+ * @param {string} opts.prefixPath 文件前缀地址
+ * @param {string[]} opts.whiteList 地址白名单
+ * @param {boolean} opts.disableCheckExternalUrl 禁止检测外链
+ * @param {boolean} opts.disableCheckInternalUrl 禁止检测内链
+ * @param {AbortSignal} opts.signal 中断信号
  * @returns {CheckResultT<number>[]} 返回检查结果
  */
-export async function execLinkValidityCheck(content: string, prefixPath: string, whiteList: string[], signal?: AbortSignal) {
+export async function execLinkValidityCheck(
+  content: string,
+  opts: {
+    prefixPath: string;
+    whiteList?: string[];
+    disableCheckExternalUrl?: boolean;
+    disableCheckInternalUrl?: boolean;
+    signal?: AbortSignal;
+  }
+) {
+  const { 
+    prefixPath, 
+    whiteList = [], 
+    disableCheckExternalUrl = false, 
+    disableCheckInternalUrl = false,
+    signal, 
+  } = opts;
   const results: CheckResultT<number>[] = [];
   const set = new Set(whiteList);
 
@@ -42,6 +60,12 @@ export async function execLinkValidityCheck(content: string, prefixPath: string,
       }
 
       const link = match[1].split('#')[0];
+      if (disableCheckExternalUrl && link.startsWith('http')) {
+        continue;
+      } else if (disableCheckInternalUrl && !link.startsWith('http')) {
+        continue;
+      }
+      
       const status = await getLinkStatus(link, prefixPath, whiteList, signal);
 
       // 跳过100 - 400之间的状态码
@@ -51,7 +75,7 @@ export async function execLinkValidityCheck(content: string, prefixPath: string,
 
       const start = match.index + (match[0].startsWith('<http') ? 1 : match[0].indexOf(match[1], 2));
       const end = start + match[1].length;
-      
+
       results.push({
         content: match[1],
         message: `${status === 499 ? '访问超时' : '链接无法访问'} (Invalid link): ${match[1]}`,
