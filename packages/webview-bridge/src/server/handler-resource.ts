@@ -40,13 +40,18 @@ async function viewSource(webviewPanel: vscode.WebviewPanel, message: MessageT<I
   if (typeof args?.[0] === 'string') {
     const filePath = vscode.Uri.file(args[0]);
     const document = await vscode.workspace.openTextDocument(filePath);
-
-    await vscode.window.showTextDocument(
+    const editor = await vscode.window.showTextDocument(
       document,
       typeof webviewPanel.viewColumn?.valueOf?.() === 'number' && webviewPanel.viewColumn.valueOf() > 1
         ? webviewPanel.viewColumn.valueOf() - 1
         : vscode.ViewColumn.Beside
     );
+
+    if (typeof args?.[1] === 'number' && typeof args?.[2] === 'number') {
+      const range = new vscode.Range(document.positionAt(args[1]), document.positionAt(args[2]));
+      editor.selection = new vscode.Selection(range.start, range.end);
+      editor.revealRange(range, vscode.TextEditorRevealType.InCenter);
+    }
   }
 
   webviewPanel.webview.postMessage(

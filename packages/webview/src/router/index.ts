@@ -29,6 +29,13 @@ const routes = [
       return import('@/views/TheCheckNameConsistencyResult.vue')
     },
   },
+  {
+    path: '/check-link-accessibility',
+    name: 'check-link-accessibility',
+    component: () => {
+      return import('@/views/TheCheckLinkAccessibility.vue')
+    },
+  },
 ]
 
 export default createRouter({

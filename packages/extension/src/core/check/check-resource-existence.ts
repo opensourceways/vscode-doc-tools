@@ -19,14 +19,18 @@ export async function checkResourceExistence(content: string, document: vscode.T
 
   const whiteListConfig = vscode.workspace.getConfiguration('docTools.check.url').get<string[]>('whiteList', []);
   const whiteList = Array.isArray(whiteListConfig) ? [...whiteListConfig, ...defaultWhitelistUrls] : defaultWhitelistUrls;
-  const results = await execResourceExistenceCheck(content, path.dirname(document.uri.fsPath), whiteList);
+  let results = await execResourceExistenceCheck(content, path.dirname(document.uri.fsPath), whiteList);
+
+  if (isConfigEnabled('docTools.check.resourceExistence.only404')) {
+    results = results.filter((item) => item.extras === 404);
+  }
 
   return results.map((item) => {
     const range = new vscode.Range(document.positionAt(item.start), document.positionAt(item.end));
     const diagnostic = new vscode.Diagnostic(
       range,
       item.message,
-      item.extras === 'notFound' ? vscode.DiagnosticSeverity.Error : vscode.DiagnosticSeverity.Warning
+      item.extras === 499 ? vscode.DiagnosticSeverity.Warning : vscode.DiagnosticSeverity.Error
     );
     diagnostic.source = 'resource-existence-check';
 

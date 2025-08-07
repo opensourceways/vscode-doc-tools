@@ -113,7 +113,7 @@ const onConfirmIgnore = async () => {
 </script>
 
 <template>
-  <div class="check-name-result">
+  <div class="check-result">
     <h1 class="title">检查项：目录、文件是否符合命名规范</h1>
     <div class="text">【命名规则】：小写字母，下划线连接</div>
     <div class="text">【检查路径】：{{ injectData.extras?.fsPath }}</div>
@@ -135,7 +135,7 @@ const onConfirmIgnore = async () => {
     </OTable>
   </div>
 
-  <ODialog v-model:visible="showUpdateDlg" class="del-body" size="small">
+  <ODialog v-model:visible="showUpdateDlg" size="small">
     <template #header>修改名称</template>
     <div class="dlg-body">
       <OInput v-model="updateName" class="full-w" placeholder="请输入名称" size="large">
@@ -158,7 +158,7 @@ const onConfirmIgnore = async () => {
     </template>
   </ODialog>
 
-  <ODialog v-model:visible="showIgnoreDlg" class="del-body" size="small">
+  <ODialog v-model:visible="showIgnoreDlg" size="small">
     <template #header>确认忽略</template>
     <div class="dlg-body">确认要忽略 {{ ignoreItem?.name }} 吗？忽略之后的检查将会跳过与其名称相同的文件/目录名字的检查</div>
     <template #footer>
@@ -171,7 +171,7 @@ const onConfirmIgnore = async () => {
 </template>
 
 <style lang="scss">
-.check-name-result {
+.check-result {
   margin: 24px;
   padding: 24px;
   min-height: calc(100vh - var(--layout-header-height) - var(--layout-doc-padding-top) - var(--layout-doc-padding-bottom));

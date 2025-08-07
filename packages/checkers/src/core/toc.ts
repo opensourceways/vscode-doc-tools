@@ -1,5 +1,5 @@
 import yaml from 'js-yaml';
-import { isAccessibleLink } from 'shared';
+import { getLinkStatus } from 'shared';
 
 import { TocItem } from '../@types/toc';
 import { CheckResultT } from '../@types/result';
@@ -17,7 +17,7 @@ function collectInvalidResults(content: string, text: string, message: string) {
   const results: CheckResultT[] = [];
   for (const match of content.matchAll(new RegExp(text, 'g'))) {
     results.push({
-      content: text,
+      content: match[0],
       message,
       start: match.index,
       end: match.index + match[0].length,
@@ -60,8 +60,8 @@ async function walkToc(content: string, item: TocItem, tocDir: string, results: 
   if (item.href) {
     const url = typeof item.href === 'string' ? item.href : item.href.upstream;
     if (url && !handled.has(`href:\\s+${url}`)) {
-      const valid = await isAccessibleLink(url, tocDir);
-      if (valid !== 'success') {
+      const status = await getLinkStatus(url, tocDir);
+      if (status >= 400) {
         results.push(...collectInvalidResults(content, `href:\\s+${url}`, `文档资源不存在 (Non-existent doc in toc): ${url}.`));
       }
 

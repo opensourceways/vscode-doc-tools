@@ -67,6 +67,10 @@
       {
         "command": "doc.tools.check.nameConsistency",
         "title": "检查中英文档名称一致性"
+      },
+      {
+        "command": "doc.tools.check.linkAccessibility",
+        "title": "检查链接可访问性"
       }
     ],
     "menus": {
@@ -93,6 +97,9 @@
         },
         {
           "command": "doc.tools.check.nameConsistency"
+        },
+        {
+          "command": "doc.tools.check.linkAccessibility"
         }
       ]
     },
@@ -131,10 +138,20 @@
           "default": true,
           "description": "启用链接有效性检查（包含：1. 内链；2. 外链）"
         },
+        "docTools.check.linkValidity.only404.enable": {
+          "type": "boolean",
+          "default": true,
+          "description": "启用链接有效性检查只在链接无法访问时提示"
+        },
         "docTools.check.resourceExistence.enable": {
           "type": "boolean",
           "default": true,
           "description": "启用资源是否存在检查（包含：1. 内链；2. 外链）"
+        },
+        "docTools.check.resourceExistence.only404.enable": {
+          "type": "boolean",
+          "default": true,
+          "description": "启用资源是否存在检查只在资源无法访问时提示"
         },
         "docTools.check.url.whiteList": {
           "type": "array",

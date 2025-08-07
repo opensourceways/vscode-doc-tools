@@ -8,4 +8,12 @@ export class ConfigBridge {
   static addCheckNameWhiteList(name: string): Promise<void> {
     return Bridge.getInstance().invoke<void>('addCheckNameWhiteList', name);
   }
+
+  /**
+   * 添加地址白名单
+   * @param {string} url
+   */
+  static addUrlWhiteList(url: string): Promise<void> {
+    return Bridge.getInstance().invoke<void>('addUrlWhiteList', url);
+  }
 }

@@ -1,4 +1,4 @@
-import { isAccessibleLink } from 'shared';
+import { getLinkStatus } from 'shared';
 
 import { CheckResultT } from '../@types/result';
 
@@ -14,14 +14,19 @@ const REGEX = [
  * @param {string} content 内容
  * @param {string} prefixPath 文件前缀地址
  * @param {string[]} whiteList 地址白名单
- * @returns {CheckResultT<string>[]} 返回检查结果
+ * @param {AbortSignal} signal 中断信号
+ * @returns {CheckResultT<number>[]} 返回检查结果
  */
-export async function execResourceExistenceCheck(content: string, prefixPath: string, whiteList: string[]) {
-  const results: CheckResultT<string>[] = [];
+export async function execResourceExistenceCheck(content: string, prefixPath: string, whiteList: string[], signal?: AbortSignal) {
+  const results: CheckResultT<number>[] = [];
   const set = new Set(whiteList);
 
   for (const reg of REGEX) {
     for (const match of content.matchAll(reg)) {
+      if (signal?.aborted) {
+        throw new Error('aborted');
+      }
+
       // 跳过空字符串
       if (!match[1]) {
         continue;
@@ -33,22 +38,22 @@ export async function execResourceExistenceCheck(content: string, prefixPath: st
       }
 
       const link = match[1];
-      const res = await isAccessibleLink(link, prefixPath);
+      const status = await getLinkStatus(link, prefixPath, whiteList, signal);
 
-      // 跳过成功链接
-      if (res === 'success') {
+      // 跳过100 - 400之间的状态码
+      if (status >= 100 && status < 400) {
         continue;
       }
 
-      const start = match.index + match[0].indexOf(link);
+      const start = match.index + match[0].indexOf(link, 3);
       const end = start + link.length;
 
       results.push({
         content: link,
-        message: `${res === 'notFound' ? '资源链接无法访问' : '访问超时'} (Non-existent resource): ${link}`,
+        message: `${status === 499 ? '访问超时' : '链接无法访问'} (Non-existent resource): ${link}`,
         start,
         end,
-        extras: res,
+        extras: status,
       });
     }
   }

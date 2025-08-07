@@ -46,7 +46,7 @@ const onRemoveItem = (row: Record<string, any>) => {
 </script>
 
 <template>
-  <div class="check-name-result">
+  <div class="check-result">
     <h1 class="title">检查项：中英文文档名称一致性</h1>
     <div class="text">【检查路径】：{{ injectData.extras?.fsPath }}</div>
     <div class="text">
@@ -71,7 +71,7 @@ const onRemoveItem = (row: Record<string, any>) => {
 </template>
 
 <style lang="scss">
-.check-name-result {
+.check-result {
   margin: 24px;
   padding: 24px;
   min-height: calc(100vh - var(--layout-header-height) - var(--layout-doc-padding-top) - var(--layout-doc-padding-bottom));

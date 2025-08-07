@@ -1,5 +1,5 @@
 import { BroadcastT, MessageT, OPERATION_TYPE, SOURCE_TYPE } from '../@types/message';
-import { createInvokeMessage, createInvokeIdBuilder } from '../utils/message';
+import { createInvokeMessage, createInvokeIdBuilder, createBroadcastMessage } from '../utils/message';
 
 const [createMessageId, removeMessageId] = createInvokeIdBuilder();
 const symbolInstance = Symbol('symbolInstance');
@@ -96,6 +96,23 @@ export class Bridge {
         })
       );
     });
+  }
+
+  /**
+   * 发送广播
+   * @param {string} name 广播名
+   * @param {any[]} extras 附带数据
+   */
+  broadcast(name: string, ...extras: any[]) {
+    this.postMessage(
+      createBroadcastMessage({
+        source: SOURCE_TYPE.client,
+        data: {
+          name,
+          extras,
+        },
+      })
+    );
   }
 
   /**

@@ -46,7 +46,6 @@ async function walkDir(dirPath: string, nameWhiteList: string[] = [], results: C
       await walkDir(completePath, nameWhiteList, results);
     } else if (name.endsWith('.md') && !nameWhiteList.includes(name)) {
       const [result, filePath] = await execNameConsistencyCheck(completePath, nameWhiteList);
-      console.log(result, filePath);
       if (!result) {
         results.push({
           content: completePath,

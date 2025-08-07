@@ -4,9 +4,11 @@ export class ResourceBridge {
   /**
    * 查看源文件
    * @param {string} fsPath 文件路径
+   * @param {number} start 选中开始位置
+   * @param {number} end 选中结束位置
    */
-  static viewSource(fsPath: string): Promise<void> {
-    return Bridge.getInstance().invoke<void>('viewSource', fsPath);
+  static viewSource(fsPath: string, start?: number, end?: number): Promise<void> {
+    return Bridge.getInstance().invoke<void>('viewSource', fsPath, start, end);
   }
 
   /**

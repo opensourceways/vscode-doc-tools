@@ -19,6 +19,9 @@ export function handleConfigMessage(webviewPanel: vscode.WebviewPanel) {
       case 'addCheckNameWhiteList':
         addCheckNameWhiteList(webviewPanel, message);
         break;
+      case 'addUrlWhiteList':
+        addUrlWhiteList(webviewPanel, message);
+        break;
     }
   });
 }
@@ -32,6 +35,34 @@ async function addCheckNameWhiteList(webviewPanel: vscode.WebviewPanel, message:
   const { id, name, args } = message.data;
   if (typeof args?.[0] === 'string') {
     const config = vscode.workspace.getConfiguration('docTools.check.name');
+    const whiteList = config.get<string[]>('whiteList', []);
+    if (!whiteList.includes(args[0])) {
+      whiteList.push(args[0]);
+    }
+  
+    await config.update('whiteList', whiteList, vscode.ConfigurationTarget.Global);
+  }
+
+  webviewPanel.webview.postMessage(
+    createInvokeMessage({
+      source: SOURCE_TYPE.server,
+      data: {
+        id,
+        name,
+      },
+    })
+  );
+}
+
+/**
+ * 处理 invoke 消息：addUrlWhiteList - 添加地址白名单
+ * @param {vscode.WebviewPanel} webviewPanel
+ * @param {MessageT<InvokeT>} message
+ */
+async function addUrlWhiteList(webviewPanel: vscode.WebviewPanel, message: MessageT<InvokeT>) {
+  const { id, name, args } = message.data;
+  if (typeof args?.[0] === 'string') {
+    const config = vscode.workspace.getConfiguration('docTools.check.url');
     const whiteList = config.get<string[]>('whiteList', []);
     if (!whiteList.includes(args[0])) {
       whiteList.push(args[0]);
