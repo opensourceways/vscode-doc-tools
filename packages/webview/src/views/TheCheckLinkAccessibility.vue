@@ -1,9 +1,14 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref } from 'vue';
-import { OTable, OLink, OIcon, OIconRefresh, ODialog, OButton } from '@opensig/opendesign';
+import { OTable, OLink, OIcon, OIconRefresh, ODialog, OButton, OCheckboxGroup, OCheckbox } from '@opensig/opendesign';
+import { Bridge, BroadcastBridge, ConfigBridge, ResourceBridge } from 'webview-bridge';
 
 import { injectData } from '@/utils/inject';
-import { Bridge, BroadcastBridge, ConfigBridge, ResourceBridge } from 'webview-bridge';
+
+const working = ref(false);
+const workingFile = ref(['markdown', '_toc.yaml']);
+const workingLink = ref(['http', 'relative-link', 'anchor']);
+const workingStatus = ref(['404']);
 
 // -------------------- 表格相关 --------------------
 const currentScanning = ref('');
@@ -17,22 +22,17 @@ const columns = [
 
 const onAsyncTaskOutput = (name: string, extras: any) => {
   if (name === 'checkLinkAccessibility:stop') {
+    working.value = false;
     currentScanning.value = '';
   } else if (name === 'checkLinkAccessibility:scanTarget') {
+    working.value = true;
     currentScanning.value = extras;
   } else if (name === 'checkLinkAccessibility:addItem') {
-    data.value.push({
-      url: extras.url,
-      msg: extras.status === 499 ? '访问超时' : `无法访问（${extras.status}）`,
-      file: extras.file,
-      start: extras.start,
-      end: extras.end,
-    });
+    data.value.push(extras);
   }
 };
 
 onMounted(() => {
-  Bridge.getInstance().broadcast('asyncTask:checkLinkAccessibility', injectData.extras?.fsPath);
   BroadcastBridge.addAsyncTaskOutputListener(onAsyncTaskOutput);
 });
 
@@ -62,22 +62,60 @@ const onConfirmIgnore = async () => {
   showIgnoreDlg.value = false;
 };
 
-// -------------------- 停止 --------------------
+// -------------------- 开始/停止 --------------------
+const onClickStartLink = () => {
+  data.value = [];
+  Bridge.getInstance().broadcast(
+    'asyncTask:checkLinkAccessibility',
+    injectData.extras?.fsPath,
+    [...workingFile.value], // 得copy一下，不然postMessage的时候会提示无法clone
+    [...workingLink.value],
+    [...workingStatus.value]
+  );
+};
+
 const onClickStopLink = () => {
   Bridge.getInstance().broadcast('asyncTask:stopCheckLinkAccessibility');
-}
+};
 </script>
 
 <template>
   <div class="check-result">
     <h1 class="title">
       检查项：链接可访问性
-      <OIcon v-if="currentScanning" class="o-rotating" title="检查中..."><OIconRefresh /></OIcon>
+      <OIcon v-if="working" class="o-rotating" title="检查中..."><OIconRefresh /></OIcon>
     </h1>
-    <OLink v-if="currentScanning" class="stop-link" color="danger" @click="onClickStopLink">停止检查</OLink>
-    <div class="text">【检查路径】：{{ injectData.extras?.fsPath }}</div>
-    <div v-if="currentScanning" class="text single-line">【正在检查】：{{ currentScanning }}</div>
-    <div v-else class="text">【检查状态】：已完成</div>
+
+    <div class="text">【开始路径】：{{ injectData.extras?.fsPath }}</div>
+    <div class="text single-line" :title="currentScanning">【正在检查】：{{ working ? currentScanning : '无' }}</div>
+    <div class="text single-line">
+      <span>【检查文件】：</span>
+      <OCheckboxGroup v-model="workingFile" :disabled="working">
+        <OCheckbox value="markdown">markdown</OCheckbox>
+        <OCheckbox value="_toc.yaml">_toc.yaml</OCheckbox>
+      </OCheckboxGroup>
+    </div>
+    <div class="text single-line">
+      <span>【链接类型】：</span>
+      <OCheckboxGroup v-model="workingLink" :disabled="working">
+        <OCheckbox value="http">http(s)链接</OCheckbox>
+        <OCheckbox value="relative-link">相对路径链接</OCheckbox>
+        <OCheckbox value="anchor">链接锚点</OCheckbox>
+      </OCheckboxGroup>
+    </div>
+    <div class="text single-line">
+      <span>【检查状态】：</span>
+      <OCheckboxGroup v-model="workingStatus" :disabled="working">
+        <OCheckbox value="404">无法访问</OCheckbox>
+        <OCheckbox value="others">访问超时等其它错误</OCheckbox>
+      </OCheckboxGroup>
+    </div>
+    <div class="text single-line">
+      <span>【控制开关】：</span>
+      <OLink v-if="working" color="danger" @click="onClickStopLink">停止检查</OLink>
+      <OLink v-else color="primary" @click="onClickStartLink">开始检查</OLink>
+    </div>
+
     <OTable class="file-tree-body" :columns="columns" :data="data" border="all">
       <template #td_url="{ row }">
         <OLink class="link" color="primary" :href="row.url.startsWith('http') ? row.url : undefined" target="_blank">{{ row.url }}</OLink>
@@ -155,16 +193,5 @@ const onClickStopLink = () => {
 
 .single-line {
   @include text-truncate(1);
-}
-
-.stop-link {
-  position: absolute;
-  right: 16px;
-  top: 24px;
-
-  @include respond-to('phone') { 
-    right: 4px;
-    top: 4px;
-  }
 }
 </style>

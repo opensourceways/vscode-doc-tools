@@ -1,8 +1,11 @@
 // 注释：<!-- xxx -->
 export const TEXT_REGEX_MD_COMMENT = '(<!--.*?-->)';
 
-// 代码块 / 行内代码： ```xxx``` | `xxx`
-export const TEXT_REGEX_MD_CODE = '(```[\\s\\S]*?```)|(`[^`]+`)';
+// 代码块
+export const TEXT_REGEX_MD_CODE = '(```[\\s\\S]*?```)';
+
+// 行内代码块
+export const TEXT_REGEX_MD_INLINE_CODE = '((?<!\\\\)`[^`\\n]+?(?<!\\\\)`(?=\\s|[^`]|$))';
 
 // 标题：h1-h6
 export const TEXT_REGEX_MD_HEADING = '((?:^|\\n)\\s*#{1,6}\\s.*(?=\\n|$))';

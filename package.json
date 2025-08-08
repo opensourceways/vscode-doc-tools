@@ -71,6 +71,10 @@
       {
         "command": "doc.tools.check.linkAccessibility",
         "title": "检查链接可访问性"
+      },
+      {
+        "command": "doc.tools.genMarkdownAnchorId",
+        "title": "生成链接锚点并复制"
       }
     ],
     "menus": {
@@ -78,6 +82,13 @@
         {
           "submenu": "doc.tools.folder",
           "when": "explorerResourceIsFolder",
+          "group": "doc.tools.toc"
+        }
+      ],
+      "editor/context": [
+        {
+          "submenu": "doc.tools.markdown",
+          "when": "resourceLangId == markdown",
           "group": "doc.tools.toc"
         }
       ],
@@ -101,11 +112,20 @@
         {
           "command": "doc.tools.check.linkAccessibility"
         }
+      ],
+      "doc.tools.markdown": [
+        {
+          "command": "doc.tools.genMarkdownAnchorId"
+        }
       ]
     },
     "submenus": [
       {
         "id": "doc.tools.folder",
+        "label": "Doc Tools"
+      },
+      {
+        "id": "doc.tools.markdown",
         "label": "Doc Tools"
       }
     ],

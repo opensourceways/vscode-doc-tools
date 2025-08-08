@@ -12,6 +12,7 @@ import { fixMarkdownlint } from '@/core/command/cmd-fix-markdownlint';
 import { checkName } from '@/core/command/cmd-check-name';
 import { checkNameConsistency } from '@/core/command/cmd-check-name-consistency';
 import { checkLinkAccessibility } from '@/core/command/cmd-check-link-accessibility';
+import { genMarkdownAnchorId } from '@/core/command/cmd-gen-markdown-anchor-id';
 
 // 用于存储错误信息
 const diagnosticsCollection = vscode.languages.createDiagnosticCollection('doc-tools');
@@ -109,6 +110,13 @@ function registerCommand(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.commands.registerCommand('doc.tools.check.linkAccessibility', (uri: vscode.Uri) => {
       checkLinkAccessibility(context, uri);
+    })
+  );
+
+  // 注册 生成链接锚点并复制 命令
+  context.subscriptions.push(
+    vscode.commands.registerCommand('doc.tools.genMarkdownAnchorId', () => {
+      genMarkdownAnchorId();
     })
   );
 }

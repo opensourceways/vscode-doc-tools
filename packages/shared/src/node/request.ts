@@ -111,7 +111,7 @@ export const getUrlStatus = (() => {
       return res.status;
     } catch (err: any) {
       if (err instanceof Error) {
-        const code = (err.cause as any).code as string;
+        const code = (err?.cause as any)?.code as string;
         if (code === 'ENOTFOUND' || code === 'EHOSTUNREACH' || code === 'ENETUNREACH') {
           map.set(url, 404);
           return 404;

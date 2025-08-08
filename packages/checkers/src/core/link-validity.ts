@@ -1,4 +1,5 @@
-import { getLinkStatus } from 'shared';
+import path from 'path';
+import { getFileContentAsync, getLinkStatus, getMarkdownIds } from 'shared';
 
 import { CheckResultT } from '../@types/result';
 
@@ -15,6 +16,7 @@ const REGEX = [
  * @param {string[]} opts.whiteList 地址白名单
  * @param {boolean} opts.disableCheckExternalUrl 禁止检测外链
  * @param {boolean} opts.disableCheckInternalUrl 禁止检测内链
+ * @param {boolean} opts.disableCheckAnchor 禁止检测链接锚点
  * @param {AbortSignal} opts.signal 中断信号
  * @returns {CheckResultT<number>[]} 返回检查结果
  */
@@ -25,18 +27,14 @@ export async function execLinkValidityCheck(
     whiteList?: string[];
     disableCheckExternalUrl?: boolean;
     disableCheckInternalUrl?: boolean;
+    disableCheckAnchor?: boolean;
     signal?: AbortSignal;
   }
 ) {
-  const { 
-    prefixPath, 
-    whiteList = [], 
-    disableCheckExternalUrl = false, 
-    disableCheckInternalUrl = false,
-    signal, 
-  } = opts;
+  const { prefixPath, whiteList = [], disableCheckExternalUrl = false, disableCheckInternalUrl = false, disableCheckAnchor = false, signal } = opts;
   const results: CheckResultT<number>[] = [];
   const set = new Set(whiteList);
+  let idsMap = new Map<string, Set<string>>();
 
   for (const reg of REGEX) {
     for (const match of content.matchAll(reg)) {
@@ -44,41 +42,72 @@ export async function execLinkValidityCheck(
         throw new Error('aborted');
       }
 
-      // 跳过空字符串
-      if (!match[1]) {
-        continue;
-      }
+      const macthedLink = match[1].trim();
 
-      // 跳过锚点链接
-      if (match[1].startsWith('#')) {
+      // 跳过空字符串
+      if (!macthedLink) {
         continue;
       }
 
       // 跳过白名单链接
-      if (set.has(match[1])) {
+      if (set.has(macthedLink)) {
         continue;
       }
 
-      const link = match[1].split('#')[0];
-      if (disableCheckExternalUrl && link.startsWith('http')) {
-        continue;
-      } else if (disableCheckInternalUrl && !link.startsWith('http')) {
-        continue;
-      }
-      
-      const status = await getLinkStatus(link, prefixPath, whiteList, signal);
+      let status = 0;
+      let preMsg = '';
+      const [link, anchor] = macthedLink.split('#');
 
-      // 跳过100 - 400之间的状态码
-      if (status >= 100 && status < 400) {
-        continue;
+      // 判断链接是否有效
+      if (link) {
+        if (disableCheckExternalUrl && link.startsWith('http')) {
+          continue;
+        } else if (disableCheckInternalUrl && !link.startsWith('http')) {
+          continue;
+        }
+
+        status = await getLinkStatus(link, prefixPath, whiteList, signal);
+        if (status >= 100 && status < 400) {
+          if (!disableCheckAnchor && link.startsWith('.') && anchor) {
+            const mdPath = path.join(prefixPath, decodeURI(link.replace('.html', '.md')));
+            if (!idsMap.get(mdPath)) {
+              const mdContent = await getFileContentAsync(mdPath);
+              idsMap.set(mdPath, getMarkdownIds(mdContent));
+            }
+
+            if (idsMap.get(mdPath)!.has(anchor)) {
+              continue;
+            } else {
+              status = 404;
+              preMsg = '锚点无法访问';
+            }
+          } else {
+            continue;
+          }
+        } else if (status === 499) {
+          preMsg = '访问超时';
+        } else {
+          preMsg = '链接无法访问';
+        }
+      } else if (!disableCheckAnchor && anchor) {
+        if (!idsMap.get('.')) {
+          idsMap.set('.', getMarkdownIds(content));
+        }
+
+        if (idsMap.get('.')!.has(anchor)) {
+          continue;
+        } else {
+          status = 404;
+          preMsg = '锚点无法访问';
+        }
       }
 
       const start = match.index + (match[0].startsWith('<http') ? 1 : match[0].indexOf(match[1], 2));
       const end = start + match[1].length;
 
       results.push({
-        content: match[1],
-        message: `${status === 499 ? '访问超时' : '链接无法访问'} (Invalid link): ${match[1]}`,
+        content: macthedLink,
+        message: `${preMsg} (Invalid link): ${macthedLink}`,
         start,
         end,
         extras: status,

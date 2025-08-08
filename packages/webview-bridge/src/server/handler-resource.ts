@@ -44,7 +44,7 @@ async function viewSource(webviewPanel: vscode.WebviewPanel, message: MessageT<I
       document,
       typeof webviewPanel.viewColumn?.valueOf?.() === 'number' && webviewPanel.viewColumn.valueOf() > 1
         ? webviewPanel.viewColumn.valueOf() - 1
-        : vscode.ViewColumn.Beside
+        : vscode.ViewColumn.Two
     );
 
     if (typeof args?.[1] === 'number' && typeof args?.[2] === 'number') {
