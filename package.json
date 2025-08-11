@@ -4,7 +4,7 @@
   "description": "tools for markdown docs",
   "publisher": "gzbang",
   "icon": "icon.png",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "private": true,
   "workspaces": [
     "packages/*"
@@ -38,7 +38,7 @@
       },
       {
         "command": "doc.tools.gen.toc.manual",
-        "title": "生成指南 _toc.yaml"
+        "title": "生成手册 _toc.yaml"
       },
       {
         "command": "doc.tools.codespell.add.whitelist",
@@ -66,7 +66,7 @@
       },
       {
         "command": "doc.tools.check.nameConsistency",
-        "title": "检查中英文档名称一致性"
+        "title": "检查中英文文档名称一致性"
       },
       {
         "command": "doc.tools.check.linkAccessibility",
