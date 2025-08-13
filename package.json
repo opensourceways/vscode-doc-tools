@@ -4,7 +4,7 @@
   "description": "tools for markdown docs",
   "publisher": "gzbang",
   "icon": "icon.png",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "private": true,
   "workspaces": [
     "packages/*"
@@ -34,23 +34,23 @@
     "commands": [
       {
         "command": "doc.tools.check",
-        "title": "Doc Tools：运行Markdown检查"
+        "title": "运行Markdown检查"
       },
       {
         "command": "doc.tools.gen.toc.manual",
-        "title": "Doc Tools：生成指南 _toc.yaml"
+        "title": "生成手册 _toc.yaml"
       },
       {
         "command": "doc.tools.codespell.add.whitelist",
-        "title": "Doc Tools：添加单词白名单"
+        "title": "添加单词白名单"
       },
       {
         "command": "doc.tools.url.add.whitelist",
-        "title": "Doc Tools：添加链接白名单"
+        "title": "添加链接白名单"
       },
       {
         "command": "doc.tools.preview.markdown",
-        "title": "Doc Tools：预览 markdown",
+        "title": "预览Markdown",
         "icon": {
           "light": "resources/icon-preview-light.svg",
           "dark": "resources/icon-preview-dark.svg"
@@ -58,14 +58,37 @@
       },
       {
         "command": "doc.tools.markdownlint.fix",
-        "title": "Doc Tools：修复 markdown-lint 错误"
+        "title": "修复MarkdownLint错误"
+      },
+      {
+        "command": "doc.tools.check.name",
+        "title": "检查目录、文件是否符合命名规范"
+      },
+      {
+        "command": "doc.tools.check.nameConsistency",
+        "title": "检查中英文文档名称一致性"
+      },
+      {
+        "command": "doc.tools.check.linkAccessibility",
+        "title": "检查链接可访问性"
+      },
+      {
+        "command": "doc.tools.genMarkdownAnchorId",
+        "title": "生成链接锚点并复制"
       }
     ],
     "menus": {
       "explorer/context": [
         {
-          "command": "doc.tools.gen.toc.manual",
+          "submenu": "doc.tools.folder",
           "when": "explorerResourceIsFolder",
+          "group": "doc.tools.toc"
+        }
+      ],
+      "editor/context": [
+        {
+          "submenu": "doc.tools.markdown",
+          "when": "resourceLangId == markdown",
           "group": "doc.tools.toc"
         }
       ],
@@ -75,8 +98,37 @@
           "when": "resourceLangId == markdown",
           "group": "navigation"
         }
+      ],
+      "doc.tools.folder": [
+        {
+          "command": "doc.tools.gen.toc.manual"
+        },
+        {
+          "command": "doc.tools.check.name"
+        },
+        {
+          "command": "doc.tools.check.nameConsistency"
+        },
+        {
+          "command": "doc.tools.check.linkAccessibility"
+        }
+      ],
+      "doc.tools.markdown": [
+        {
+          "command": "doc.tools.genMarkdownAnchorId"
+        }
       ]
     },
+    "submenus": [
+      {
+        "id": "doc.tools.folder",
+        "label": "Doc Tools"
+      },
+      {
+        "id": "doc.tools.markdown",
+        "label": "Doc Tools"
+      }
+    ],
     "configuration": {
       "type": "object",
       "title": "Doc Tools配置",
@@ -106,10 +158,20 @@
           "default": true,
           "description": "启用链接有效性检查（包含：1. 内链；2. 外链）"
         },
+        "docTools.check.linkValidity.only404.enable": {
+          "type": "boolean",
+          "default": true,
+          "description": "启用链接有效性检查只在链接无法访问时提示"
+        },
         "docTools.check.resourceExistence.enable": {
           "type": "boolean",
           "default": true,
           "description": "启用资源是否存在检查（包含：1. 内链；2. 外链）"
+        },
+        "docTools.check.resourceExistence.only404.enable": {
+          "type": "boolean",
+          "default": true,
+          "description": "启用资源是否存在检查只在资源无法访问时提示"
         },
         "docTools.check.url.whiteList": {
           "type": "array",
@@ -140,6 +202,31 @@
           "type": "boolean",
           "default": false,
           "description": "启用中英文标点符号混用检查（因语句含义复杂，可能存在误报）"
+        },
+        "docTools.check.punctuationConsecutive.enable": {
+          "type": "boolean",
+          "default": false,
+          "description": "启用连续标点符号检查（因语句含义复杂，可能存在误报）"
+        },
+        "docTools.check.punctuationManualLink.enable": {
+          "type": "boolean",
+          "default": false,
+          "description": "启用手册/指南链接是否被书名号包裹检查"
+        },
+        "docTools.check.name.enable": {
+          "type": "boolean",
+          "default": false,
+          "description": "启用文件/目录命名规范检查"
+        },
+        "docTools.check.name.whiteList": {
+          "type": "array",
+          "default": [],
+          "description": "文件/目录命名规范白名单（添加后忽略对该名称的检查）"
+        },
+        "docTools.check.nameConsistency.enable": {
+          "type": "boolean",
+          "default": false,
+          "description": "启用中英文文档名称一致性检查"
         }
       }
     }

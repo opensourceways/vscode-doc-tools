@@ -1,4 +1,5 @@
-import { isAccessibleLink } from 'shared';
+import path from 'path';
+import { getFileContentAsync, getLinkStatus, getMarkdownIds } from 'shared';
 
 import { CheckResultT } from '../@types/result';
 
@@ -11,48 +12,105 @@ const REGEX = [
 /**
  * 检查链接有效性
  * @param {string} content 内容
- * @param {string} prefixPath 文件前缀地址
- * @param {string[]} whiteList 地址白名单
- * @returns {CheckResultT<string>[]} 返回检查结果
+ * @param {string} opts.prefixPath 文件前缀地址
+ * @param {string[]} opts.whiteList 地址白名单
+ * @param {boolean} opts.disableCheckExternalUrl 禁止检测外链
+ * @param {boolean} opts.disableCheckInternalUrl 禁止检测内链
+ * @param {boolean} opts.disableCheckAnchor 禁止检测链接锚点
+ * @param {AbortSignal} opts.signal 中断信号
+ * @returns {CheckResultT<number>[]} 返回检查结果
  */
-export async function execLinkValidityCheck(content: string, prefixPath: string, whiteList: string[]) {
-  const results: CheckResultT<string>[] = [];
+export async function execLinkValidityCheck(
+  content: string,
+  opts: {
+    prefixPath: string;
+    whiteList?: string[];
+    disableCheckExternalUrl?: boolean;
+    disableCheckInternalUrl?: boolean;
+    disableCheckAnchor?: boolean;
+    signal?: AbortSignal;
+  }
+) {
+  const { prefixPath, whiteList = [], disableCheckExternalUrl = false, disableCheckInternalUrl = false, disableCheckAnchor = false, signal } = opts;
+  const results: CheckResultT<number>[] = [];
   const set = new Set(whiteList);
+  let idsMap = new Map<string, Set<string>>();
 
   for (const reg of REGEX) {
     for (const match of content.matchAll(reg)) {
-      // 跳过空字符串
-      if (!match[1]) {
-        continue;
+      if (signal?.aborted) {
+        throw new Error('aborted');
       }
 
-      // 跳过锚点链接
-      if (match[1].startsWith('#')) {
+      const macthedLink = match[1].trim();
+
+      // 跳过空字符串
+      if (!macthedLink) {
         continue;
       }
 
       // 跳过白名单链接
-      if (set.has(match[1])) {
+      if (set.has(macthedLink)) {
         continue;
       }
 
-      const link = match[1].split('#')[0];
-      const res = await isAccessibleLink(link, prefixPath);
+      let status = 0;
+      let preMsg = '';
+      const [link, anchor] = macthedLink.split('#');
 
-      // 跳过成功链接
-      if (res === 'success') {
-        continue;
+      // 判断链接是否有效
+      if (link) {
+        if (disableCheckExternalUrl && link.startsWith('http')) {
+          continue;
+        } else if (disableCheckInternalUrl && !link.startsWith('http')) {
+          continue;
+        }
+
+        status = await getLinkStatus(link, prefixPath, whiteList, signal);
+        if (status >= 100 && status < 400) {
+          if (!disableCheckAnchor && link.startsWith('.') && anchor) {
+            const mdPath = path.join(prefixPath, decodeURI(link.replace('.html', '.md')));
+            if (!idsMap.get(mdPath)) {
+              const mdContent = await getFileContentAsync(mdPath);
+              idsMap.set(mdPath, getMarkdownIds(mdContent));
+            }
+
+            if (idsMap.get(mdPath)!.has(anchor)) {
+              continue;
+            } else {
+              status = 404;
+              preMsg = '锚点无法访问';
+            }
+          } else {
+            continue;
+          }
+        } else if (status === 499) {
+          preMsg = '访问超时';
+        } else {
+          preMsg = '链接无法访问';
+        }
+      } else if (!disableCheckAnchor && anchor) {
+        if (!idsMap.get('.')) {
+          idsMap.set('.', getMarkdownIds(content));
+        }
+
+        if (idsMap.get('.')!.has(anchor)) {
+          continue;
+        } else {
+          status = 404;
+          preMsg = '锚点无法访问';
+        }
       }
 
-      const start = match.index + match[0].indexOf(match[1]);
+      const start = match.index + (match[0].startsWith('<http') ? 1 : match[0].indexOf(match[1], 2));
       const end = start + match[1].length;
-      
+
       results.push({
-        content: match[1],
-        message: `${res === 'notFound' ? '链接无法访问' : '访问超时'} (Invalid link): ${match[1]}`,
+        content: macthedLink,
+        message: `${preMsg} (Invalid link): ${macthedLink}`,
         start,
         end,
-        extras: res,
+        extras: status,
       });
     }
   }

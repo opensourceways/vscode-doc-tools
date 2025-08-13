@@ -1,19 +1,8 @@
 import * as vscode from 'vscode';
-import fs from 'fs';
 import path from 'path';
 
 import { ServerMessageHandler } from 'webview-bridge';
-
-let panel: vscode.WebviewPanel | null = null;
-let timerTriggerMdContentChange: NodeJS.Timeout | null = null;
-let timerTriggerTocContentChange: NodeJS.Timeout | null = null;
-
-/**
- * 释放 webview panel
- */
-export function disposePreviewMarkdown() {
-  panel?.dispose();
-}
+import { createWebviewPanel } from '@/utils/webview';
 
 /**
  * 预览 markdown
@@ -21,85 +10,70 @@ export function disposePreviewMarkdown() {
  * @param {vscode.Uri} uri 文档 uri
  */
 export function previewMarkdown(context: vscode.ExtensionContext, uri: vscode.Uri) {
-  if (panel) {
-    panel.dispose();
-  }
-
+  const fsPath = uri.fsPath.replace(/\\/g, '/');
   const isDarkTheme = vscode.workspace.getConfiguration().get<string>('workbench.colorTheme', '').toLowerCase().includes('dark');
-  const isDev = fs.existsSync(path.resolve(context.extensionPath, 'packages/webview-bridge/dev/index.html'));
-  const basePath = path.join(context.extensionPath, isDev ? 'packages/webview-bridge/dev' : 'dist/webview', '/');
-  const htmlPath = path.join(basePath, 'index.html');
 
-  panel = vscode.window.createWebviewPanel(
-    'Doc Tools：预览 markdown', // 标识
-    path.basename(uri.fsPath), // 面板标题
-    vscode.ViewColumn.Beside, // 在编辑器旁边打开
-    {
+  createWebviewPanel({
+    context,
+    viewType: 'Doc Tools：预览 markdown',
+    title: path.basename(uri.fsPath),
+    showOptions: vscode.ViewColumn.Beside,
+    iconPath: vscode.Uri.file(path.join(context.extensionPath, 'resources', isDarkTheme ? 'icon-preview-dark.svg' : 'icon-preview-light.svg')),
+    webviewPanelOptions: {
       retainContextWhenHidden: true,
       enableScripts: true,
       enableCommandUris: true,
-    }
-  );
-
-  panel.iconPath = vscode.Uri.file(path.join(context.extensionPath, 'resources', isDarkTheme ? 'icon-preview-dark.svg' : 'icon-preview-light.svg'));
-  ServerMessageHandler.bind(panel, isDev);
-
-  const fsPath = uri.fsPath.replace(/\\/g, '/');
-  const injectData = {
-    path: '/markdown',
-    theme: isDarkTheme ? 'dark' : 'light',
-    locale: fsPath.includes('/en/') ? 'en' : 'zh',
-    query: {
-      fsPath,
     },
-  };
-
-  if (isDev) {
-    panel.webview.html = fs
-      .readFileSync(htmlPath, 'utf-8')
-      .replace('${baseHref}', panel.webview.asWebviewUri(vscode.Uri.file(basePath)).toString())
-      .replace('${iframeSrc}', `http://localhost:23333?injectData=${encodeURIComponent(JSON.stringify(injectData))}`);
-  } else {
-    panel.webview.html = fs
-      .readFileSync(htmlPath, 'utf-8')
-      .replace(`<base href="/">`, `<base href="${panel.webview.asWebviewUri(vscode.Uri.file(basePath))}">`)
-      .replace(`</title>`, `</title><script>window.__injectData = \`${JSON.stringify(injectData)}\`</script>`);
-  }
-
-  context.subscriptions.push(panel);
+    injectData: {
+      path: '/markdown',
+      theme: isDarkTheme ? 'dark' : 'light',
+      locale: fsPath.includes('/en/') ? 'en' : 'zh',
+      query: {
+        fsPath,
+      },
+    },
+    onBeforeLoad(webviewPanel, isDev) {
+      ServerMessageHandler.bind(webviewPanel, isDev);
+    },
+  });
 }
 
 /**
  * 触发 markdown/_toc.yaml 内容改变
  * @param {vscode.TextDocument} document 文档对象
  */
-export function triggerPreviewMarkdownContentChange(document: vscode.TextDocument) {
-  if (document.languageId !== 'markdown' && document.languageId !== 'yaml') {
-    return;
-  }
+export const triggerPreviewMarkdownContentChange = (() => {
+  let timerTriggerMdContentChange: NodeJS.Timeout | null = null;
+  let timerTriggerTocContentChange: NodeJS.Timeout | null = null;
 
-  if (document.languageId === 'markdown') {
-    if (timerTriggerMdContentChange) {
-      clearTimeout(timerTriggerMdContentChange);
+  return (document: vscode.TextDocument) => {
+    if (document.languageId !== 'markdown' && document.languageId !== 'yaml') {
+      return;
     }
 
-    timerTriggerMdContentChange = setTimeout(() => {
-      ServerMessageHandler.broadcast('onMarkdownContentChange', document.uri.fsPath.replace(/\\/g, '/'));
-      timerTriggerMdContentChange = null;
-    }, 1000);
+    if (document.languageId === 'markdown') {
+      if (timerTriggerMdContentChange) {
+        clearTimeout(timerTriggerMdContentChange);
+      }
 
-    return;
-  }
+      timerTriggerMdContentChange = setTimeout(() => {
+        ServerMessageHandler.broadcast('onMarkdownContentChange', document.uri.fsPath.replace(/\\/g, '/'));
+        timerTriggerMdContentChange = null;
+      }, 1000);
 
-  if (document.languageId === 'yaml' && document.uri.path.split('/').pop() === '_toc.yaml') {
-    if (timerTriggerTocContentChange) {
-      clearTimeout(timerTriggerTocContentChange);
+      return;
     }
 
-    timerTriggerTocContentChange = setTimeout(() => {
-      ServerMessageHandler.broadcast('onTocContentChange', document.uri.fsPath.replace(/\\/g, '/'));
-      timerTriggerTocContentChange = null;
-    }, 1000);
-    return;
-  }
-}
+    if (document.languageId === 'yaml' && document.uri.path.split('/').pop() === '_toc.yaml') {
+      if (timerTriggerTocContentChange) {
+        clearTimeout(timerTriggerTocContentChange);
+      }
+
+      timerTriggerTocContentChange = setTimeout(() => {
+        ServerMessageHandler.broadcast('onTocContentChange', document.uri.fsPath.replace(/\\/g, '/'));
+        timerTriggerTocContentChange = null;
+      }, 1000);
+      return;
+    }
+  };
+})();

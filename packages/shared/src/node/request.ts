@@ -5,30 +5,35 @@ import path from 'path';
  * 创建 fetch 请求
  * @param {string} url 请求地址
  * @param {number} opts.timeout 超时时间，单位ms，默认 10 * 1000 ms，可空
- * @param {AbortController} opts.controller 控制器，可空
  * @returns {Promise<Response>} 返回请求结果
  */
-export function createHeadRequest(
+export function createRequest(
   url: string,
+  method: string,
   opts?: {
     timeout: number;
-    controller?: AbortController;
+    signal?: AbortSignal;
   }
 ) {
-  const { timeout = 10 * 1000, controller = new AbortController() } = opts || {};
-
-  const timer = setTimeout(() => {
+  const controller = new AbortController();
+  const { timeout = 10 * 1000, signal } = opts || {};
+  const abortFunc = () => {
     controller.abort();
-  }, timeout);
+    signal?.removeEventListener('abort', abortFunc);
+  };
+
+  signal?.addEventListener('abort', abortFunc);
+  const timer = setTimeout(abortFunc, timeout);
 
   const response = fetch(url, {
-    method: 'HEAD',
+    method,
     headers: {
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36',
     },
     signal: controller.signal,
   }).finally(() => {
     clearTimeout(timer);
+    signal?.removeEventListener('abort', abortFunc);
   });
 
   return response;
@@ -44,72 +49,79 @@ export function isPrivateIP(ip: string) {
 }
 
 /**
- * 判断链接是否可访问
+ * 获取链接状态码
  * @param {string} link 链接地址
  * @param {string} prefixPath 文件前缀地址，可空
- * @returns {Promise<'success' | 'notFound' | 'timeout'>} 返回判断结果 success 可访问 notFound 404 timeout 访问超时
+ * @param {string[]} whitelist 白名单，可空
+ * @param {AbortSignal} signal 中止信号
+ * @returns {Promise<number>} 返回访问状态码
  */
-export function isAccessibleLink(link: string, prefixPath = '', whitelist: string[] = []) {
+export function getLinkStatus(link: string, prefixPath = '', whitelist: string[] = [], signal?: AbortSignal) {
   // localhost跳过
   const noHttpUrl = link.replace('http://', '').replace('https://', '');
   if (noHttpUrl.startsWith('localhost')) {
-    return Promise.resolve('success');
+    return Promise.resolve(200);
   }
 
   // 内网地址跳过
   if (isPrivateIP(noHttpUrl.split(':')?.[0]) || isPrivateIP(noHttpUrl.split('/')?.[0])) {
-    return Promise.resolve('success');
+    return Promise.resolve(200);
   }
 
   // 白名单跳过
   if (whitelist.some((item) => new RegExp(item).test(link))) {
-    return Promise.resolve('success');
+    return Promise.resolve(200);
+  }
+
+  // 跳过某些协议的检查
+  if (link.startsWith('mailto:') || link.startsWith('file://') || link.startsWith('ftp://')) {
+    return Promise.resolve(200);
   }
 
   // 链接
   if (link.startsWith('http')) {
-    return isAccessibleHttpLink(link);
+    return getUrlStatus(link, signal);
   }
 
   // 本地文件
-  return Promise.resolve(fs.existsSync(path.join(prefixPath, link)) ? 'success' : 'notFound');
+  return Promise.resolve(fs.existsSync(path.join(prefixPath, decodeURI(link.replace('.html', '.md')))) ? 200 : 404);
 }
 
 /**
- * 判断 http 链接是否可访问
+ * 获取 http 链接状态码
  * @param {string} url 链接地址
- * @returns {Promise<'success' | 'notFound' | 'timeout'>} 返回判断结果 success 可访问 notFound 页面不存在 timeout 访问超时
+ * @param {AbortSignal} signal 中止信号
+ * @returns {Promise<number>} 返回访问状态码
  */
-export const isAccessibleHttpLink = (() => {
-  const map = new Map<string, string | number>();
+export const getUrlStatus = (() => {
+  const map = new Map<string, number>();
 
-  return async (url: string) => {
+  return async (url: string, signal?: AbortSignal) => {
     try {
-      if (typeof map.get(url) === 'string') {
-        return map.get(url) as string;
+      if (map.get(url)! >= 100) {
+        return map.get(url)!;
       }
 
-      const res = await createHeadRequest(url, {
+      const res = await createRequest(url, 'GET', {
         timeout: 5 * 1000,
+        signal,
       });
 
-      if (res.status === 200) {
-        map.set(url, 'success');
-        return 'success';
-      } else if (res.status === 404) {
-        map.set(url, 'notFound');
-        return 'notFound';
-      }
-    } catch (err) {
-      if (err instanceof Error && err.name !== 'AbortError') {
-        map.set(url, 'notFound');
-        return 'notFound';
+      map.set(url, res.status);
+      return res.status;
+    } catch (err: any) {
+      if (err instanceof Error) {
+        const code = (err?.cause as any)?.code as string;
+        if (code === 'ENOTFOUND' || code === 'EHOSTUNREACH' || code === 'ENETUNREACH') {
+          map.set(url, 404);
+          return 404;
+        }
       }
     }
 
     let record = map.get(url);
-    if (typeof record === 'string') {
-      return record;
+    if (record! >= 100) {
+      return record!;
     }
 
     if (record === undefined) {
@@ -117,8 +129,7 @@ export const isAccessibleHttpLink = (() => {
     }
 
     record++;
-    map.set(url, record >= 3 ? 'timeout' : record);
-
-    return 'timeout';
+    map.set(url, record >= 3 ? 499 : record);
+    return 499;
   };
 })();

@@ -6,11 +6,12 @@ import { handlePageMessage } from './handler-page';
 import { handleResourceMessage } from './handler-resource';
 import { handleMarkdownMessage } from './handler-markdown';
 import { handleTocMessage } from './handler-toc';
+import { handleConfigMessage } from './handler-config';
 
-const symbolWebviewPanel = Symbol('ServerMessageHandler');
+const symbolWebviewPanel = Symbol('symbolWebviewPanel');
 
 export class ServerMessageHandler {
-  static [symbolWebviewPanel]: vscode.WebviewPanel;
+  static [symbolWebviewPanel]: vscode.WebviewPanel | null;
 
   /**
    * 绑定webviewPanel
@@ -18,11 +19,23 @@ export class ServerMessageHandler {
    * @param {boolean} isDev 是否处于开发环境
    */
   static bind(webviewPanel: vscode.WebviewPanel, isDev: boolean) {
+    if (this[symbolWebviewPanel]) {
+      this[symbolWebviewPanel].dispose();
+    }
+
     this[symbolWebviewPanel] = webviewPanel;
     handlePageMessage(webviewPanel);
     handleResourceMessage(webviewPanel);
     handleMarkdownMessage(webviewPanel, isDev);
     handleTocMessage(webviewPanel);
+    handleConfigMessage(webviewPanel);
+  }
+
+  static unbind() {
+    if (this[symbolWebviewPanel]) {
+      this[symbolWebviewPanel].dispose();
+      this[symbolWebviewPanel] = null;
+    }
   }
 
   /**

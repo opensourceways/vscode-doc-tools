@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
+import { execMdInTocCheck } from 'checkers';
 
 import { isConfigEnabled } from '@/utils/common';
-import { execMdInTocCheck } from 'checkers';
 
 /**
  * 检查 markdown 是否加入 _toc.yaml

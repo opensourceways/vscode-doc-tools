@@ -18,17 +18,20 @@ export async function checkLinkValidity(content: string, document: vscode.TextDo
 
   const whiteListConfig = vscode.workspace.getConfiguration('docTools.check.url').get<string[]>('whiteList', []);
   const whiteList = Array.isArray(whiteListConfig) ? [...whiteListConfig, ...defaultWhitelistUrls] : defaultWhitelistUrls;
-  const results = await execLinkValidityCheck(content, path.dirname(document.uri.fsPath), whiteList);
+  let results = await execLinkValidityCheck(content, {
+    whiteList,
+    prefixPath: path.dirname(document.uri.fsPath),
+  });
+
+  if (isConfigEnabled('docTools.check.linkValidity.only404')) {
+    results = results.filter((item) => item.extras === 404);
+  }
 
   return results.map((item) => {
     const range = new vscode.Range(document.positionAt(item.start), document.positionAt(item.end));
-    const diagnostic = new vscode.Diagnostic(
-      range,
-      item.message,
-      item.extras === 'notFound' ? vscode.DiagnosticSeverity.Error : vscode.DiagnosticSeverity.Warning
-    );
+    const diagnostic = new vscode.Diagnostic(range, item.message, item.extras === 499 ? vscode.DiagnosticSeverity.Warning : vscode.DiagnosticSeverity.Error);
     diagnostic.source = 'link-validity-check';
-    
+
     return diagnostic;
   });
 }

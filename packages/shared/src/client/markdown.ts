@@ -6,6 +6,7 @@ import {
   TEXT_REGEX_MD_HEADING,
   TEXT_REGEX_MD_HR,
   TEXT_REGEX_MD_IMAGE,
+  TEXT_REGEX_MD_INLINE_CODE,
   TEXT_REGEX_MD_ITALIC,
   TEXT_REGEX_MD_LINK,
   TEXT_REGEX_MD_LIST,
@@ -88,6 +89,50 @@ export function getMarkdownTitleId(title: string) {
 }
 
 /**
+ * 获取所有出现的id
+ * @param {string} content markdown 内容
+ * @returns {Set<string>} 返回匹配的id
+ */
+export function getMarkdownIds(content: string) {
+  const ids = new Set<string>();
+
+  // 提取 Markdown 标题id
+  content.split('\n').forEach((line) => {
+    const tirmStr = line.trim();
+    if (tirmStr.startsWith('#')) {
+      const title = line.replace(/#+ +/, '');
+      if (title) {
+        let count = 1;
+        let titleId = getMarkdownTitleId(title);
+        let id = titleId // 对于相同的标题，markdown id转换时会在后面加上数字
+        while (ids.has(id)) {
+          id = `${titleId}-${count}`;
+          count++;
+        }
+
+        ids.add(id);
+      }
+    }
+  });
+
+  // 提取 HTML 标签中的 id
+  for (const match of content.matchAll(/<[^>]+id=["']([^"']+)["'][^>]*>/g)) {
+    if (match[1]) {
+      ids.add(match[1]);
+    }
+  }
+
+  // 提取 HTML 标签中的 name（主要用于特定标签）
+  for (const match of content.matchAll(/<(a|input|select|textarea|button|iframe)[^>]+name=["']([^"']+)["'][^>]*>/g)) {
+    if (match[2]) {
+      ids.add(match[2]);
+    }
+  }
+
+  return ids;
+}
+
+/**
  * 获取屏蔽某些 markdown 语法后的内容
  * @param {string} content markdown 内容
  * @returns {string} 返回过滤后的内容
@@ -118,6 +163,7 @@ export function getMarkdownFilterContent(
 
   if (disableCode) {
     regs.push(TEXT_REGEX_MD_CODE);
+    regs.push(TEXT_REGEX_MD_INLINE_CODE);
   }
 
   if (disableHeading) {

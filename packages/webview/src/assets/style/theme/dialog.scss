@@ -34,3 +34,19 @@
 .o-dialog {
   --dlg-radius: var(--layout-pkg-radius);
 }
+
+.dlg-body {
+  text-align: center;
+  word-wrap: break-word;
+}
+
+.button-box {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 24px;
+
+  > *:not(:last-child) {
+    margin-right: 16px;
+  }
+}

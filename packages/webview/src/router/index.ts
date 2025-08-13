@@ -15,6 +15,27 @@ const routes = [
       return import('@/views/TheMarkdown.vue')
     },
   },
+  {
+    path: '/check-name-result',
+    name: 'check-name-result',
+    component: () => {
+      return import('@/views/TheCheckNameResult.vue')
+    },
+  },
+  {
+    path: '/check-name-consistency-result',
+    name: 'check-name-consistency-result',
+    component: () => {
+      return import('@/views/TheCheckNameConsistencyResult.vue')
+    },
+  },
+  {
+    path: '/check-link-accessibility',
+    name: 'check-link-accessibility',
+    component: () => {
+      return import('@/views/TheCheckLinkAccessibility.vue')
+    },
+  },
 ]
 
 export default createRouter({

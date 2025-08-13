@@ -102,4 +102,20 @@ export class BroadcastBridge {
   static removeTocContentChangeListener(callback: (tocPath: string) => void) {
     this[symbolRemoveListener]('onTocContentChange', callback);
   }
+
+  /**
+   * 添加 异步任务输出 监听
+   * @param {Function} callback 回调方法
+   */
+  static addAsyncTaskOutputListener<T = any>(callback: (name: string, data: T) => void) {
+    this[symbolAddListener]('onAsyncTaskOutput', callback);
+  }
+
+  /**
+   * 移除 异步任务输出 监听
+   * @param {Function} callback 回调方法
+   */
+  static removeAsyncTaskOutputListener<T = any>(callback: (name: string, data: T) => void) {
+    this[symbolRemoveListener]('onAsyncTaskOutput', callback);
+  }
 }

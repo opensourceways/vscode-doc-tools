@@ -12,5 +12,6 @@ export const injectData = (() => {
     theme: 'dark' | 'light';
     locale: string;
     query: Record<string, any>;
+    extras?: Record<string, any>;
   };
 })();

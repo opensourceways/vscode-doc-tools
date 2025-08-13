@@ -5,6 +5,7 @@ import yaml from 'js-yaml';
 import { getFileContentAsync, getMarkdownTitle, getYamlAsync } from 'shared';
 
 import type { TocItem } from '@/@types/toc';
+import { isConfigEnabled } from '@/utils/common';
 
 /**
  * 获取已经加入 toc item 的 markdown 路径
@@ -60,11 +61,11 @@ async function getManualToc(dirPath: string) {
   // 遍历目录加入sections
   const walkDir = async (targetPath: string) => {
     for (const name of fs.readdirSync(targetPath)) {
-      const completedPath = path.join(targetPath, name).replace(/\\/g, '/');
+      const completePath = path.join(targetPath, name).replace(/\\/g, '/');
 
       // 目录继续处理
-      if (fs.statSync(completedPath).isDirectory()) {
-        walkDir(completedPath);
+      if (fs.statSync(completePath).isDirectory()) {
+        walkDir(completePath);
         continue;
       }
 
@@ -74,7 +75,7 @@ async function getManualToc(dirPath: string) {
       }
 
       // 跳过没有标题的md
-      const content = await getFileContentAsync(completedPath);
+      const content = await getFileContentAsync(completePath);
       const title = getMarkdownTitle(content);
       if (!title) {
         vscode.window.showWarningMessage(`标题不存在：${name}`);
@@ -82,7 +83,7 @@ async function getManualToc(dirPath: string) {
       }
 
       // 跳过已有的md
-      const relativePath = `.${completedPath.replace(dirPath, '')}`;
+      const relativePath = `.${completePath.replace(dirPath, '')}`;
       const item = hrefMap.get(relativePath);
       if (item) {
         // 更新label
@@ -122,7 +123,7 @@ export async function genTocManual(uri: vscode.Uri) {
     return;
   }
 
-  if (!dirPath.includes('docs/zh') && !dirPath.includes('docs/en')) {
+  if (isConfigEnabled('docTools.scope') && !dirPath.includes('docs/zh') && !dirPath.includes('docs/en')) {
     vscode.window.showErrorMessage(`非文档下的 zh 或 en 目录：${dirPath}`);
     return;
   }
