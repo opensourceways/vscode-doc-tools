@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import fs from 'fs';
 import path from 'path';
-import yaml from 'js-yaml';
+import { stringify } from 'yaml';
 import { existsAsync, getFileContentAsync, getMarkdownPureTitle, getMarkdownTitle, getYamlAsync } from 'shared';
 
 import type { TocItem } from '@/@types/toc';
@@ -129,7 +129,7 @@ export async function genTocManual(uri: vscode.Uri) {
   }
 
   const tocPath = path.join(dirPath, '_toc.yaml');
-  fs.writeFileSync(tocPath, yaml.dump(toc), 'utf8');
+  fs.writeFileSync(tocPath, stringify(toc), 'utf8');
   const doc = await vscode.workspace.openTextDocument(tocPath);
   vscode.window.showTextDocument(doc);
 }

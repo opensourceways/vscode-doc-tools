@@ -1,79 +1,207 @@
-import yaml from 'js-yaml';
+import { parseDocument, isMap, isSeq, ParsedNode } from 'yaml';
 import { getLinkStatus } from 'shared';
 
-import { TocItem } from '../@types/toc';
 import { CheckResultT } from '../@types/result';
 
-const ALLOWED_KEYS = ['label', 'description', 'isManual', 'sections', 'href', 'upstream', 'path'];
-
-/**
- * 收集错误提示
- * @param {string} content _toc.yaml 内容
- * @param {string} text 错误文本
- * @param {string} message 提示消息
- * @returns {CheckResultT[]} 返回结果
- */
-function collectInvalidResults(content: string, text: string, message: string) {
-  const results: CheckResultT[] = [];
-  for (const match of content.matchAll(new RegExp(text, 'g'))) {
-    results.push({
-      content: match[0],
-      message,
-      start: match.index,
-      end: match.index + match[0].length,
-    });
+const ALLOWED_KEYS_MAP: Record<
+  string,
+  {
+    checkValue?: (value: unknown, tocDir?: string) => Promise<string | undefined> | string | undefined;
   }
-
-  return results;
-}
-
-/**
- * 遍历收集 toc 错误
- * @param {string} content _toc.yaml 内容
- * @param {TocItem} item toc item
- * @param {string} tocDir _toc.yaml 所在目录
- * @param {CheckResultT[]} results 已收集的结果
- * @param {Set<string>} handled 已处理的错误，首次调用无需传递，用于递归收集传参
- */
-async function walkToc(content: string, item: TocItem, tocDir: string, results: CheckResultT[], handled = new Set<string>()) {
-  // 检查 key
-  for (const key of Object.keys(item)) {
-    if (!ALLOWED_KEYS.includes(key) && !handled.has(`${key}:`)) {
-      results.push(...collectInvalidResults(content, `${key}:`, `_toc.yaml 不允许该 key 值 (Not allowed key): ${key}.`));
-      handled.add(`${key}:`);
-    }
-  }
-
-  // 检查isManual，只能为 true 或 false
-  if (item.isManual && typeof item.isManual !== 'boolean' && !handled.has(`isManual:\\s+${item.isManual}`)) {
-    results.push(
-      ...collectInvalidResults(
-        content,
-        `isManual:\\s+${item.isManual}`,
-        `isManual 只能为 true 或 false (Not allowed value: ${item.isManual}. The value of isManual can only be true or false.)`
-      )
-    );
-    handled.add(`isManual:\\s+${item.isManual}`);
-  }
-
-  // 检查链接有效性
-  if (item.href) {
-    const url = typeof item.href === 'string' ? item.href : item.href.upstream;
-    if (url && !handled.has(`href:\\s+${url}`)) {
-      const status = await getLinkStatus(url, tocDir);
-      if (status >= 400) {
-        results.push(...collectInvalidResults(content, `href:\\s+${url}`, `文档资源不存在 (Non-existent doc in toc): ${url}.`));
+> = {
+  label: {
+    checkValue: (value: unknown) => {
+      if (typeof value !== 'string') {
+        return `label 只能为字符串`;
+      } else if (value.trim() === '') {
+        return `label 不能为空字符串`;
+      }
+    },
+  },
+  description: {
+    checkValue: (value: unknown) => {
+      if (typeof value !== 'string') {
+        return `description 只能为字符串`;
+      } else if (value.trim() === '') {
+        return `description 不能为空字符串`;
+      }
+    },
+  },
+  isManual: {
+    checkValue: (value: unknown) => {
+      if (typeof value !== 'boolean') {
+        return `isManual 只能为 true/false`;
+      }
+    },
+  },
+  sections: {
+    checkValue: (value: unknown) => {
+      if (!Array.isArray(value)) {
+        return `sections 只能为数组`;
+      }
+    },
+  },
+  href: {
+    checkValue: async (value: unknown, tocDir?: string) => {
+      if (typeof value !== 'string' && typeof value !== 'object') {
+        return `href 只能为字符串或者对象`;
+      } else if (typeof value === 'string') {
+        const status = await getLinkStatus(value, tocDir);
+        if (status === 404) {
+          return `文档资源不存在: ${value}.`;
+        }
+      }
+    },
+  },
+  upstream: {
+    checkValue: async (value: unknown) => {
+      if (typeof value !== 'string') {
+        return `upstream 只能为字符串`;
+      } else if (value.trim() === '') {
+        return `upstream 不能为空字符串`;
+      } else if (!value.startsWith('http')) {
+        return `upstream 只能为 http(s) 地址`;
       }
 
-      handled.add(`href:\\s+${url}`);
+      const status = await getLinkStatus(value);
+      if (status === 404) {
+        return `文档资源不存在: ${value}.`;
+      }
+    },
+  },
+  path: {
+    checkValue: (value: unknown) => {
+      if (typeof value !== 'string') {
+        return `path 只能为字符串`;
+      } else if (value.trim() === '') {
+        return `path 不能为空字符串`;
+      }
+    },
+  },
+};
+
+async function visitToc(node: ParsedNode, tocDir: string, results: CheckResultT[], firstCall = false) {
+  // 处理对象
+  if (isMap(node)) {
+    for (const { key, value } of node.items) {
+      const keyString = key.toString();
+      if (!ALLOWED_KEYS_MAP[keyString]) {
+        results.push({
+          content: keyString,
+          message: `_toc.yaml 不允许该字段：${keyString}`,
+          start: key.range[0],
+          end: key.range[1],
+        });
+
+        continue;
+      }
+
+      if (value && ALLOWED_KEYS_MAP[keyString].checkValue) {
+        const message = await ALLOWED_KEYS_MAP[keyString].checkValue(value.toJSON(), tocDir);
+        if (message) {
+          results.push({
+            content: keyString,
+            message,
+            start: value.range[0],
+            end: value.range[1],
+          });
+        }
+      }
+
+      if (keyString === 'label') {
+        if (node.items.length === 1) {
+          results.push({
+            content: keyString,
+            message: `缺少 href 或 sections 字段`,
+            start: key.range[0],
+            end: key.range[1],
+          });
+        }
+
+        continue;
+      }
+
+      if (keyString === 'href') {
+        if (value) {
+          await visitToc(value, tocDir, results);
+        }
+
+        continue;
+      }
+
+      if (keyString === 'sections') {
+        if (!node.items.some(({ key }) => key.toString() === 'label')) {
+          results.push({
+            content: keyString,
+            message: `缺少 label 字段`,
+            start: key.range[0],
+            end: key.range[1],
+          });
+        }
+
+        if (value) {
+          await visitToc(value, tocDir, results);
+        }
+
+        continue;
+      }
+
+      if (keyString === 'upstream') {
+        if (node.items.some(({ key }) => key.toString() === 'href')) {
+          results.push({
+            content: keyString,
+            message: `upstream 字段不允许与 href 字段同时存在，请检查缩进是否正确`,
+            start: key.range[0],
+            end: key.range[1],
+          });
+        }
+
+        continue;
+      }
+
+      if (keyString === 'path') {
+        if (node.items.some(({ key }) => key.toString() === 'href')) {
+          results.push({
+            content: keyString,
+            message: `path 字段不允许与 href 字段同时存在，请检查缩进是否正确`,
+            start: key.range[0],
+            end: key.range[1],
+          });
+        }
+
+        if (!node.items.some(({ key }) => key.toString() === 'upstream')) {
+          results.push({
+            content: keyString,
+            message: `需要添加 upstream 字段才可使用 path 字段`,
+            start: key.range[0],
+            end: key.range[1],
+          });
+        }
+
+        continue;
+      }
     }
+
+    return;
   }
 
-  // 继续递归遍历
-  if (Array.isArray(item.sections)) {
-    for (const child of item.sections) {
-      await walkToc(content, child, tocDir, results, handled);
+  // 处理数组
+  if (isSeq(node)) {
+    for (const item of node.items) {
+      await visitToc(item, tocDir, results);
     }
+
+    return;
+  }
+
+  // 首次调用，并且转换成非对象或者数组
+  if (firstCall) {
+    results.push({
+      content: '',
+      message: `_toc.yaml 转换失败！请检测是否按格式编写 _toc.yaml`,
+      start: node.range[0],
+      end: node.range[1],
+    });
   }
 }
 
@@ -87,9 +215,10 @@ export async function execTocCheck(content: string, tocDir: string) {
   const results: CheckResultT[] = [];
 
   try {
-    const obj = yaml.load(content) as TocItem;
-    await walkToc(content, obj, tocDir, results);
+    const toc = parseDocument(content);
+    await visitToc(toc.contents!, tocDir, results, true);
   } catch (err: any) {
+    console.log(err);
     if (err?.mark) {
       const arr = content.split('\n');
       let start = err.mark.column;

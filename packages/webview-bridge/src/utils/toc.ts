@@ -1,6 +1,6 @@
 import path from 'path';
 import fs from 'fs';
-import yaml from 'js-yaml';
+import { parse } from 'yaml';
 import { getFileContentAsync, getGitUrlInfo, getMarkdownLevelTitles, getMarkdownTitleId } from 'shared';
 
 /**
@@ -154,7 +154,7 @@ export async function getTocByMdPath(fsPath: string) {
     if (fs.existsSync(tocPath)) {
       try {
         const content = await getFileContentAsync(tocPath);
-        tocObj = yaml.load(content) as Record<string, any>;
+        tocObj = parse(content) as Record<string, any>;
         if (isMdInToc(tocObj, dirPath, mdPath)) {
           found = true;
           break;

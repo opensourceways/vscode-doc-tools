@@ -85,9 +85,9 @@ async function walkDir(
       }
 
       results.forEach((item) => {
-        if (item.content.includes('href')) {
+        if (item.message.includes('文档资源不存在')) {
           ServerMessageHandler.broadcast('onAsyncTaskOutput', 'checkLinkAccessibility:addItem', {
-            url: item.content.split(':')[1].trim(),
+            url: item.message.split(':')[1].trim(),
             status: 404,
             start: item.start,
             end: item.end,
@@ -131,7 +131,8 @@ async function startWalk(
       ServerMessageHandler.broadcast('onAsyncTaskOutput', 'checkLinkAccessibility:stop');
     }
   } catch (err) {
-    // nothing
+    console.log(err);
+    stopWalk();
   }
 }
 
