@@ -1,3 +1,4 @@
+import path from 'path';
 import fs from 'fs';
 import fsAsnyc from 'fs/promises';
 
@@ -75,5 +76,19 @@ export async function readdirAsync(targetPath: string) {
     return await fsAsnyc.readdir(targetPath);
   } catch {
     return [];
+  }
+}
+
+export async function existsAsync(targetPath: string) { 
+  try {
+    if (!fs.existsSync(targetPath)) {
+      return false;
+    }
+
+    const name = path.basename(targetPath);
+    const realName = path.basename(await fsAsnyc.realpath(targetPath));
+    return name === realName;
+  } catch {
+    return false;
   }
 }

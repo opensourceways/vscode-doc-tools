@@ -40,6 +40,8 @@ export function getMarkdownPureTitle(title: string) {
   return title
     .replace(/\*\*([^*]+)\*\*/g, '$1') // 去除加粗（**）
     .replace(/\*([^*]+)\*/g, '$1') // 去除斜体（*）
+    .replace(/__([^_]+)__/g, '$1') // 加粗 __
+    .replace(/_([^_]+)_/g, '$1') // 斜体 _
     .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // 去除链接
     .replace(/<[^>]+>/g, '') // 去除 HTML 标签
     .replace(/`/g, ''); // 去除反引号

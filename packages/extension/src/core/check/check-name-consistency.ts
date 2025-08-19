@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import fs from 'fs';
 import { execNameConsistencyCheck } from 'checkers';
 
 import { isConfigEnabled } from '@/utils/common';
@@ -13,12 +14,13 @@ export async function checkNameConsistency(document: vscode.TextDocument) {
     return;
   }
 
-  const fsPath = document.uri.fsPath.replace(/\\/g, '/');
+  const fsPath = fs.realpathSync.native(document.uri.fsPath).replace(/\\/g, '/');
   if (!fsPath.includes('/zh/') && !fsPath.includes('/en/')) {
     return;
   }
 
   const [result, filePath] = await execNameConsistencyCheck(fsPath, ['README.md']);
+
   if (!result && filePath) {
     vscode.window.showInformationMessage(`友情提示：${fsPath.split('/').pop()} 中英文文档名称不一致`);
   }

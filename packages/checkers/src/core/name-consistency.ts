@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { readdirAsync } from 'shared';
+import { existsAsync, readdirAsync } from 'shared';
 import { CheckResultT } from 'src/@types/result';
 
 /**
@@ -16,7 +16,7 @@ export async function execNameConsistencyCheck(mdPath: string, nameWhiteList: st
   }
 
   const localePath = mdPath.includes('/zh/') ? mdPath.replace('/zh/', '/en/') : mdPath.replace('/en/', '/zh/');
-  if (fs.existsSync(localePath)) {
+  if (await existsAsync(localePath)) {
     return [true];
   }
 

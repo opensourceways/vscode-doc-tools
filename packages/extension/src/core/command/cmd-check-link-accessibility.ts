@@ -1,12 +1,11 @@
 import * as vscode from 'vscode';
 import fs from 'fs';
 import path from 'path';
-import { getFileContentAsync, getMarkdownFilterContent, readdirAsync } from 'shared';
+import { existsAsync, getFileContentAsync, getMarkdownFilterContent, readdirAsync } from 'shared';
 import { BroadcastT, MessageT, OPERATION_TYPE, ServerMessageHandler, SOURCE_TYPE } from 'webview-bridge';
 import { execLinkValidityCheck, execResourceExistenceCheck, execTocCheck } from 'checkers';
 
 import defaultWhitelistUrls from '@/config/whitelist-urls';
-import { isConfigEnabled } from '@/utils/common';
 import { createWebviewPanel } from '@/utils/webview';
 
 let controller: AbortController | null = null;
@@ -147,24 +146,17 @@ function stopWalk() {
  * @param {vscode.Uri} uri 目标目录 uri
  */
 export async function checkLinkAccessibility(context: vscode.ExtensionContext, uri: vscode.Uri) {
-  const dirPath = uri.fsPath.replace(/\\/g, '/');
-
-  if (!fs.existsSync(dirPath)) {
-    vscode.window.showErrorMessage(`路径不存在：${dirPath}`);
+  if (!(await existsAsync(uri.fsPath))) {
+    vscode.window.showErrorMessage(`路径不存在：${uri.fsPath}`);
     return;
   }
 
-  if (!fs.statSync(dirPath).isDirectory()) {
-    vscode.window.showErrorMessage(`非目录路径：${dirPath}`);
+  const fsPath = fs.realpathSync.native(uri.fsPath).replace(/\\/g, '/');
+  if (!fs.statSync(fsPath).isDirectory()) {
+    vscode.window.showErrorMessage(`非目录路径：${fsPath}`);
     return;
   }
 
-  if (isConfigEnabled('docTools.scope') && !dirPath.includes('docs/zh/') && !dirPath.includes('docs/en/')) {
-    vscode.window.showErrorMessage(`非文档下的 zh 或 en 目录：${dirPath}`);
-    return;
-  }
-
-  const fsPath = uri.fsPath.replace(/\\/g, '/');
   const isDarkTheme = vscode.workspace.getConfiguration().get<string>('workbench.colorTheme', '').toLowerCase().includes('dark');
 
   const webviewPanel = createWebviewPanel({
