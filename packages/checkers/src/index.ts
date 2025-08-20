@@ -5,6 +5,7 @@ export * from './core/punctuation-blank-space';
 export * from './core/punctuation-mixing';
 export * from './core/punctuation-manual-link';
 export * from './core/punctuation-consecutive';
+export * from './core/punctuation-pair';
 export * from './core/resource-existence';
 export * from './core/tag-closed';
 export * from './core/toc';

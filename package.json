@@ -211,7 +211,12 @@
         "docTools.check.punctuationManualLink.enable": {
           "type": "boolean",
           "default": false,
-          "description": "启用手册/指南链接是否被书名号包裹检查"
+          "description": "启用手册/指南链接是否被书名号包裹检查（因语句含义复杂，可能存在误报）"
+        },
+        "docTools.check.punctuationPair.enable": {
+          "type": "boolean",
+          "default": false,
+          "description": "启用中英文标点符号是否配对检查（因语句含义复杂，可能存在误报）"
         },
         "docTools.check.name.enable": {
           "type": "boolean",
