@@ -108,6 +108,16 @@ async function visitToc(node: ParsedNode, tocDir: string, results: CheckResultT[
         }
       }
 
+      const items = node.items.filter(({ key }) => key.toString() === keyString);
+      if (items.length > 1) {
+        results.push({
+          content: keyString,
+          message: `${keyString} 字段重复`,
+          start: key.range[0],
+          end: key.range[1],
+        });
+      }
+
       if (keyString === 'label') {
         if (node.items.length === 1) {
           results.push({
@@ -218,20 +228,7 @@ export async function execTocCheck(content: string, tocDir: string) {
     const toc = parseDocument(content);
     await visitToc(toc.contents!, tocDir, results, true);
   } catch (err: any) {
-    if (err?.mark) {
-      const arr = content.split('\n');
-      let start = err.mark.column;
-      for (let i = 0; i < err.mark.line; i++) {
-        start += arr[i].length + 1;
-      }
-
-      results.push({
-        content: '',
-        message: err.message,
-        start,
-        end: start + arr[err.mark.line].trim().length,
-      });
-    }
+    // nothing
   }
 
   return results;
