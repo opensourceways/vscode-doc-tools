@@ -131,7 +131,6 @@ async function startWalk(
       ServerMessageHandler.broadcast('onAsyncTaskOutput', 'checkLinkAccessibility:stop');
     }
   } catch (err) {
-    console.log(err);
     stopWalk();
   }
 }

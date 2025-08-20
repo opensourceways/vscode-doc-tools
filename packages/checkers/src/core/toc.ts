@@ -218,7 +218,6 @@ export async function execTocCheck(content: string, tocDir: string) {
     const toc = parseDocument(content);
     await visitToc(toc.contents!, tocDir, results, true);
   } catch (err: any) {
-    console.log(err);
     if (err?.mark) {
       const arr = content.split('\n');
       let start = err.mark.column;

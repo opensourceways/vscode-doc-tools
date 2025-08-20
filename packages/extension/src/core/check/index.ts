@@ -18,6 +18,7 @@ import { checkPunctuationConsecutive } from './check-punctuation-consecutive';
 import { checkPunctuationPair } from './check-punctuation-pair';
 import { checkName } from './check-name';
 import { checkNameConsistency } from './check-name-consistency';
+import { checkExtraBlankSpace } from './check-extra-blank-space';
 
 // 用于存储延迟任务记录
 const timerMap = new Map<string, NodeJS.Timeout>();
@@ -83,6 +84,7 @@ async function checkMarkdown(event: EVENT_TYPE, document: vscode.TextDocument, d
     checkPunctuationManualLink(content, document),
     checkPunctuationConsecutive(content, document),
     checkPunctuationPair(content, document),
+    checkExtraBlankSpace(content, document),
     checkTagClosed(content, document),
     checkCodespell(content, document),
     lintMarkdown(document),

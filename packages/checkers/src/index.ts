@@ -12,3 +12,4 @@ export * from './core/toc';
 export * from './core/markdownlint';
 export * from './core/name';
 export * from './core/name-consistency';
+export * from './core/extra-blank-space';
