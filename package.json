@@ -196,7 +196,7 @@
         "docTools.check.punctuationBlankSpace.enable": {
           "type": "boolean",
           "default": false,
-          "description": "启用中文标点符号前后无空格检查（因语句含义复杂，可能存在误报）"
+          "description": "启用标点符号前后无空格检查（因语句含义复杂，可能存在误报）"
         },
         "docTools.check.punctuationMixing.enable": {
           "type": "boolean",

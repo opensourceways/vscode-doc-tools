@@ -49,7 +49,7 @@ async function walkDir(dirPath: string, nameWhiteList: string[] = [], results: C
       if (!result) {
         results.push({
           content: completePath,
-          message: filePath ? '中英文名称不一致' : completePath.includes('/zh/') ? '不存在对应的英文文档' : '不存在对应的中文文档',
+          message: filePath ? '中英文文档名称不一致' : completePath.includes('/zh/') ? '不存在对应的英文文档' : '不存在对应的中文文档',
           start: 0,
           end: 0,
           extras: filePath || '',
