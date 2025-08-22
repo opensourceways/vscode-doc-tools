@@ -12,7 +12,7 @@ export function execTagClosedCheck(content: string) {
   const selfClosedTags = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr']);
 
   // 正则表达式，匹配 HTML 标签、被转义的标签
-  const REGEX_TAG = /(?<!\\)<\s*\/?\s*([a-zA-Z0-9\-]+)([^>]*)>|<\s*\/?\s*([a-zA-Z0-9\-]+)([^>]*?)\/>|\\<([^>]*)>|<([^>]*)\\>/g;
+  const REGEX_TAG = /(?<!\\)<\/?([a-zA-Z]+[a-zA-Z0-9\-]+)([^>]*?)>|(?<!\\)<([a-zA-Z]+[a-zA-Z0-9\-]+)([^>]*?)\/>|\\<([a-zA-Z]+[^>]*?)>|<([a-zA-Z]+[^>]*?)\\>/g;
 
   for (const match of content.matchAll(REGEX_TAG)) {
     // 跳过链接
@@ -80,7 +80,7 @@ export function execTagClosedCheck(content: string) {
     if (!tagMacthed) {
       results.push({
         content: match[0],
-        message: `未闭合的 html 标签 (Unclosed html tag): <${tag}>.`,
+        message: `未闭合的 html 标签 (Unclosed html tag): <${tag}>`,
         start: match.index,
         end: match.index + match[0].length,
       });
@@ -93,7 +93,7 @@ export function execTagClosedCheck(content: string) {
 
     results.push({
       content: match[0],
-      message: `未闭合的 html 标签 (Unclosed html tag): <${tag}>.`,
+      message: `未闭合的 html 标签 (Unclosed html tag): <${tag}>`,
       start: match.index,
       end: match.index + match[0].length,
     });

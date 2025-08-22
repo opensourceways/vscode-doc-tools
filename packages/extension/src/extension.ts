@@ -14,6 +14,7 @@ import { checkNameConsistency } from '@/core/command/cmd-check-name-consistency'
 import { checkLinkAccessibility } from '@/core/command/cmd-check-link-accessibility';
 import { genMarkdownAnchorId } from '@/core/command/cmd-gen-markdown-anchor-id';
 import { checkToc } from './core/command/cmd-check-toc';
+import { checkTagClosed } from './core/command/cmd-check-tag-closed';
 
 // 用于存储错误信息
 const diagnosticsCollection = vscode.languages.createDiagnosticCollection('doc-tools');
@@ -121,6 +122,12 @@ function registerCommand(context: vscode.ExtensionContext) {
     })
   );
 
+  // 注册 批量检查 Html 标签闭合 命令
+  context.subscriptions.push(
+    vscode.commands.registerCommand('doc.tools.check.tagClosed', (uri: vscode.Uri) => {
+      checkTagClosed(context, uri);
+    })
+  );
 
   // 注册 生成链接锚点并复制 命令
   context.subscriptions.push(

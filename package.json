@@ -62,19 +62,23 @@
       },
       {
         "command": "doc.tools.check.name",
-        "title": "检查目录、文件是否符合命名规范"
+        "title": "批量检查目录和文件是否符合命名规范"
       },
       {
         "command": "doc.tools.check.nameConsistency",
-        "title": "检查中英文文档名称一致性"
+        "title": "批量检查中英文文档名称一致性"
       },
       {
         "command": "doc.tools.check.linkAccessibility",
-        "title": "检查链接可访问性"
+        "title": "批量检查链接可访问性"
       },
       {
         "command": "doc.tools.check.toc",
-        "title": "检查_toc.yaml"
+        "title": "批量检查 _toc.yaml"
+      },
+      {
+        "command": "doc.tools.check.tagClosed",
+        "title": "批量检查 Html 标签闭合"
       },
       {
         "command": "doc.tools.genMarkdownAnchorId",
@@ -122,6 +126,10 @@
         },
         {
           "command": "doc.tools.check.toc",
+          "group": "doc.tools.check"
+        },
+        {
+          "command": "doc.tools.check.tagClosed",
           "group": "doc.tools.check"
         }
       ],
