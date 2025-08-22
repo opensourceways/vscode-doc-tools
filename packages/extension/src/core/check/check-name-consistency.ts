@@ -20,8 +20,13 @@ export async function checkNameConsistency(document: vscode.TextDocument) {
   }
 
   const [result, filePath] = await execNameConsistencyCheck(fsPath, ['README.md']);
+  if (result) {
+    return;
+  }
 
-  if (!result && filePath) {
+  if (filePath) {
     vscode.window.showInformationMessage(`友情提示：${fsPath.split('/').pop()} 中英文文档名称不一致`);
+  } else {
+    vscode.window.showInformationMessage(`友情提示：${fsPath.split('/').pop()} 缺少对应的${fsPath.includes('/zh/') ? '英文' : '中文'}文档`);
   }
 }
