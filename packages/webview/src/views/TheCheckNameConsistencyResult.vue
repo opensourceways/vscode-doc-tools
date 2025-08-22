@@ -56,7 +56,7 @@ const onRemoveItem = (row: Record<string, any>) => {
       >
       项为不存在对应的中文/英文文档
     </div>
-    <OTable class="file-tree-body" :columns="columns" :data="data" border="all">
+    <OTable :columns="columns" :data="data" border="all">
       <template #td_name="{ row }">
         <OLink class="link" color="primary" @click="onClickSourceLink(row.path)">{{ row.name }}</OLink>
       </template>

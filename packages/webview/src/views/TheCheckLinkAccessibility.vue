@@ -116,7 +116,7 @@ const onClickStopLink = () => {
       <OLink v-else color="primary" @click="onClickStartLink">开始检查</OLink>
     </div>
 
-    <OTable class="file-tree-body" :columns="columns" :data="data" border="all">
+    <OTable :columns="columns" :data="data" border="all">
       <template #td_url="{ row }">
         <OLink class="link" color="primary" :href="row.url.startsWith('http') ? row.url : undefined" target="_blank">{{ row.url }}</OLink>
       </template>

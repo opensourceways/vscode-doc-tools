@@ -6,7 +6,7 @@ import { CheckResultT } from '../@types/result';
 const ALLOWED_KEYS_MAP: Record<
   string,
   {
-    checkValue?: (value: unknown, tocDir?: string) => Promise<string | undefined> | string | undefined;
+    checkValue?: (value: unknown, tocDir?: string, signal?: AbortSignal) => Promise<string | undefined> | string | undefined;
   }
 > = {
   label: {
@@ -42,19 +42,19 @@ const ALLOWED_KEYS_MAP: Record<
     },
   },
   href: {
-    checkValue: async (value: unknown, tocDir?: string) => {
+    checkValue: async (value: unknown, tocDir?: string, signal?: AbortSignal) => {
       if (typeof value !== 'string' && typeof value !== 'object') {
         return `href 只能为字符串或者对象`;
       } else if (typeof value === 'string') {
-        const status = await getLinkStatus(value, tocDir);
+        const status = await getLinkStatus(value, tocDir, [], signal);
         if (status === 404) {
-          return `文档资源不存在: ${value}.`;
+          return `文档资源不存在: ${value}`;
         }
       }
     },
   },
   upstream: {
-    checkValue: async (value: unknown) => {
+    checkValue: async (value: unknown, _?: string, signal?: AbortSignal) => {
       if (typeof value !== 'string') {
         return `upstream 只能为字符串`;
       } else if (value.trim() === '') {
@@ -63,9 +63,9 @@ const ALLOWED_KEYS_MAP: Record<
         return `upstream 只能为 http(s) 地址`;
       }
 
-      const status = await getLinkStatus(value);
+      const status = await getLinkStatus(value, '', [], signal);
       if (status === 404) {
-        return `文档资源不存在: ${value}.`;
+        return `文档资源不存在: ${value}`;
       }
     },
   },
@@ -80,10 +80,14 @@ const ALLOWED_KEYS_MAP: Record<
   },
 };
 
-async function visitToc(node: ParsedNode, tocDir: string, results: CheckResultT[], firstCall = false) {
+async function visitToc(node: ParsedNode, tocDir: string, results: CheckResultT[], signal?: AbortSignal, firstCall = false) {
   // 处理对象
   if (isMap(node)) {
     for (const { key, value } of node.items) {
+      if (signal?.aborted) {
+        throw new Error('aborted');
+      }
+
       const keyString = key.toString();
       if (!ALLOWED_KEYS_MAP[keyString]) {
         results.push({
@@ -97,7 +101,7 @@ async function visitToc(node: ParsedNode, tocDir: string, results: CheckResultT[
       }
 
       if (value && ALLOWED_KEYS_MAP[keyString].checkValue) {
-        const message = await ALLOWED_KEYS_MAP[keyString].checkValue(value.toJSON(), tocDir);
+        const message = await ALLOWED_KEYS_MAP[keyString].checkValue(value.toJSON(), tocDir, signal);
         if (message) {
           results.push({
             content: keyString,
@@ -133,7 +137,7 @@ async function visitToc(node: ParsedNode, tocDir: string, results: CheckResultT[
 
       if (keyString === 'href') {
         if (value) {
-          await visitToc(value, tocDir, results);
+          await visitToc(value, tocDir, results, signal);
         }
 
         continue;
@@ -150,7 +154,7 @@ async function visitToc(node: ParsedNode, tocDir: string, results: CheckResultT[
         }
 
         if (value) {
-          await visitToc(value, tocDir, results);
+          await visitToc(value, tocDir, results, signal);
         }
 
         continue;
@@ -198,7 +202,11 @@ async function visitToc(node: ParsedNode, tocDir: string, results: CheckResultT[
   // 处理数组
   if (isSeq(node)) {
     for (const item of node.items) {
-      await visitToc(item, tocDir, results);
+      if (signal?.aborted) {
+        throw new Error('aborted');
+      }
+
+      await visitToc(item, tocDir, results, signal);
     }
 
     return;
@@ -219,14 +227,15 @@ async function visitToc(node: ParsedNode, tocDir: string, results: CheckResultT[
  * 检查 _toc.yaml
  * @param {string} content _toc.yaml 内容
  * @param {string} tocDir _toc.yaml 所在目录
+ * @param {AbortSignal} signal 中断信号
  * @returns {CheckResultT[]} 返回检查结果
  */
-export async function execTocCheck(content: string, tocDir: string) {
+export async function execTocCheck(content: string, tocDir: string, signal?: AbortSignal) {
   const results: CheckResultT[] = [];
 
   try {
     const toc = parseDocument(content);
-    await visitToc(toc.contents!, tocDir, results, true);
+    await visitToc(toc.contents!, tocDir, results, signal, true);
   } catch (err: any) {
     // nothing
   }

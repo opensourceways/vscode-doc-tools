@@ -396,7 +396,7 @@ PS：在嵌套的 HTML 标签（如 \<table>xxx\</table> 这种情况）里引�
 
 - `docTools.check.punctuationBlankSpace.enable`
   - 类型：`boolean`
-  - 说明：启用中文标点符号前后无空格检查
+  - 说明：启用标点符号前后无空格检查
   - 默认：`false`
 
 - `docTools.check.punctuationMixing.enable`

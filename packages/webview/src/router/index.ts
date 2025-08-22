@@ -36,6 +36,13 @@ const routes = [
       return import('@/views/TheCheckLinkAccessibility.vue')
     },
   },
+  {
+    path: '/check-toc',
+    name: 'check-toc',
+    component: () => {
+      return import('@/views/TheCheckToc.vue')
+    },
+  },
 ]
 
 export default createRouter({

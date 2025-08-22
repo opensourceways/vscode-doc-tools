@@ -73,6 +73,10 @@
         "title": "检查链接可访问性"
       },
       {
+        "command": "doc.tools.check.toc",
+        "title": "检查_toc.yaml"
+      },
+      {
         "command": "doc.tools.genMarkdownAnchorId",
         "title": "生成链接锚点并复制"
       }
@@ -101,16 +105,24 @@
       ],
       "doc.tools.folder": [
         {
-          "command": "doc.tools.gen.toc.manual"
+          "command": "doc.tools.gen.toc.manual",
+          "group": "doc.tools.gen"
         },
         {
-          "command": "doc.tools.check.name"
+          "command": "doc.tools.check.name",
+          "group": "doc.tools.check"
         },
         {
-          "command": "doc.tools.check.nameConsistency"
+          "command": "doc.tools.check.nameConsistency",
+          "group": "doc.tools.check"
         },
         {
-          "command": "doc.tools.check.linkAccessibility"
+          "command": "doc.tools.check.linkAccessibility",
+          "group": "doc.tools.check"
+        },
+        {
+          "command": "doc.tools.check.toc",
+          "group": "doc.tools.check"
         }
       ],
       "doc.tools.markdown": [

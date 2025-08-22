@@ -79,7 +79,7 @@ async function walkDir(
       });
     } else if (!opts.disableScanToc && name === '_toc.yaml') {
       const content = await getFileContentAsync(completePath);
-      const results = await execTocCheck(content, dir);
+      const results = await execTocCheck(content, dir, opts.signal);
       if (opts.signal.aborted) {
         throw new Error('aborted');
       }
@@ -130,7 +130,7 @@ async function startWalk(
     if (controller && !controller.signal.aborted) {
       ServerMessageHandler.broadcast('onAsyncTaskOutput', 'checkLinkAccessibility:stop');
     }
-  } catch (err) {
+  } catch {
     stopWalk();
   }
 }
