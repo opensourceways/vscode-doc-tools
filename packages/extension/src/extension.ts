@@ -13,6 +13,8 @@ import { checkName } from '@/core/command/cmd-check-name';
 import { checkNameConsistency } from '@/core/command/cmd-check-name-consistency';
 import { checkLinkAccessibility } from '@/core/command/cmd-check-link-accessibility';
 import { genMarkdownAnchorId } from '@/core/command/cmd-gen-markdown-anchor-id';
+import { checkToc } from './core/command/cmd-check-toc';
+import { checkTagClosed } from './core/command/cmd-check-tag-closed';
 
 // 用于存储错误信息
 const diagnosticsCollection = vscode.languages.createDiagnosticCollection('doc-tools');
@@ -92,24 +94,38 @@ function registerCommand(context: vscode.ExtensionContext) {
     })
   );
 
-  // 注册 检查目录名、文件名命名规范 命令
+  // 注册 批量检查目录名、文件名命名规范 命令
   context.subscriptions.push(
     vscode.commands.registerCommand('doc.tools.check.name', (uri: vscode.Uri) => {
       checkName(context, uri);
     })
   );
 
-  // 注册 检查中英文文档名称一致性 命令
+  // 注册 批量检查中英文文档名称一致性 命令
   context.subscriptions.push(
     vscode.commands.registerCommand('doc.tools.check.nameConsistency', (uri: vscode.Uri) => {
       checkNameConsistency(context, uri);
     })
   );
 
-  // 注册 检查链接可访问性 命令
+  // 注册 批量检查链接可访问性 命令
   context.subscriptions.push(
     vscode.commands.registerCommand('doc.tools.check.linkAccessibility', (uri: vscode.Uri) => {
       checkLinkAccessibility(context, uri);
+    })
+  );
+
+  // 注册 批量检查toc 命令
+  context.subscriptions.push(
+    vscode.commands.registerCommand('doc.tools.check.toc', (uri: vscode.Uri) => {
+      checkToc(context, uri);
+    })
+  );
+
+  // 注册 批量检查 Html 标签闭合 命令
+  context.subscriptions.push(
+    vscode.commands.registerCommand('doc.tools.check.tagClosed', (uri: vscode.Uri) => {
+      checkTagClosed(context, uri);
     })
   );
 

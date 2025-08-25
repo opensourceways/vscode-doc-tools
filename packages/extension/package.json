@@ -1,6 +1,6 @@
 {
   "name": "extension",
-  "version": "0.0.9",
+  "version": "0.1.0",
   "license": "MIT",
   "scripts": {
     "vscode:prepublish": "yarn run package",
@@ -18,13 +18,12 @@
   },
   "dependencies": {
     "checkers": "*",
-    "js-yaml": "4.1.0",
     "markdownlint": "0.38.0",
     "shared": "*",
-    "webview-bridge": "*"
+    "webview-bridge": "*",
+    "yaml": "2.8.1"
   },
   "devDependencies": {
-    "@types/js-yaml": "4.0.9",
     "@types/mocha": "10.0.10",
     "@types/node": "24.0.1",
     "@types/vscode": "1.75.0",

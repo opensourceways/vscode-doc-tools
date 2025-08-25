@@ -1,6 +1,5 @@
 import path from 'path';
-import fs from 'fs';
-import { getYamlAsync } from 'shared';
+import { existsAsync, getYamlAsync } from 'shared';
 
 import { TocItem } from '../@types/toc';
 
@@ -41,7 +40,7 @@ export async function execMdInTocCheck(markdownPath: string): Promise<[boolean, 
   while (dirArr.length) {
     const dirPath = dirArr.join('/');
     tocPath = path.join(dirPath, '_toc.yaml');
-    if (fs.existsSync(tocPath)) {
+    if (await existsAsync(tocPath)) {
       const yamlObj = await getYamlAsync<TocItem>(tocPath);
       if (isMdInToc(yamlObj, dirPath, mdPath)) {
         isInToc = true;

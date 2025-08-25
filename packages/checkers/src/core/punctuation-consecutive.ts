@@ -1,21 +1,35 @@
 import { getMarkdownFilterContent } from 'shared';
 import type { CheckResultT } from '../@types/result';
 
-const rightEnPunctuationSet = new Set<string>(')]}>"\'`');
-const enPunctuationSet = new Set<string>('.!?;:,"\'()[]{}`');
+const PUNCTUATIONS_MAP: Record<string, Set<string>> = {
+  '.': new Set('.)]}>"\'`'),
+  '!': new Set(')]}>"\'`'),
+  '?': new Set(')]}>"\'`'),
+  ';': new Set(')]}>"\'`'),
+  ':': new Set(''),
+  ',': new Set(''),
+  '。': new Set('“”‘’（【《'),
+  '！': new Set('“”‘’（【《'),
+  '？': new Set('“”‘’（【《'),
+  '；': new Set('“”‘’（【《'),
+  '：': new Set('“‘（【《'),
+  '，': new Set('“‘（【《'),
+  '”': new Set('。！？；：，）】》—－～…、'),
+  '’': new Set('。！？；：，）】》—－～…、'),
+  '（': new Set('“‘【《'),
+  '）': new Set('。！？；：，”’—－～…、'),
+  '【': new Set('“‘（《'),
+  '】': new Set('。！？；：，”’—－～…、'),
+  '《': new Set('“‘（【'),
+  '》': new Set('。！？；：，”’—－～…、）】》'),
+  '、': new Set('“‘（【《'),
+  '～': new Set('“‘（【《'),
+  '—': new Set('“‘（【《'),
+  '－': new Set('“‘（【《'),
+  '…': new Set('…“‘（【《'),
+}
 
-const rightZhPunctuationSet = new Set<string>('）】》');
-const endZhPunctuationSet = new Set<string>('。！？；：”、，—－～');
-const zhPunctuationSet = new Set<string>('。！？；：，“”‘’（）【】《》—－～·…、￥');
-
-const allPunctuationSet = new Set([...Array.from(enPunctuationSet), ...Array.from(zhPunctuationSet)]);
-const validConsecutivePunctuation = new Set<string>([
-  '...',
-  '……',
-  ...Array.from(enPunctuationSet).flatMap((end) => Array.from(rightEnPunctuationSet).map((right) => end + right)),
-  ...Array.from(rightEnPunctuationSet).flatMap((right) => Array.from(enPunctuationSet).map((end) => right + end)),
-  ...Array.from(rightZhPunctuationSet).flatMap((right) => Array.from(endZhPunctuationSet).map((end) => right + end)),
-]);
+const PUNCTUATIONS = new Set(Object.keys(PUNCTUATIONS_MAP));
 
 /**
  * 检查文本中是否有连续标点符号
@@ -25,49 +39,34 @@ const validConsecutivePunctuation = new Set<string>([
 export function execPunctuationConsecutiveCheck(content: string): CheckResultT[] {
   const results: CheckResultT[] = [];
   const filterContent = getMarkdownFilterContent(content, {
-    disableHeading: true,
-    disableList: true,
     disableLink: true,
     disableRefLink: true,
     disableImage: true,
-    disableBold: true,
-    disableItalic: true,
-    disableVitepressAlertLine: true,
   });
 
-  // 遍历文本查找连续标点符号
   for (let i = 0; i < filterContent.length - 1; i++) {
-    const currentChar = filterContent[i];
-
-    // 如果当前字符是标点符号
-    if (allPunctuationSet.has(currentChar)) {
-      // 查找连续标点符号的完整序列
-      let consecutiveSequence = currentChar;
-      let j = i + 1;
-
-      // 继续查找后续的连续标点符号
-      while (j < filterContent.length && allPunctuationSet.has(filterContent[j])) {
-        consecutiveSequence += filterContent[j];
-        j++;
-      }
-
-      // 如果序列长度大于1，则为连续标点符号
-      if (consecutiveSequence.length > 1) {
-        // 只返回非法的连续标点符号
-        if (!validConsecutivePunctuation.has(consecutiveSequence)) {
-          // 创建符合 CheckResultT 格式的结果
-          results.push({
-            content: consecutiveSequence,
-            message: `连续的标点符号`,
-            start: i,
-            end: i + consecutiveSequence.length,
-          });
-        }
-
-        // 跳过已检查的部分
-        i = j - 1;
-      }
+    // 当前不是标点符号，跳过
+    if (!PUNCTUATIONS.has(filterContent[i])) {
+      continue;
     }
+
+    // 下一个不是标点符号，跳过
+    if (!PUNCTUATIONS.has(filterContent[i + 1])) {
+      i++;
+      continue;
+    }
+
+    // 下一个字符允许紧挨着当前字符，跳过
+    if (PUNCTUATIONS_MAP[filterContent[i]].has(filterContent[i + 1])) {
+      continue;
+    }
+
+    results.push({
+      content: filterContent[i] + filterContent[i + 1],
+      message: `连续的标点符号：${filterContent[i] + filterContent[i + 1]}`,
+      start: i,
+      end: i + 2,
+    });
   }
 
   return results;

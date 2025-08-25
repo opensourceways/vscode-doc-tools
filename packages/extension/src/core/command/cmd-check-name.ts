@@ -2,10 +2,9 @@ import * as vscode from 'vscode';
 import fs from 'fs';
 import path from 'path';
 import { execFilenameAndDirnameCheck } from 'checkers';
-
-import { isConfigEnabled } from '@/utils/common';
-import { createWebviewPanel } from '@/utils/webview';
 import { ServerMessageHandler } from 'webview-bridge';
+
+import { createWebviewPanel } from '@/utils/webview';
 
 /**
  * 检查目录名、文件名命名规范
@@ -13,20 +12,14 @@ import { ServerMessageHandler } from 'webview-bridge';
  * @param {vscode.Uri} uri 目标目录 uri
  */
 export async function checkName(context: vscode.ExtensionContext, uri: vscode.Uri) {
-  const dirPath = uri.fsPath.replace(/\\/g, '/');
-
-  if (!fs.existsSync(dirPath)) {
-    vscode.window.showErrorMessage(`路径不存在：${dirPath}`);
+  if (!fs.existsSync(uri.fsPath)) {
+    vscode.window.showErrorMessage(`路径不存在：${uri.fsPath}`);
     return;
   }
 
-  if (!fs.statSync(dirPath).isDirectory()) {
-    vscode.window.showErrorMessage(`非目录路径：${dirPath}`);
-    return;
-  }
-
-  if (isConfigEnabled('docTools.scope') && !dirPath.includes('docs/zh/') && !dirPath.includes('docs/en/')) {
-    vscode.window.showErrorMessage(`非文档下的 zh 或 en 目录：${dirPath}`);
+  const fsPath = fs.realpathSync.native(uri.fsPath).replace(/\\/g, '/');
+  if (!fs.statSync(fsPath).isDirectory()) {
+    vscode.window.showErrorMessage(`非目录路径：${fsPath}`);
     return;
   }
 
@@ -39,8 +32,7 @@ export async function checkName(context: vscode.ExtensionContext, uri: vscode.Ur
     async (progress) => {
       const config = vscode.workspace.getConfiguration('docTools.check.name');
       const whiteList = config.get<string[]>('whiteList', []);
-      const results = await execFilenameAndDirnameCheck(dirPath, whiteList);
-      const fsPath = uri.fsPath.replace(/\\/g, '/');
+      const results = await execFilenameAndDirnameCheck(fsPath, whiteList);
       const isDarkTheme = vscode.workspace.getConfiguration().get<string>('workbench.colorTheme', '').toLowerCase().includes('dark');
 
       progress.report({ message: 'Doc Tools: 正在生成检查结果...' });

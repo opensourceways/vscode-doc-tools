@@ -4,7 +4,7 @@
   "description": "tools for markdown docs",
   "publisher": "gzbang",
   "icon": "icon.png",
-  "version": "0.0.9",
+  "version": "0.1.0",
   "private": true,
   "workspaces": [
     "packages/*"
@@ -62,15 +62,23 @@
       },
       {
         "command": "doc.tools.check.name",
-        "title": "检查目录、文件是否符合命名规范"
+        "title": "批量检查目录和文件是否符合命名规范"
       },
       {
         "command": "doc.tools.check.nameConsistency",
-        "title": "检查中英文文档名称一致性"
+        "title": "批量检查中英文文档名称一致性"
       },
       {
         "command": "doc.tools.check.linkAccessibility",
-        "title": "检查链接可访问性"
+        "title": "批量检查链接可访问性"
+      },
+      {
+        "command": "doc.tools.check.toc",
+        "title": "批量检查 _toc.yaml"
+      },
+      {
+        "command": "doc.tools.check.tagClosed",
+        "title": "批量检查 Html 标签闭合"
       },
       {
         "command": "doc.tools.genMarkdownAnchorId",
@@ -101,16 +109,28 @@
       ],
       "doc.tools.folder": [
         {
-          "command": "doc.tools.gen.toc.manual"
+          "command": "doc.tools.gen.toc.manual",
+          "group": "doc.tools.gen"
         },
         {
-          "command": "doc.tools.check.name"
+          "command": "doc.tools.check.name",
+          "group": "doc.tools.check"
         },
         {
-          "command": "doc.tools.check.nameConsistency"
+          "command": "doc.tools.check.nameConsistency",
+          "group": "doc.tools.check"
         },
         {
-          "command": "doc.tools.check.linkAccessibility"
+          "command": "doc.tools.check.linkAccessibility",
+          "group": "doc.tools.check"
+        },
+        {
+          "command": "doc.tools.check.toc",
+          "group": "doc.tools.check"
+        },
+        {
+          "command": "doc.tools.check.tagClosed",
+          "group": "doc.tools.check"
         }
       ],
       "doc.tools.markdown": [
@@ -196,7 +216,7 @@
         "docTools.check.punctuationBlankSpace.enable": {
           "type": "boolean",
           "default": false,
-          "description": "启用中文标点符号前后无空格检查（因语句含义复杂，可能存在误报）"
+          "description": "启用标点符号前后无空格检查（因语句含义复杂，可能存在误报）"
         },
         "docTools.check.punctuationMixing.enable": {
           "type": "boolean",
@@ -211,7 +231,17 @@
         "docTools.check.punctuationManualLink.enable": {
           "type": "boolean",
           "default": false,
-          "description": "启用手册/指南链接是否被书名号包裹检查"
+          "description": "启用手册/指南链接是否被书名号包裹检查（因语句含义复杂，可能存在误报）"
+        },
+        "docTools.check.punctuationPair.enable": {
+          "type": "boolean",
+          "default": false,
+          "description": "启用中英文标点符号是否配对检查（因语句含义复杂，可能存在误报）"
+        },
+        "docTools.check.extraBlankSpace.enable": {
+          "type": "boolean",
+          "default": false,
+          "description": "启用中文文字之间无空格检查"
         },
         "docTools.check.name.enable": {
           "type": "boolean",

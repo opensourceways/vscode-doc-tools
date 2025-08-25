@@ -124,7 +124,7 @@ const onConfirmIgnore = async () => {
       >
       项为目录
     </div>
-    <OTable class="file-tree-body" :columns="columns" :data="data" border="all">
+    <OTable :columns="columns" :data="data" border="all">
       <template #td_name="{ row }">
         <OLink class="link" color="primary" @click="onClickLink(row)">{{ row.name }}</OLink>
       </template>

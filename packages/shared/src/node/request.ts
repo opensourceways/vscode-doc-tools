@@ -1,5 +1,5 @@
-import fs from 'fs';
 import path from 'path';
+import { existsAsync } from './file';
 
 /**
  * 创建 fetch 请求
@@ -29,6 +29,7 @@ export function createRequest(
     method,
     headers: {
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36',
+      'Accept': 'text/html,application/json,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
     },
     signal: controller.signal,
   }).finally(() => {
@@ -56,26 +57,26 @@ export function isPrivateIP(ip: string) {
  * @param {AbortSignal} signal 中止信号
  * @returns {Promise<number>} 返回访问状态码
  */
-export function getLinkStatus(link: string, prefixPath = '', whitelist: string[] = [], signal?: AbortSignal) {
+export async function getLinkStatus(link: string, prefixPath = '', whitelist: string[] = [], signal?: AbortSignal) {
   // localhost跳过
   const noHttpUrl = link.replace('http://', '').replace('https://', '');
   if (noHttpUrl.startsWith('localhost')) {
-    return Promise.resolve(200);
+    return 200;
   }
 
   // 内网地址跳过
   if (isPrivateIP(noHttpUrl.split(':')?.[0]) || isPrivateIP(noHttpUrl.split('/')?.[0])) {
-    return Promise.resolve(200);
+    return 200;
   }
 
   // 白名单跳过
   if (whitelist.some((item) => new RegExp(item).test(link))) {
-    return Promise.resolve(200);
+    return 200;
   }
 
   // 跳过某些协议的检查
   if (link.startsWith('mailto:') || link.startsWith('file://') || link.startsWith('ftp://')) {
-    return Promise.resolve(200);
+    return 200;
   }
 
   // 链接
@@ -84,7 +85,7 @@ export function getLinkStatus(link: string, prefixPath = '', whitelist: string[]
   }
 
   // 本地文件
-  return Promise.resolve(fs.existsSync(path.join(prefixPath, decodeURI(link.replace('.html', '.md')))) ? 200 : 404);
+  return (await existsAsync(path.join(prefixPath, decodeURI(link.replace('.html', '.md'))))) ? 200 : 404;
 }
 
 /**

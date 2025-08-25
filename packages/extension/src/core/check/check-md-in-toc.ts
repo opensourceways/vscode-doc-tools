@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import fs from 'fs';
 import { execMdInTocCheck } from 'checkers';
 
 import { isConfigEnabled } from '@/utils/common';
@@ -12,8 +13,10 @@ export async function checkMdInToc(document: vscode.TextDocument) {
     return;
   }
 
-  const [isInToc] = await execMdInTocCheck(document.uri.fsPath);
+  const fsPath = fs.realpathSync.native(document.uri.fsPath).replace(/\\/g, '/');
+
+  const [isInToc] = await execMdInTocCheck(fsPath);
   if (!isInToc) {
-    vscode.window.showInformationMessage(`友情提示：${document.uri.path.split('/').pop()} 未加入到任何_toc.yaml文件`);
+    vscode.window.showInformationMessage(`友情提示：${fsPath.split('/').pop()} 未加入到任何_toc.yaml文件`);
   }
 }

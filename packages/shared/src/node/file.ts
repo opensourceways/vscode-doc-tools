@@ -1,7 +1,7 @@
+import path from 'path';
 import fs from 'fs';
 import fsAsnyc from 'fs/promises';
-
-import yaml from 'js-yaml';
+import { parse } from 'yaml';
 
 /**
  * 获取文件内容
@@ -43,7 +43,7 @@ export async function getFileContentAsync(fsPath: string, defaultVal = '', encod
 export async function getYamlAsync<T>(fsPath: string, defaultVal: any = null, encoding: BufferEncoding = 'utf8') {
   try {
     if (fs.existsSync(fsPath)) {
-      return yaml.load(await fsAsnyc.readFile(fsPath, encoding)) as T;
+      return parse(await fsAsnyc.readFile(fsPath, encoding)) as T;
     }
   } catch {
     // nothing
@@ -75,5 +75,19 @@ export async function readdirAsync(targetPath: string) {
     return await fsAsnyc.readdir(targetPath);
   } catch {
     return [];
+  }
+}
+
+export async function existsAsync(targetPath: string) { 
+  try {
+    if (!fs.existsSync(targetPath)) {
+      return false;
+    }
+
+    const name = path.basename(targetPath);
+    const realName = path.basename(await fsAsnyc.realpath(targetPath));
+    return name === realName;
+  } catch {
+    return false;
   }
 }

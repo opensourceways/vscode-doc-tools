@@ -33,7 +33,21 @@ const routes = [
     path: '/check-link-accessibility',
     name: 'check-link-accessibility',
     component: () => {
-      return import('@/views/TheCheckLinkAccessibility.vue')
+      return import('@/views/TheCheckLinkAccessibilityResult.vue')
+    },
+  },
+  {
+    path: '/check-toc',
+    name: 'check-toc',
+    component: () => {
+      return import('@/views/TheCheckTocResult.vue')
+    },
+  },
+  {
+    path: '/check-tag-closed',
+    name: 'check-tag-closed',
+    component: () => {
+      return import('@/views/TheCheckTagClosedResult.vue')
     },
   },
 ]

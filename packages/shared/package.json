@@ -1,6 +1,6 @@
 {
   "name": "shared",
-  "version": "0.0.9",
+  "version": "0.1.0",
   "author": "cctvcat",
   "license": "MIT",
   "main": "src/index.ts",
@@ -12,6 +12,6 @@
     }
   },
   "dependencies": {
-    "js-yaml": "4.1.0"
+    "yaml": "2.8.1"
   }
 }

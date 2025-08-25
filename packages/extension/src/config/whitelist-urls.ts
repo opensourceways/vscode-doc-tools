@@ -9,4 +9,5 @@ export default [
   'https://dl-cdn.openeuler.openatom.cn/openEuler-{version}/OS/aarch64',
   'http://server',
   'http://[gala-gopher所在节点ip]:[端口号]/[function（采集特性)]',
+  'https://example.com/*',
 ];

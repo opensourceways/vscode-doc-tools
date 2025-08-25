@@ -54,7 +54,10 @@ function getZhPunctuationMixing(content: string) {
       continue;
     }
 
-    if (filterContent[i] === '.' && isDigit(filterContent[i - 1]) && filterContent[i + 1] === ' ') {
+    if (
+      filterContent[i] === '.' &&
+      ((isDigit(filterContent[i - 1]) && filterContent[i + 1] === ' ') || filterContent[i + 1] === '/' || isEnglishLetter(filterContent[i + 1]))
+    ) {
       continue;
     }
 

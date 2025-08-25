@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import fs from 'fs';
 import { execNameCheck } from 'checkers';
 
 import { isConfigEnabled } from '@/utils/common';
@@ -15,8 +16,9 @@ export async function checkName(document: vscode.TextDocument) {
 
   const config = vscode.workspace.getConfiguration('docTools.check.name');
   const whiteList = config.get<string[]>('whiteList', []);
+  const fsPath = fs.realpathSync.native(document.uri.fsPath).replace(/\\/g, '/');
 
-  if (!execNameCheck(document.uri.path.split('/').pop() || '', whiteList)) {
-    vscode.window.showInformationMessage(`友情提示：${document.uri.path.split('/').pop()} 不符合小写字母加下划线连接的命名规范`);
+  if (!execNameCheck(fsPath.split('/').pop() || '', whiteList)) {
+    vscode.window.showInformationMessage(`友情提示：${fsPath.split('/').pop()} 不符合小写字母加下划线连接的命名规范`);
   }
 }

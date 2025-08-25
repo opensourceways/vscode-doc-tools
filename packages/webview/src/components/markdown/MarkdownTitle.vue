@@ -8,6 +8,7 @@ import IconPin from '~icons/app/icon-pin.svg';
 import { scrollIntoView } from '@/utils/scroll-to';
 import { useScreen } from '@/composables/useScreen';
 import { useLocale } from '@/composables/useLocale';
+import { useClipboard } from '@/composables/useClipboard';
 
 const props = defineProps({
   // 标签标题
@@ -45,9 +46,13 @@ const onClickAnchor = () => {
   }
 };
 
-const onClickCopyLink = () => {
-  message.info({
-    content: t('docs.dontSupportCopy'),
+const onClickCopyLink = (evt: Event) => {
+  useClipboard({
+    text: `#${props.titleId}`,
+    target: evt as MouseEvent,
+    success: () => {
+      message.success({ content: t('docs.copyAnchorSuccess') });
+    },
   });
 };
 </script>

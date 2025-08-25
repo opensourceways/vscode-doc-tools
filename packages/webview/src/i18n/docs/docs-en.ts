@@ -1,6 +1,6 @@
 export default {
   invalidLink: 'Invalid link.',
-  dontSupportCopy: `Preview mode doesn't support copying links.`,
+  copyAnchorSuccess: `Copied anchor successfully.`,
   copySuccess: 'Copied successfully.',
   previous: 'Previous',
   next: 'Next',
