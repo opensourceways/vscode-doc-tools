@@ -5,6 +5,7 @@ import { stringify } from 'yaml';
 import { existsAsync, getFileContentAsync, getMarkdownPureTitle, getMarkdownTitle, getYamlAsync } from 'shared';
 
 import type { TocItem } from '@/@types/toc';
+import { triggerPreviewMarkdownContentChange } from './cmd-preview-markdown';
 
 /**
  * 获取已经加入 toc item 的 markdown 路径
@@ -132,4 +133,5 @@ export async function genTocManual(uri: vscode.Uri) {
   fs.writeFileSync(tocPath, stringify(toc), 'utf8');
   const doc = await vscode.workspace.openTextDocument(tocPath);
   vscode.window.showTextDocument(doc);
+  triggerPreviewMarkdownContentChange(doc);
 }

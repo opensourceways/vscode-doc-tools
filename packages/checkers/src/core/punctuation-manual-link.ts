@@ -33,7 +33,7 @@ export function execPunctuationManualLinkCheck(content: string) {
       const name = match[1].trim();
 
       // 跳过已经被书名号包裹的
-      if (name.startsWith('《') && name.endsWith('》')) {
+      if (name.includes('《') && name.includes('》')) {
         continue;
       }
 
