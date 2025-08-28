@@ -6,7 +6,7 @@ import { isConfigEnabled } from '@/utils/common';
 
 
 // 错误单词提示记录
-const wordsMap = new Map<string, string[]>();
+const WORDS = new Map<string, string[]>();
 
 /**
  * codespell 检查
@@ -25,7 +25,7 @@ export async function checkCodespell(content: string, document: vscode.TextDocum
 
   return results.map(item => { 
     if (Array.isArray(item.extras)) {
-      wordsMap.set(item.content, item.extras);
+      WORDS.set(item.content, item.extras);
     }
 
     const range = new vscode.Range(document.positionAt(item.start), document.positionAt(item.end));
@@ -54,7 +54,7 @@ export function getCodespellCodeActions(context: vscode.CodeActionContext, docum
       return;
     }
 
-    const suggestions = wordsMap.get(item.code as string);
+    const suggestions = WORDS.get(item.code as string);
     if (!Array.isArray(suggestions)) {
       return;
     }

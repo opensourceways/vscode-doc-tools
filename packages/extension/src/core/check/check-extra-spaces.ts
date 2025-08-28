@@ -3,7 +3,19 @@ import { execExtraSpacesCheck, EXTRA_SPACES_CHECK } from 'checkers';
 
 import { isConfigEnabled } from '@/utils/common';
 
+/**
+ * 是否启用，过渡性配置，用于迁移配置项
+ * @returns 是否启用
+ */
+function isEnabled() {
+  if (isConfigEnabled('docTools.check.extraBlankSpace')) {
+    vscode.workspace.getConfiguration('docTools.check.extraSpaces').update('enable', true, vscode.ConfigurationTarget.Global)
+    vscode.workspace.getConfiguration('docTools.check.extraBlankSpace').update('enable', undefined, vscode.ConfigurationTarget.Global);
+    return true;
+  }
 
+  return isConfigEnabled('docTools.check.extraSpaces');
+}
 
 /**
  * 中文之间多余空格检查
@@ -12,7 +24,7 @@ import { isConfigEnabled } from '@/utils/common';
  * @returns {vscode.Diagnostic[]} 返回错误 Diagnostic 提示数组
  */
 export async function checkExtraSpaces(content: string, document: vscode.TextDocument) {
-  if (!isConfigEnabled('docTools.check.extraBlankSpace')) {
+  if (!isEnabled()) {
     return [];
   }
 
@@ -33,7 +45,7 @@ export async function checkExtraSpaces(content: string, document: vscode.TextDoc
  */
 export function getExtraSpacesCodeActions(context: vscode.CodeActionContext, document: vscode.TextDocument) {
   const actions: vscode.CodeAction[] = [];
-  if (!isConfigEnabled('docTools.check.extraBlankSpace')) {
+  if (!isEnabled()) {
     return actions;
   }
 
