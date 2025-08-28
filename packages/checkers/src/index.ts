@@ -1,4 +1,4 @@
-export * from './core/codespell';
+export * from './core/codespell-check';
 export * from './core/link-validity';
 export * from './core/md-in-toc';
 export * from './core/punctuation-blank-space';

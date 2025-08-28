@@ -1,12 +1,14 @@
 import { spellCheckDocument, type ValidationIssue } from 'cspell-lib';
 
-import { type CheckResultT } from '../@types/result';
+import { type ResultT } from '../@types/result';
+
+export const CODESPELL_CHECK = 'codespell-check';
 
 /**
  * codespell 检查
  * @param {string} content 内容
  * @param {string[]} whiteList 单词白名单
- * @returns {CheckResultT<string[] | undefined>[]} 返回检查结果
+ * @returns {ResultT<string[] | undefined>[]} 返回检查结果
  */
 export async function execCodespellCheck(content: string, whiteList: string[]) {
   const results = await spellCheckDocument(
@@ -32,13 +34,18 @@ export async function execCodespellCheck(content: string, whiteList: string[]) {
     }
   );
 
-  return results.issues.map<CheckResultT<string[] | undefined>>((issue: ValidationIssue) => {
+  return results.issues.map<ResultT<string[] | undefined>>((issue: ValidationIssue) => {
     return {
+      name: CODESPELL_CHECK,
+      type: 'warning',
       content: issue.text,
-      message: `单词拼写错误 (CodeSpell warning): ${issue.text}`,
       start: issue.offset,
       end: issue.offset + issue.text.length,
       extras: issue.suggestions,
+      message: {
+        zh: `单词拼写错误：${issue.text}`,
+        en: `Spelling mistake: ${issue.text}`,
+      },
     };
   });
 }

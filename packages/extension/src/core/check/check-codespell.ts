@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { execCodespellCheck } from 'checkers';
+import { CODESPELL_CHECK, execCodespellCheck } from 'checkers';
 
 import defaultWhitelistWords from '@/config/whitelist-words';
 import { isConfigEnabled } from '@/utils/common';
@@ -29,8 +29,8 @@ export async function checkCodespell(content: string, document: vscode.TextDocum
     }
 
     const range = new vscode.Range(document.positionAt(item.start), document.positionAt(item.end));
-    const diagnostic = new vscode.Diagnostic(range, item.message, vscode.DiagnosticSeverity.Information);
-    diagnostic.source = 'codespell-check';
+    const diagnostic = new vscode.Diagnostic(range, item.message.zh, vscode.DiagnosticSeverity.Information);
+    diagnostic.source = CODESPELL_CHECK;
     diagnostic.code = item.content;
     
     return diagnostic;
@@ -50,7 +50,7 @@ export function getCodespellCodeActions(context: vscode.CodeActionContext, docum
   }
 
   context.diagnostics.forEach((item) => {
-    if (item.source !== 'codespell-check') {
+    if (item.source !== CODESPELL_CHECK) {
       return;
     }
 
