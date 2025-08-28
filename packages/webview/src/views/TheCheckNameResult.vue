@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { isArray, OTable, OLink, ODialog, OButton, OInput, OIcon, useMessage } from '@opensig/opendesign';
+import { isArray, OTable, OLink, OInput, OIcon, useMessage } from '@opensig/opendesign';
 
 import IconEdit from '~icons/app/icon-edit.svg';
+import ConfirmDialog from '@/components/ConfirmDialog.vue';
 
 import { injectData } from '@/utils/inject';
 import { ConfigBridge, ResourceBridge } from 'webview-bridge';
@@ -135,9 +136,15 @@ const onConfirmIgnore = async () => {
     </OTable>
   </div>
 
-  <ODialog v-model:visible="showUpdateDlg" size="small">
-    <template #header>修改名称</template>
-    <div class="dlg-body">
+  <ConfirmDialog
+    v-model:visible="showUpdateDlg"
+    title="修改名称"
+    confirm-text="确认修改"
+    :disable-confirm="disabledUpdate"
+    @confirm="onUpdateName"
+    @cancel="showUpdateDlg = false"
+  >
+    <template #content>
       <OInput v-model="updateName" class="full-w" placeholder="请输入名称" size="large">
         <template #append>
           <OLink class="link" @click="">
@@ -149,25 +156,17 @@ const onConfirmIgnore = async () => {
           </OLink>
         </template>
       </OInput>
-    </div>
-    <template #footer>
-      <div class="button-box">
-        <OButton variant="solid" color="primary" size="large" :disabled="disabledUpdate" @click="onUpdateName">确认修改</OButton>
-        <OButton variant="outline" color="primary" size="large" @click="showUpdateDlg = false">取消</OButton>
-      </div>
     </template>
-  </ODialog>
+  </ConfirmDialog>
 
-  <ODialog v-model:visible="showIgnoreDlg" size="small">
-    <template #header>确认忽略</template>
-    <div class="dlg-body">确认要忽略 {{ ignoreItem?.name }} 吗？忽略之后的检查将会跳过与其名称相同的文件/目录名字的检查</div>
-    <template #footer>
-      <div class="button-box">
-        <OButton variant="solid" color="primary" size="large" @click="onConfirmIgnore">确认忽略</OButton>
-        <OButton variant="outline" color="primary" size="large" @click="showIgnoreDlg = false">取消</OButton>
-      </div>
-    </template>
-  </ODialog>
+  <ConfirmDialog
+    v-model:visible="showIgnoreDlg"
+    title="确认忽略"
+    :content="`确认要忽略 ${ignoreItem?.name} 吗？忽略之后的检查将会跳过与其名称相同的文件/目录名字的检查`"
+    confirm-text="确认忽略"
+    @confirm="onConfirmIgnore"
+    @cancel="showIgnoreDlg = false"
+  />
 </template>
 
 <style lang="scss">
@@ -204,8 +203,9 @@ const onConfirmIgnore = async () => {
 }
 
 .icon-edit {
-  margin-left: 4px;
-  @include h4;
+  margin-left: 6px;
+  margin-right: 4px;
+  font-size: 18px;
 }
 
 .o-link:not(:last-child) {

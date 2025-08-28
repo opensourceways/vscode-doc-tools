@@ -16,6 +16,13 @@ const routes = [
     },
   },
   {
+    path: '/batch-exec-markdownlint-result',
+    name: 'batch-exec-markdownlint-result',
+    component: () => {
+      return import('@/views/TheBatchExecMarkdownlintResult.vue')
+    },
+  },
+  {
     path: '/check-name-result',
     name: 'check-name-result',
     component: () => {

@@ -15,6 +15,7 @@ import { checkLinkAccessibility } from '@/core/command/cmd-check-link-accessibil
 import { genMarkdownAnchorId } from '@/core/command/cmd-gen-markdown-anchor-id';
 import { checkToc } from './core/command/cmd-check-toc';
 import { checkTagClosed } from './core/command/cmd-check-tag-closed';
+import { batchExecMarkdownlint } from './core/command/cmd-batch-exec-markdownlint';
 
 // 用于存储错误信息
 const diagnosticsCollection = vscode.languages.createDiagnosticCollection('doc-tools');
@@ -91,6 +92,13 @@ function registerCommand(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.commands.registerCommand('doc.tools.markdownlint.fix', (document: vscode.TextDocument) => {
       fixMarkdownlint(document);
+    })
+  );
+
+  // 注册 批量执行 Markdownlint 命令
+  context.subscriptions.push(
+    vscode.commands.registerCommand('doc.tools.batch.exec.markdownlint', (uri: vscode.Uri) => {
+      batchExecMarkdownlint(context, uri);
     })
   );
 

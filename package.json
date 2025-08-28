@@ -61,6 +61,10 @@
         "title": "修复MarkdownLint错误"
       },
       {
+        "command": "doc.tools.batch.exec.markdownlint",
+        "title": "批量执行 Markdownlint"
+      },
+      {
         "command": "doc.tools.check.name",
         "title": "批量检查目录和文件是否符合命名规范"
       },
@@ -111,6 +115,10 @@
         {
           "command": "doc.tools.gen.toc.manual",
           "group": "doc.tools.gen"
+        },
+        {
+          "command": "doc.tools.batch.exec.markdownlint",
+          "group": "doc.tools.check"
         },
         {
           "command": "doc.tools.check.name",
