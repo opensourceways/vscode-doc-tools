@@ -1,6 +1,8 @@
 import { getLinkStatus } from 'shared';
 
-import { CheckResultT } from '../@types/result';
+import { ResultT } from '../@types/result';
+
+export const RESOURCE_EXISTENCE_CHECK = 'resource-existence-check';
 
 const REGEX = [
   /!\[.*?\]\((.*?)\)/g, // 提取 ![xxx](xxx) 语法的链接
@@ -17,7 +19,7 @@ const REGEX = [
  * @param {boolean} opts.disableCheckExternalUrl 禁止检测外链
  * @param {boolean} opts.disableCheckInternalUrl 禁止检测内链
  * @param {AbortSignal} opts.signal 中断信号
- * @returns {CheckResultT<number>[]} 返回检查结果
+ * @returns {ResultT<number>[]} 返回检查结果
  */
 export async function execResourceExistenceCheck(
   content: string,
@@ -36,7 +38,7 @@ export async function execResourceExistenceCheck(
     disableCheckInternalUrl = false,
     signal, 
   } = opts;
-  const results: CheckResultT<number>[] = [];
+  const results: ResultT<number>[] = [];
   const set = new Set(whiteList);
 
   for (const reg of REGEX) {
@@ -73,11 +75,16 @@ export async function execResourceExistenceCheck(
       const end = start + link.length;
 
       results.push({
+        name: RESOURCE_EXISTENCE_CHECK,
+        type: status === 404 ? 'error' : 'warning',
         content: link,
-        message: `${status === 499 ? '访问超时' : '链接无法访问'} (Non-existent resource): ${link}`,
         start,
         end,
         extras: status,
+        message: {
+          zh: status === 499 ? '访问超时' : '资源链接无法访问',
+          en: status === 499 ? 'Timeout' : 'Invalid resource link',
+        },
       });
     }
   }

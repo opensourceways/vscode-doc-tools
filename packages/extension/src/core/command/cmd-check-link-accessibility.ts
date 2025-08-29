@@ -72,7 +72,7 @@ async function walkDir(
               start: item.start,
               end: item.end,
               file: completePath,
-              msg: item.message.split(' ')[0],
+              msg: item.message.zh,
             });
           }
         });

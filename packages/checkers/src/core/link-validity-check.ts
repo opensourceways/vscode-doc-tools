@@ -1,7 +1,15 @@
 import path from 'path';
 import { getFileContentAsync, getLinkStatus, getMarkdownIds } from 'shared';
 
-import { CheckResultT } from '../@types/result';
+import { ResultT } from '../@types/result';
+
+export const LINK_VALIDITY_CHECK = 'link-validity-check';
+
+const EN_DESCRIPTION: Record<string, string> = {
+  '锚点无法访问': 'Invalid anchor',
+  '链接无法访问': 'Invalid link',
+  '访问超时': 'Timeout',
+};
 
 const REGEX = [
   /(?<!\!)\[.*?\]\((.+?)\)/g, // 匹配 [xx](xxx) 链接
@@ -18,7 +26,7 @@ const REGEX = [
  * @param {boolean} opts.disableCheckInternalUrl 禁止检测内链
  * @param {boolean} opts.disableCheckAnchor 禁止检测链接锚点
  * @param {AbortSignal} opts.signal 中断信号
- * @returns {CheckResultT<number>[]} 返回检查结果
+ * @returns {ResultT<number>[]} 返回检查结果
  */
 export async function execLinkValidityCheck(
   content: string,
@@ -32,7 +40,7 @@ export async function execLinkValidityCheck(
   }
 ) {
   const { prefixPath, whiteList = [], disableCheckExternalUrl = false, disableCheckInternalUrl = false, disableCheckAnchor = false, signal } = opts;
-  const results: CheckResultT<number>[] = [];
+  const results: ResultT<number>[] = [];
   const set = new Set(whiteList);
   let idsMap = new Map<string, Set<string>>();
 
@@ -55,7 +63,7 @@ export async function execLinkValidityCheck(
       }
 
       let status = 0;
-      let preMsg = '';
+      let zhMsg = '';
       const [link, anchor] = macthedLink.split('#');
 
       // 判断链接是否有效
@@ -79,15 +87,15 @@ export async function execLinkValidityCheck(
               continue;
             } else {
               status = 404;
-              preMsg = '锚点无法访问';
+              zhMsg = '锚点无法访问';
             }
           } else {
             continue;
           }
         } else if (status === 499) {
-          preMsg = '访问超时';
+          zhMsg = '访问超时';
         } else {
-          preMsg = '链接无法访问';
+          zhMsg = '链接无法访问';
         }
       } else if (!disableCheckAnchor && anchor) {
         if (!idsMap.get('.')) {
@@ -98,7 +106,7 @@ export async function execLinkValidityCheck(
           continue;
         } else {
           status = 404;
-          preMsg = '锚点无法访问';
+          zhMsg = '锚点无法访问';
         }
       }
 
@@ -106,11 +114,16 @@ export async function execLinkValidityCheck(
       const end = start + match[1].length;
 
       results.push({
+        name: LINK_VALIDITY_CHECK,
+        type: status === 404 ? 'error' : 'warning',
         content: macthedLink,
-        message: `${preMsg} (Invalid link): ${macthedLink}`,
         start,
         end,
         extras: status,
+        message: {
+          zh: zhMsg,
+          en: EN_DESCRIPTION[zhMsg],
+        },
       });
     }
   }

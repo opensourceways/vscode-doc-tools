@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import path from 'path';
-import { execResourceExistenceCheck } from 'checkers';
+import { execResourceExistenceCheck, RESOURCE_EXISTENCE_CHECK } from 'checkers';
 
 import { isConfigEnabled } from '@/utils/common';
 import defaultWhitelistUrls from '@/config/whitelist-urls';
@@ -30,8 +30,9 @@ export async function checkResourceExistence(content: string, document: vscode.T
 
   return results.map((item) => {
     const range = new vscode.Range(document.positionAt(item.start), document.positionAt(item.end));
-    const diagnostic = new vscode.Diagnostic(range, item.message, item.extras === 499 ? vscode.DiagnosticSeverity.Warning : vscode.DiagnosticSeverity.Error);
-    diagnostic.source = 'resource-existence-check';
+    const diagnostic = new vscode.Diagnostic(range, item.message.zh, item.extras === 499 ? vscode.DiagnosticSeverity.Warning : vscode.DiagnosticSeverity.Error);
+    diagnostic.source = RESOURCE_EXISTENCE_CHECK;
+    diagnostic.code = item.content;
 
     return diagnostic;
   });
@@ -49,11 +50,11 @@ export function getResourceExistenceCodeActions(context: vscode.CodeActionContex
   }
 
   context.diagnostics.forEach((item) => {
-    if (item.source !== 'resource-existence-check') {
+    if (item.source !== RESOURCE_EXISTENCE_CHECK) {
       return;
     }
 
-    const link = item.message.split(': ')[1];
+    const link = item.code as string;
     if (!link.startsWith('http')) {
       return;
     }
