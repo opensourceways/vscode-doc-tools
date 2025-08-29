@@ -33,7 +33,7 @@ async function walkDir(dir: string, signal: AbortSignal) {
           start: item.start,
           end: item.end,
           file: completePath,
-          msg: item.message,
+          msg: item.message.zh,
         });
       });
     }

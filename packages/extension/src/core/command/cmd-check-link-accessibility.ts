@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import { existsAsync, getFileContentAsync, getMarkdownFilterContent, readdirAsync } from 'shared';
 import { BroadcastT, MessageT, OPERATION_TYPE, ServerMessageHandler, SOURCE_TYPE } from 'webview-bridge';
-import { execLinkValidityCheck, execResourceExistenceCheck, execTocCheck } from 'checkers';
+import { execLinkValidityCheck, execResourceExistenceCheck } from 'checkers';
 
 import defaultWhitelistUrls from '@/config/whitelist-urls';
 import { createWebviewPanel } from '@/utils/webview';
@@ -15,8 +15,6 @@ async function walkDir(
   opts: {
     whiteList: string[];
     signal: AbortSignal;
-    disableScanMarkdown?: boolean;
-    disableScanToc?: boolean;
     disableCheckExternalUrl?: boolean;
     disableCheckInternalUrl?: boolean;
     disableCheckAnchor?: boolean;
@@ -35,7 +33,7 @@ async function walkDir(
 
     if (fs.statSync(completePath).isDirectory()) {
       await walkDir(completePath, opts);
-    } else if (!opts.disableScanMarkdown && name.endsWith('.md')) {
+    } else if (name.endsWith('.md')) {
       const content = getMarkdownFilterContent(await getFileContentAsync(completePath), {
         disableHtmlComment: true,
         disableCode: true,
@@ -77,25 +75,6 @@ async function walkDir(
           }
         });
       });
-    } else if (!opts.disableScanToc && name === '_toc.yaml') {
-      const content = await getFileContentAsync(completePath);
-      const results = await execTocCheck(content, dir, opts.signal);
-      if (opts.signal.aborted) {
-        throw new Error('aborted');
-      }
-
-      results.forEach((item) => {
-        if (item.message.includes('文档资源不存在')) {
-          ServerMessageHandler.broadcast('onAsyncTaskOutput', 'checkLinkAccessibility:addItem', {
-            url: item.message.split(':')[1].trim(),
-            status: 404,
-            start: item.start,
-            end: item.end,
-            file: completePath,
-            msg: '链接无法访问',
-          });
-        }
-      });
     }
   }
 }
@@ -103,8 +82,6 @@ async function walkDir(
 async function startWalk(
   targetPath: string,
   opts: {
-    disableScanMarkdown?: boolean;
-    disableScanToc?: boolean;
     disableCheckExternalUrl?: boolean;
     disableCheckInternalUrl?: boolean;
     disableCheckAnchor?: boolean;
@@ -193,17 +170,14 @@ export async function checkLinkAccessibility(context: vscode.ExtensionContext, u
       name === 'asyncTask:checkLinkAccessibility' &&
       typeof extras?.[0] === 'string' &&
       Array.isArray(extras?.[1]) &&
-      Array.isArray(extras?.[2]) &&
-      Array.isArray(extras?.[3])
+      Array.isArray(extras?.[2])
     ) {
       startWalk(extras[0], {
-        disableScanMarkdown: !extras[1].includes('markdown'),
-        disableScanToc: !extras[1].includes('_toc.yaml'),
-        disableCheckExternalUrl: !extras[2].includes('http'),
-        disableCheckInternalUrl: !extras[2].includes('relative-link'),
-        disableCheckAnchor: !extras[2].includes('anchor'),
-        disableCheck404: !extras[3].includes('404'),
-        disableCheckOtherStatus: !extras[3].includes('others'),
+        disableCheckExternalUrl: !extras[1].includes('http'),
+        disableCheckInternalUrl: !extras[1].includes('relative-link'),
+        disableCheckAnchor: !extras[1].includes('anchor'),
+        disableCheck404: !extras[2].includes('404'),
+        disableCheckOtherStatus: !extras[2].includes('others'),
       });
     } else if (name === 'asyncTask:stopCheckLinkAccessibility') {
       stopWalk();

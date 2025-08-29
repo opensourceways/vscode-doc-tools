@@ -8,7 +8,7 @@ export * from './core/punctuation-consecutive';
 export * from './core/punctuation-pair';
 export * from './core/resource-existence-check';
 export * from './core/tag-closed';
-export * from './core/toc';
+export * from './core/toc-check';
 export * from './core/markdownlint';
 export * from './core/name';
 export * from './core/name-consistency';

@@ -6,7 +6,6 @@ import { Bridge, BroadcastBridge, ConfigBridge, ResourceBridge } from 'webview-b
 import { injectData } from '@/utils/inject';
 
 const working = ref(false);
-const workingFile = ref(['markdown', '_toc.yaml']);
 const workingLink = ref(['http', 'relative-link', 'anchor']);
 const workingStatus = ref(['404']);
 
@@ -68,8 +67,7 @@ const onClickStartLink = () => {
   Bridge.getInstance().broadcast(
     'asyncTask:checkLinkAccessibility',
     injectData.extras?.fsPath,
-    [...workingFile.value], // 得copy一下，不然postMessage的时候会提示无法clone
-    [...workingLink.value],
+    [...workingLink.value], // 得copy一下，不然postMessage的时候会提示无法clone
     [...workingStatus.value]
   );
 };
@@ -88,13 +86,6 @@ const onClickStopLink = () => {
 
     <div class="text">【开始路径】：{{ injectData.extras?.fsPath }}</div>
     <div class="text single-line" :title="currentScanning">【正在检查】：{{ working ? currentScanning : '无' }}</div>
-    <div class="text single-line">
-      <span>【检查文件】：</span>
-      <OCheckboxGroup v-model="workingFile" :disabled="working">
-        <OCheckbox value="markdown">markdown</OCheckbox>
-        <OCheckbox value="_toc.yaml">_toc.yaml</OCheckbox>
-      </OCheckboxGroup>
-    </div>
     <div class="text single-line">
       <span>【链接类型】：</span>
       <OCheckboxGroup v-model="workingLink" :disabled="working">
