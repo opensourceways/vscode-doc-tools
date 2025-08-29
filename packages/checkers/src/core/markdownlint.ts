@@ -1,17 +1,19 @@
 import { lint } from 'markdownlint/async';
 import { type LintError, type Configuration, type LintResults } from 'markdownlint';
 
-import { CheckResultT } from '../@types/result';
+import { ResultT } from '../@types/result';
 import { MD_DESC } from '../config/markdownlint';
+
+export const MARKDOWNLINT = 'markdownlint';
 
 /**
  * 转换 markdownlint 执行结果
  * @param {string} content 内容
  * @param {LintResults} lintResults markdownlint 执行结果
- * @returns {CheckResultT<string>[]} 返回检查结果
+ * @returns {ResultT<string>[]} 返回检查结果
  */
 function parseLintResults(content: string, lintResults: LintResults) {
-  const results: CheckResultT<string>[] = [];
+  const results: ResultT<string>[] = [];
   const lines = content.split('\n');
 
   // 遍历每个文件的结果
@@ -25,21 +27,24 @@ function parseLintResults(content: string, lintResults: LintResults) {
         start += lines[i].length + 1;
       }
 
-      let message = `${issue.ruleDescription}${issue.errorDetail ? `. ${issue.errorDetail}` : ''}${
-        MD_DESC[issue.ruleNames[0]] ? `\n${MD_DESC[issue.ruleNames[0]]}` : ''
-      }`;
-
-      if (typeof issue.errorDetail === 'string' && typeof MD_DESC[issue.ruleNames[0]] === 'string') {
+      const enMsg = `${issue.ruleDescription}${issue.errorDetail ? `. ${issue.errorDetail}` : ''}`;
+      let zhMsg = MD_DESC[issue.ruleNames[0]];
+      if (typeof issue.errorDetail === 'string' && typeof zhMsg === 'string') {
         const zhDetail = issue.errorDetail.replace('Expected: ', '期望：').replace('; Actual: ', '；当前：');
-        message = message.replace('{expected_actual}', zhDetail);
+        zhMsg = zhMsg.replace('{expected_actual}', zhDetail);
       }
 
       results.push({
+        name: MARKDOWNLINT,
+        type: 'warning',
         content: lines[issue.lineNumber - 1],
-        message,
         start,
         end: start + lines[issue.lineNumber - 1].length,
         extras: issue.ruleNames.join(',') + (issue.fixInfo ? ',fixable' : ''),
+        message: {
+          zh: zhMsg || enMsg,
+          en: enMsg,
+        },
       });
     });
   });
@@ -51,9 +56,9 @@ function parseLintResults(content: string, lintResults: LintResults) {
  * 执行 markdownlint
  * @param {string} content 内容
  * @param {Configuration} config markdownlint 配置
- * @returns {Promise<[CheckResultT<string>[], LintError[]]>} 返回检查结果
+ * @returns {Promise<[ResultT<string>[], LintError[]]>} 返回检查结果
  */
-export function execMarkdownlint(content: string, config: Configuration): Promise<[CheckResultT<string>[], LintError[]]> {
+export function execMarkdownlint(content: string, config: Configuration): Promise<[ResultT<string>[], LintError[]]> {
   return new Promise((resolve) => {
     lint(
       {

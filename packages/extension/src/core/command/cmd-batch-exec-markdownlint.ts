@@ -41,12 +41,11 @@ async function walkDir(dir: string, config: Configuration, signal: AbortSignal) 
         ServerMessageHandler.broadcast('onAsyncTaskOutput', 'batchExecMarkdownlint:addItem', {
           file: completePath,
           msgs: results.map((item) => {
-            const [enMsg, zhMsg] = item.message.split('\n');
             return {
               start: item.start,
               end: item.end,
               file: completePath,
-              msg: `${item.extras?.split(',')[0]}：${zhMsg || enMsg}`,
+              msg: `${item.extras?.split(',')[0]}：${item.message.zh}`,
             };
           }),
         });
@@ -95,13 +94,12 @@ async function fixMarkdown(targetPath: string, tip: boolean) {
   ServerMessageHandler.broadcast('onAsyncTaskOutput', 'batchExecMarkdownlint:fixItem', {
     tip,
     file: targetPath,
-    msgs: results.map((item) => {
-      const [enMsg, zhMsg] = item.message.split('\n');
+    msgs: results.map((item) => {;
       return {
         start: item.start,
         end: item.end,
         file: targetPath,
-        msg: `${item.extras?.split(',')[0]}：${zhMsg || enMsg}`,
+        msg: `${item.extras?.split(',')[0]}：${item.message.zh}`,
       };
     }),
   });

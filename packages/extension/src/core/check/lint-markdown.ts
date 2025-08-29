@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { type Configuration, type LintError } from 'markdownlint';
-import { execMarkdownlint } from 'checkers';
+import { execMarkdownlint, MARKDOWNLINT } from 'checkers';
 
 import { MD_DEFAULT_CONFIG } from '@/config/markdownlint';
 import { isConfigEnabled } from '@/utils/common';
@@ -24,9 +24,9 @@ export async function lintMarkdown(document: vscode.TextDocument) {
 
   return results.map((item) => {
     const range = new vscode.Range(document.positionAt(item.start), document.positionAt(item.end));
-    const diagnostic = new vscode.Diagnostic(range, item.message, vscode.DiagnosticSeverity.Warning);
+    const diagnostic = new vscode.Diagnostic(range, item.message.zh, vscode.DiagnosticSeverity.Warning);
     diagnostic.code = item.extras;
-    diagnostic.source = 'markdown-lint';
+    diagnostic.source = MARKDOWNLINT;
 
     return diagnostic;
   });
@@ -45,7 +45,7 @@ export function getMarkdownlintCodeActions(context: vscode.CodeActionContext, do
   }
 
   context.diagnostics.forEach((item) => {
-    if (item.source !== 'markdown-lint' || !String(item.code).includes('fixable')) {
+    if (item.source !== MARKDOWNLINT || !String(item.code).includes('fixable')) {
       return;
     }
 
