@@ -1,6 +1,6 @@
 export * from './core/codespell-check';
 export * from './core/link-validity-check';
-export * from './core/md-in-toc';
+export * from './core/md-in-toc-check';
 export * from './core/punctuation-blank-space';
 export * from './core/punctuation-mixing';
 export * from './core/punctuation-manual-link';

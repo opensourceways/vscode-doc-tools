@@ -30,7 +30,7 @@ export async function checkResourceExistence(content: string, document: vscode.T
 
   return results.map((item) => {
     const range = new vscode.Range(document.positionAt(item.start), document.positionAt(item.end));
-    const diagnostic = new vscode.Diagnostic(range, item.message.zh, item.extras === 499 ? vscode.DiagnosticSeverity.Warning : vscode.DiagnosticSeverity.Error);
+    const diagnostic = new vscode.Diagnostic(range, item.message.zh, item.type === 'error' ? vscode.DiagnosticSeverity.Error : vscode.DiagnosticSeverity.Warning);
     diagnostic.source = RESOURCE_EXISTENCE_CHECK;
     diagnostic.code = item.content;
 
