@@ -22,7 +22,7 @@ export function execExtraSpacesCheck(content: string): ResultT[] {
       end,
       message: {
         zh: `中文之间存在多余空格`,
-        en: `Extra spaces`,
+        en: `Extra spaces.`,
       },
     });
   }

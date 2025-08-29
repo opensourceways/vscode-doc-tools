@@ -1,18 +1,20 @@
-import { CheckResultT } from 'src/@types/result';
+import { ResultT } from 'src/@types/result';
+
+export const TAG_CLOSED_CHECK = 'tag-closed-check';
 
 /**
  * 检查 html 标签是否闭合
  * @param {string} content markdown 内容
- * @returns {CheckResultT[]} 返回检查结果
+ * @returns {ResultT[]} 返回检查结果
  */
 export function execTagClosedCheck(content: string) {
-  const results: CheckResultT[] = [];
+  const results: ResultT[] = [];
 
   const record: { tag: string; match: RegExpExecArray }[] = []; // 保存标签及其起始位置
   const selfClosedTags = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr']);
 
   // 正则表达式，匹配 HTML 标签、被转义的标签
-  const REGEX_TAG = /(?<!\\)<\/?([a-zA-Z]+[a-zA-Z0-9\-]+)([^>]*?)>|(?<!\\)<([a-zA-Z]+[a-zA-Z0-9\-]+)([^>]*?)\/>|\\<([a-zA-Z]+[^>]*?)>|<([a-zA-Z]+[^>]*?)\\>/g;
+  const REGEX_TAG = /(?<!\\)<\/?([a-zA-Z]+[a-zA-Z0-9\-]*)([^>]*?)>|(?<!\\)<([a-zA-Z]+[a-zA-Z0-9\-]*)([^>]*?)\/>|\\<([a-zA-Z]+[^>]*?)>|<([a-zA-Z]+[^>]*?)\\>/g;
 
   for (const match of content.matchAll(REGEX_TAG)) {
     // 跳过链接
@@ -31,10 +33,15 @@ export function execTagClosedCheck(content: string) {
       // 处于 html 标签中不允许使用 \<xx\> \<xx> <xx\> 写法
       if (record.length > 0) {
         results.push({
+          name: TAG_CLOSED_CHECK,
+          type: 'error',
           content: match[0],
-          message: `未闭合的 html 标签 (Unclosed html tag): ${match[0]}.\\<或\\>的转义写法不允许在标签嵌套中使用`,
           start: match.index,
           end: match.index + match[0].length,
+          message: {
+            zh: `未闭合的 html 标签：${match[0]}；\\<或\\>的转义写法不允许在标签嵌套中使用`,
+            en: `Unclosed html tag: ${match[0]}. \\< or \\> escape syntax is not allowed to be used in nested tags.`,
+          },
         });
       }
       continue;
@@ -79,10 +86,15 @@ export function execTagClosedCheck(content: string) {
 
     if (!tagMacthed) {
       results.push({
+        name: TAG_CLOSED_CHECK,
+        type: 'error',
         content: match[0],
-        message: `未闭合的 html 标签 (Unclosed html tag): <${tag}>`,
         start: match.index,
         end: match.index + match[0].length,
+        message: {
+          zh: `未闭合的 html 标签：<${tag}>`,
+          en: `Unclosed html tag: <${tag}>.`,
+        },
       });
     }
   }
@@ -92,10 +104,15 @@ export function execTagClosedCheck(content: string) {
     const { tag, match } = record.pop()!;
 
     results.push({
+      name: TAG_CLOSED_CHECK,
+      type: 'error',
       content: match[0],
-      message: `未闭合的 html 标签 (Unclosed html tag): <${tag}>`,
       start: match.index,
       end: match.index + match[0].length,
+      message: {
+        zh: `未闭合的 html 标签：<${tag}>`,
+        en: `Unclosed html tag: <${tag}>.`,
+      },
     });
   }
 

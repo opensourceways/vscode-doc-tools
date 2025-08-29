@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { execTagClosedCheck } from 'checkers';
+import { execTagClosedCheck, TAG_CLOSED_CHECK } from 'checkers';
 
 import { isConfigEnabled } from '@/utils/common';
 
@@ -17,8 +17,8 @@ export async function checkTagClosed(content: string, document: vscode.TextDocum
 
   return execTagClosedCheck(content).map((item) => {
     const range = new vscode.Range(document.positionAt(item.start), document.positionAt(item.end));
-    const diagnostic = new vscode.Diagnostic(range, item.message, vscode.DiagnosticSeverity.Error);
-    diagnostic.source = 'tag-closed-check';
+    const diagnostic = new vscode.Diagnostic(range, item.message.zh, vscode.DiagnosticSeverity.Error);
+    diagnostic.source = TAG_CLOSED_CHECK;
     diagnostic.code = item.content;
     diagnostics.push(diagnostic);
 
@@ -39,7 +39,7 @@ export function getTagClosedCodeActions(context: vscode.CodeActionContext, docum
   }
 
   context.diagnostics.forEach((item) => {
-    if (item.source !== 'tag-closed-check') {
+    if (item.source !== TAG_CLOSED_CHECK) {
       return;
     }
 

@@ -44,7 +44,7 @@ export async function execCodespellCheck(content: string, whiteList: string[]) {
       extras: issue.suggestions,
       message: {
         zh: `单词拼写错误：${issue.text}`,
-        en: `Spelling mistake: ${issue.text}`,
+        en: `Spelling mistake: ${issue.text}.`,
       },
     };
   });

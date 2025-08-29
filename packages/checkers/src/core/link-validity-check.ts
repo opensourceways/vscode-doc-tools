@@ -6,9 +6,9 @@ import { ResultT } from '../@types/result';
 export const LINK_VALIDITY_CHECK = 'link-validity-check';
 
 const EN_DESCRIPTION: Record<string, string> = {
-  '锚点无法访问': 'Invalid anchor',
-  '链接无法访问': 'Invalid link',
-  '访问超时': 'Timeout',
+  '锚点无法访问': 'Invalid anchor.',
+  '链接无法访问': 'Invalid link.',
+  '访问超时': 'Timeout.',
 };
 
 const REGEX = [

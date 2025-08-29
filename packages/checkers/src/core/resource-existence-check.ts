@@ -83,7 +83,7 @@ export async function execResourceExistenceCheck(
         extras: status,
         message: {
           zh: status === 499 ? '访问超时' : '资源链接无法访问',
-          en: status === 499 ? 'Timeout' : 'Invalid resource link',
+          en: status === 499 ? 'Timeout.' : 'Invalid resource link.',
         },
       });
     }
