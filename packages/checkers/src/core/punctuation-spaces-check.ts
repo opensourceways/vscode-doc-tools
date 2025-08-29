@@ -1,14 +1,16 @@
 import { hasChinese, SET_CHINESE_PUNCTUATION, SET_ENGLISH_PUNCTUATION } from 'shared';
 
-import { CheckResultT } from '../@types/result';
+import { ResultT } from '../@types/result';
+
+export const PUNCTUATION_SPACES_CHECK = 'punctuation-spaces-check';
 
 /**
  * 检查中文标点符号前后是否有多余空格
  * @param {string} content 内容
- * @returns {CheckResultT[]} 返回检查结果
+ * @returns {ResultT[]} 返回检查结果
  */
 function execZhCheck(content: string) {
-  const results: CheckResultT[] = [];
+  const results: ResultT[] = [];
 
   for (let i = 0; i < content.length; i++) {
     // 跳过非符号内容
@@ -44,10 +46,15 @@ function execZhCheck(content: string) {
       }
 
       results.push({
+        name: PUNCTUATION_SPACES_CHECK,
+        type: 'info',
         content: ' ',
-        message: `存在多余的空格`,
         start,
         end,
+        message: {
+          zh: `存在多余的空格`,
+          en: `Extra spaces.`,
+        }
       });
     }
 
@@ -64,10 +71,15 @@ function execZhCheck(content: string) {
       }
 
       results.push({
+        name: PUNCTUATION_SPACES_CHECK,
+        type: 'info',
         content: ' ',
-        message: `存在多余的空格`,
         start,
         end,
+        message: {
+          zh: `存在多余的空格`,
+          en: `Extra spaces.`,
+        }
       });
     }
   }
@@ -78,10 +90,10 @@ function execZhCheck(content: string) {
 /**
  * 检查英文标点符号前后是否有多余空格
  * @param {string} content 内容
- * @returns {CheckResultT[]} 返回检查结果
+ * @returns {ResultT[]} 返回检查结果
  */
 function execEnCheck(content: string) {
-  const results: CheckResultT[] = [];
+  const results: ResultT[] = [];
   for (let i = 0; i < content.length; i++) {
     const char = content[i];
 
@@ -107,10 +119,15 @@ function execEnCheck(content: string) {
     // 如果 start 不等于 i，则说明前面有多余空格
     if (start !== i) {
       results.push({
+        name: PUNCTUATION_SPACES_CHECK,
+        type: 'info',
         content: content.slice(start, i + 1),
-        message: `${char} 前面存在多余空格`,
         start: start,
         end: i + 1,
+        message: {
+          zh: `存在多余的空格`,
+          en: `Extra spaces.`,
+        }
       });
     }
 
@@ -123,10 +140,15 @@ function execEnCheck(content: string) {
     // 如果 end 不等于 i，则说明后面有多余空格
     if (end !== i) {
       results.push({
+        name: PUNCTUATION_SPACES_CHECK,
+        type: 'info',
         content: content.slice(i, end + 1),
-        message: `${char} 后面存在多余空格`,
         start: i,
         end: end + 1,
+        message: {
+          zh: `存在多余的空格`,
+          en: `Extra spaces.`,
+        }
       });
     }
   }
@@ -136,8 +158,8 @@ function execEnCheck(content: string) {
 /**
  * 检查标点符号前后是否有多余空格
  * @param {string} content 内容
- * @returns {CheckResultT[]} 返回检查结果
+ * @returns {ResultT[]} 返回检查结果
  */
-export function execPunctuationBlankSpaceCheck(content: string) {
+export function execPunctuationSpacesCheck(content: string) {
   return hasChinese(content) ? execZhCheck(content) : execEnCheck(content);
 }

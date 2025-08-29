@@ -11,7 +11,7 @@ import { checkResourceExistence, getResourceExistenceCodeActions } from './check
 import { checkLinkValidity, getLinkValidityCodeActions } from './check-link-validity';
 import { checkToc } from './check-toc';
 import { checkMdInToc } from './check-md-in-toc';
-import { checkPunctuationBlankSpace, getPunctuationBlankSpaceCodeActions } from './check-punctuation-blank-space';
+import { checkPunctuationSpaces, getPunctuationSpacesCodeActions } from './check-punctuation-spaces';
 import { checkPunctuationMixing } from './check-punctuation-mixing';
 import { checkPunctuationManualLink, getPunctuationMauanlLinkActions } from './check-punctuation-manual-link';
 import { checkPunctuationConsecutive } from './check-punctuation-consecutive';
@@ -79,7 +79,7 @@ async function checkMarkdown(event: EVENT_TYPE, document: vscode.TextDocument, d
 
   // 先执行不耗时的检查
   const diagnostics: vscode.Diagnostic[] = await Promise.all([
-    checkPunctuationBlankSpace(content, document),
+    checkPunctuationSpaces(content, document),
     checkPunctuationMixing(content, document),
     checkPunctuationManualLink(content, document),
     checkPunctuationConsecutive(content, document),
@@ -128,7 +128,7 @@ async function checkTocYaml(document: vscode.TextDocument, diagnosticsCollection
  */
 export function getCodeActions(document: vscode.TextDocument, context: vscode.CodeActionContext) {
   const actions: vscode.CodeAction[] = [
-    ...getPunctuationBlankSpaceCodeActions(context, document),
+    ...getPunctuationSpacesCodeActions(context, document),
     ...getPunctuationMauanlLinkActions(context, document),
     ...getCodespellCodeActions(context, document),
     ...getTagClosedCodeActions(context, document),

@@ -1,4 +1,6 @@
-import { CheckResultT } from '../@types/result';
+import { ResultT } from '../@types/result';
+
+export const PUNCTUATION_PAIR_CHECK = 'punctuation-pair-check';
 
 // 定义成对符号映射关系
 const PAIR_SYMBOLS: Record<string, string> = {
@@ -26,9 +28,9 @@ const CLOSE_SYMBOLS = new Set(Object.values(PAIR_SYMBOLS));
  * @param content 待检查的文本内容
  * @returns 检查结果
  */
-export function execPunctuationPairCheck(content: string): CheckResultT[] {
+export function execPunctuationPairCheck(content: string): ResultT[] {
   const stack: { char: string; position: number }[] = [];
-  const results: CheckResultT[] = [];
+  const results: ResultT[] = [];
 
   for (let i = 0; i < content.length; i++) {
     const char = content[i];
@@ -46,10 +48,15 @@ export function execPunctuationPairCheck(content: string): CheckResultT[] {
       // 检查栈是否为空（没有对应的开符号）
       if (stack.length === 0) {
         results.push({
+          name: PUNCTUATION_PAIR_CHECK,
+          type: 'info',
           content: char,
-          message: `未匹配成对的符号: ${char}`,
           start: i,
           end: i + 1,
+          message: {
+            zh: `未匹配成对的标点符号: ${char}`,
+            en: `Unmatched punctuation: ${char}`,
+          },
         });
         continue;
       }
@@ -58,10 +65,15 @@ export function execPunctuationPairCheck(content: string): CheckResultT[] {
       const lastOpener = stack.pop()!;
       if (PAIR_SYMBOLS[lastOpener.char] !== char) {
         results.push({
+          name: PUNCTUATION_PAIR_CHECK,
+          type: 'info',
           content: lastOpener.char,
-          message: `符号不匹配: ${lastOpener.char}；应该对应 ${PAIR_SYMBOLS[lastOpener.char]}，但实际是 ${char}`,
           start: lastOpener.position,
           end: lastOpener.position + 1,
+          message: {
+            zh: `标点符号不匹配: ${lastOpener.char}；应该对应 ${PAIR_SYMBOLS[lastOpener.char]}，但实际是 ${char}`,
+            en: `Punctuation does not match: ${lastOpener.char}. It should be ${PAIR_SYMBOLS[lastOpener.char]}, but actually is ${char}`,
+          },
         });
       }
     }
@@ -71,10 +83,15 @@ export function execPunctuationPairCheck(content: string): CheckResultT[] {
   while (stack.length > 0) {
     const unclosed = stack.pop()!;
     results.push({
+      name: PUNCTUATION_PAIR_CHECK,
+      type: 'info',
       content: unclosed.char,
-      message: `未匹配成对的符号: ${unclosed.char}`,
       start: unclosed.position,
       end: unclosed.position + 1,
+      message: {
+        zh: `未匹配成对的标点符号: ${unclosed.char}`,
+        en: `Unmatched punctuation: ${unclosed.char}`,
+      },
     });
   }
 

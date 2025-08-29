@@ -221,7 +221,7 @@
           "default": true,
           "description": "启用 _toc.yaml 检查（包含：1.目录中引用的文件需要存在；2.md 文件是否加入 _toc.yaml）"
         },
-        "docTools.check.punctuationBlankSpace.enable": {
+        "docTools.check.punctuationSpaces.enable": {
           "type": "boolean",
           "default": false,
           "description": "启用标点符号前后无空格检查（因语句含义复杂，可能存在误报）"

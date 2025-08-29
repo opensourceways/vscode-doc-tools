@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { execPunctuationManualLinkCheck } from 'checkers';
+import { execPunctuationManualLinkCheck, PUNCTUATION_MANUAL_LINK_CHECK } from 'checkers';
 
 import { isConfigEnabled } from '@/utils/common';
 
@@ -16,8 +16,8 @@ export async function checkPunctuationManualLink(content: string, document: vsco
 
   return execPunctuationManualLinkCheck(content).map((item) => {
     const range = new vscode.Range(document.positionAt(item.start), document.positionAt(item.end));
-    const diagnostic = new vscode.Diagnostic(range, item.message, vscode.DiagnosticSeverity.Information);
-    diagnostic.source = 'punctuation-manual-link-check';
+    const diagnostic = new vscode.Diagnostic(range, item.message.zh, vscode.DiagnosticSeverity.Information);
+    diagnostic.source = PUNCTUATION_MANUAL_LINK_CHECK;
     diagnostic.code = item.extras;
     return diagnostic;
   });
@@ -36,7 +36,7 @@ export function getPunctuationMauanlLinkActions(context: vscode.CodeActionContex
   }
 
   context.diagnostics.forEach((item) => {
-    if (item.source !== 'punctuation-manual-link-check') {
+    if (item.source !== PUNCTUATION_MANUAL_LINK_CHECK) {
       return;
     }
 

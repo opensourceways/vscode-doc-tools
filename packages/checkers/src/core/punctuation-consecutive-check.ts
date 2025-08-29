@@ -1,5 +1,7 @@
 import { getMarkdownFilterContent } from 'shared';
-import type { CheckResultT } from '../@types/result';
+import type { ResultT } from '../@types/result';
+
+export const PUNCTUATION_CONSECTIVE_CHECK = 'punctuation-consecutive-check';
 
 const PUNCTUATIONS_MAP: Record<string, Set<string>> = {
   '.': new Set('.)]}>"\'`'),
@@ -34,10 +36,10 @@ const PUNCTUATIONS = new Set(Object.keys(PUNCTUATIONS_MAP));
 /**
  * 检查文本中是否有连续标点符号
  * @param {string} content 内容
- * @returns {CheckResultT[]} 返回检测到的连续标点符号
+ * @returns {ResultT[]} 返回检测到的连续标点符号
  */
-export function execPunctuationConsecutiveCheck(content: string): CheckResultT[] {
-  const results: CheckResultT[] = [];
+export function execPunctuationConsecutiveCheck(content: string): ResultT[] {
+  const results: ResultT[] = [];
   const filterContent = getMarkdownFilterContent(content, {
     disableLink: true,
     disableRefLink: true,
@@ -62,10 +64,15 @@ export function execPunctuationConsecutiveCheck(content: string): CheckResultT[]
     }
 
     results.push({
+      name: PUNCTUATION_CONSECTIVE_CHECK,
+      type: 'info',
       content: filterContent[i] + filterContent[i + 1],
-      message: `连续的标点符号：${filterContent[i] + filterContent[i + 1]}`,
       start: i,
       end: i + 2,
+      message: {
+        zh: `连续的标点符号：${filterContent[i] + filterContent[i + 1]}`,
+        en: `Consecutive punctuations: ${filterContent[i] + filterContent[i + 1]}`,
+      },
     });
   }
 

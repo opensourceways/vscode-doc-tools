@@ -1,6 +1,8 @@
 import { hasChinese } from 'shared';
 
-import { CheckResultT } from '../@types/result';
+import { ResultT } from '../@types/result';
+
+export const PUNCTUATION_MANUAL_LINK_CHECK = 'punctuation-manual-link-check';
 
 const REGEX = [
   /(?<!\!)\[(.*?)\]\(.+?\)/g, // 匹配 [xx](xxx) 链接
@@ -10,10 +12,10 @@ const REGEX = [
 /**
  * 检查外链手册是否有书名号
  * @param {string} content 内容
- * @returns {CheckResultT<string>[]} 返回检查结果
+ * @returns {ResultT<string>[]} 返回检查结果
  */
 export function execPunctuationManualLinkCheck(content: string) {
-  const results: CheckResultT<string>[] = [];
+  const results: ResultT<string>[] = [];
   if (!hasChinese(content)) {
     return results;
   }
@@ -39,11 +41,16 @@ export function execPunctuationManualLinkCheck(content: string) {
 
       const start = match.index + match[0].indexOf(match[1]);
       results.push({
+        name: PUNCTUATION_MANUAL_LINK_CHECK,
+        type: 'info',
         content: match[1],
-        message: `请使用书名号将 ${name} 包裹起来`,
         start,
         end: start + match[1].length,
         extras: name,
+        message: {
+          zh: `请使用书名号包裹，如《${name}》`,
+          en: `Please use bookmarks to wrap the book name, such as 《${name}》`,
+        },
       });
     }
   }
