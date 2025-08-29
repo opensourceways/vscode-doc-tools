@@ -61,7 +61,7 @@ const onClickStopLink = () => {
       检查项：Html 标签闭合
       <OIcon v-if="working" class="o-rotating" title="检查中..."><OIconRefresh /></OIcon>
     </h1>
-    <div class="text">【开始路径】：{{ injectData.extras?.fsPath }}</div>
+    <div class="text single-line">【开始路径】：{{ injectData.extras?.fsPath }}</div>
     <div class="text single-line" :title="currentScanning">【正在检查】：{{ working ? currentScanning : '无' }}</div>
     <div class="text single-line">
       <span>【控制开关】：</span>

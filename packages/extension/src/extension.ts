@@ -9,7 +9,7 @@ import { addCodespellWhitelist } from '@/core/command/cmd-add-codespell-whitlist
 import { addUrlWhitelist } from '@/core/command/cmd-add-url-whilelist';
 import { previewMarkdown, triggerPreviewMarkdownContentChange } from '@/core/command/cmd-preview-markdown';
 import { fixMarkdownlint } from '@/core/command/cmd-fix-markdownlint';
-import { checkName } from '@/core/command/cmd-check-name';
+import { createBatchCheckFileNamingWebview } from '@/core/command/cmd-batch-check-file-naming';
 import { checkNameConsistency } from '@/core/command/cmd-check-name-consistency';
 import { checkLinkAccessibility } from '@/core/command/cmd-check-link-accessibility';
 import { genMarkdownAnchorId } from '@/core/command/cmd-gen-markdown-anchor-id';
@@ -105,7 +105,7 @@ function registerCommand(context: vscode.ExtensionContext) {
   // 注册 批量检查目录名、文件名命名规范 命令
   context.subscriptions.push(
     vscode.commands.registerCommand('doc.tools.check.name', (uri: vscode.Uri) => {
-      checkName(context, uri);
+      createBatchCheckFileNamingWebview(context, uri);
     })
   );
 

@@ -1,14 +1,18 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
-import { isArray, OTable, OLink, OInput, OIcon, useMessage } from '@opensig/opendesign';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { OTable, OLink, OInput, OIcon, useMessage } from '@opensig/opendesign';
 
 import IconEdit from '~icons/app/icon-edit.svg';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
 
 import { injectData } from '@/utils/inject';
-import { ConfigBridge, ResourceBridge } from 'webview-bridge';
+import { Bridge, BroadcastBridge, ConfigBridge, ResourceBridge } from 'webview-bridge';
+
+const working = ref(false);
+const currentScanning = ref('');
 
 // -------------------- 表格相关 --------------------
+const data = ref<Record<string, any>[]>([]);
 const columns = [
   { label: '类型', key: 'fileType', style: 'width:15%' },
   { label: '名称', key: 'name', style: 'width: 30%' },
@@ -16,20 +20,25 @@ const columns = [
   { label: '操作', key: 'action', style: 'width:20%' },
 ];
 
-const data = ref<Record<string, any>[]>([]);
-if (isArray(injectData.extras?.results)) {
-  injectData.extras.results.sort((a, b) => {
-    return (a.extras === 'file' ? 0 : 1) - (b.extras === 'file' ? 0 : 1);
-  });
+const onAsyncTaskOutput = (name: string, extras: any) => {
+  if (name === 'checkFileNaming:stop') {
+    working.value = false;
+    currentScanning.value = '';
+  } else if (name === 'checkFileNaming:scanTarget') {
+    working.value = true;
+    currentScanning.value = extras;
+  } else if (name === 'checkFileNaming:addItem') {
+    data.value.push(extras);
+  }
+};
 
-  data.value = injectData.extras.results.map((item) => {
-    return {
-      fileType: item.extras === 'directory' ? '目录' : '文件',
-      name: item.content.split('/').pop(),
-      path: item.content,
-    };
-  });
-}
+onMounted(() => {
+  BroadcastBridge.addAsyncTaskOutputListener(onAsyncTaskOutput);
+});
+
+onBeforeUnmount(() => {
+  BroadcastBridge.removeAsyncTaskOutputListener(onAsyncTaskOutput);
+});
 
 const fileItemsCounts = computed(() => {
   return data.value.filter((item) => item.fileType === '文件').length;
@@ -45,6 +54,16 @@ const onClickLink = (row: Record<string, any>) => {
   } else {
     ResourceBridge.revealInExplorer(row.path);
   }
+};
+
+// -------------------- 开始/停止 --------------------
+const onClickStartLink = () => {
+  data.value = [];
+  Bridge.getInstance().broadcast('asyncTask:checkFileNaming', injectData.extras?.fsPath);
+};
+
+const onClickStopLink = () => {
+  Bridge.getInstance().broadcast('asyncTask:stopCheckFileNaming');
 };
 
 // -------------------- 修改名称 --------------------
@@ -115,15 +134,21 @@ const onConfirmIgnore = async () => {
 
 <template>
   <div class="check-result">
-    <h1 class="title">检查项：目录、文件是否符合命名规范</h1>
+    <h1 class="title">检查项：目录和文件名称是否符合命名规范</h1>
     <div class="text">【命名规则】：小写字母，下划线连接</div>
-    <div class="text">【检查路径】：{{ injectData.extras?.fsPath }}</div>
+    <div class="text single-line">【检查路径】：{{ injectData.extras?.fsPath }}</div>
+    <div class="text single-line" :title="currentScanning">【正在检查】：{{ working ? currentScanning : '无' }}</div>
     <div class="text">
       【检查结果】：共检查出 <span class="red">{{ data.length }}</span> 项不符合；其中 <span class="red">{{ fileItemsCounts }}</span> 项为文件，<span
         class="red"
         >{{ dirItemsCounts }}</span
       >
       项为目录
+    </div>
+    <div class="text single-line">
+      <span>【控制开关】：</span>
+      <OLink v-if="working" color="danger" @click="onClickStopLink">停止检查</OLink>
+      <OLink v-else color="primary" @click="onClickStartLink">开始检查</OLink>
     </div>
     <OTable :columns="columns" :data="data" border="all">
       <template #td_name="{ row }">
@@ -210,5 +235,9 @@ const onConfirmIgnore = async () => {
 
 .o-link:not(:last-child) {
   margin-right: 8px;
+}
+
+.single-line {
+  @include text-truncate(1);
 }
 </style>

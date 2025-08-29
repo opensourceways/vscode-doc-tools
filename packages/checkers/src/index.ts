@@ -10,6 +10,6 @@ export * from './core/resource-existence-check';
 export * from './core/tag-closed-check';
 export * from './core/toc-check';
 export * from './core/markdownlint';
-export * from './core/name';
+export * from './core/file-naming-check';
 export * from './core/name-consistency';
 export * from './core/extra-spaces-check';

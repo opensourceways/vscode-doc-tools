@@ -251,7 +251,7 @@
           "default": false,
           "description": "启用中文文字之间无空格检查（因语句含义复杂，可能存在误报）"
         },
-        "docTools.check.name.enable": {
+        "docTools.check.fileNaming.enable": {
           "type": "boolean",
           "default": false,
           "description": "启用文件/目录命名规范检查"

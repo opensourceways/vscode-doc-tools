@@ -16,7 +16,7 @@ import { checkPunctuationMixing } from './check-punctuation-mixing';
 import { checkPunctuationManualLink, getPunctuationMauanlLinkActions } from './check-punctuation-manual-link';
 import { checkPunctuationConsecutive } from './check-punctuation-consecutive';
 import { checkPunctuationPair } from './check-punctuation-pair';
-import { checkName } from './check-name';
+import { checkFileNaming } from './check-file-naming';
 import { checkNameConsistency } from './check-name-consistency';
 import { checkExtraSpaces, getExtraSpacesCodeActions } from './check-extra-spaces';
 
@@ -105,7 +105,7 @@ async function checkMarkdown(event: EVENT_TYPE, document: vscode.TextDocument, d
   // 弹窗提示的检查
   if (event === EVENT_TYPE.EVENT_ACTIVE || event === EVENT_TYPE.EVENT_OPEN_TEXT_DOC) {
     checkMdInToc(document);
-    checkName(document);
+    checkFileNaming(document);
     checkNameConsistency(document);
   }
 }
