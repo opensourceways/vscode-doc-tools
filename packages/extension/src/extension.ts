@@ -10,7 +10,7 @@ import { addUrlWhitelist } from '@/core/command/cmd-add-url-whilelist';
 import { previewMarkdown, triggerPreviewMarkdownContentChange } from '@/core/command/cmd-preview-markdown';
 import { fixMarkdownlint } from '@/core/command/cmd-fix-markdownlint';
 import { createBatchCheckFileNamingWebview } from '@/core/command/cmd-batch-check-file-naming';
-import { checkNameConsistency } from '@/core/command/cmd-check-name-consistency';
+import { checkNameConsistency } from '@/core/command/cmd-batch-check-file-naming-consistency';
 import { checkLinkAccessibility } from '@/core/command/cmd-check-link-accessibility';
 import { genMarkdownAnchorId } from '@/core/command/cmd-gen-markdown-anchor-id';
 import { checkToc } from './core/command/cmd-check-toc';

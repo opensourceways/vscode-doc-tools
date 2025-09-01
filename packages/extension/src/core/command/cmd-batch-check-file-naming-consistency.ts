@@ -1,0 +1,119 @@
+import * as vscode from 'vscode';
+import fs from 'fs';
+import path from 'path';
+import { execFileNamingConsistencyCheck } from 'checkers';
+import { BroadcastT, MessageT, OPERATION_TYPE, ServerMessageHandler, SOURCE_TYPE } from 'webview-bridge';
+import { readdirAsync, sleep } from 'shared';
+
+import { createWebviewPanel } from '@/utils/webview';
+
+let controller: AbortController | null = null;
+
+async function walkDir(dir: string, nameWhiteList: string[] = [], signal: AbortSignal) {
+  const names = await readdirAsync(dir);
+  for (const name of names) {
+    if (signal.aborted) {
+      throw new Error('aborted');
+    }
+
+    const completePath = path.join(dir, name).replace(/\\/g, '/');
+    ServerMessageHandler.broadcast('onAsyncTaskOutput', 'checkFileNamingConsistency:scanTarget', completePath);
+
+    if (fs.statSync(completePath).isDirectory()) {
+      await walkDir(completePath, nameWhiteList, signal);
+    } else if (name.endsWith('.md')) {
+      const [result, filePath] = await execFileNamingConsistencyCheck(completePath, nameWhiteList);
+      if (!result) {
+        ServerMessageHandler.broadcast('onAsyncTaskOutput', 'checkFileNamingConsistency:addItem', {
+          content: completePath,
+          message: filePath ? '中英文文档名称不一致' : completePath.includes('/zh/') ? '不存在对应的英文文档' : '不存在对应的中文文档',
+          start: 0,
+          end: 0,
+          extras: filePath || '',
+        });
+      }
+    }
+
+    await sleep(1);
+  }
+}
+
+async function startWalk(targetPath: string) {
+  try {
+    controller?.abort();
+    controller = new AbortController();
+    controller.signal.addEventListener('abort', () => {
+      throw new Error('abort');
+    });
+
+    const config = vscode.workspace.getConfiguration('docTools.check.name');
+    const whiteList = config.get<string[]>('whiteList', []);
+    await walkDir(targetPath, whiteList, controller.signal);
+    if (controller && !controller.signal.aborted) {
+      ServerMessageHandler.broadcast('onAsyncTaskOutput', 'checkFileNamingConsistency:stop');
+    }
+  } catch {
+    stopWalk();
+  }
+}
+
+function stopWalk() {
+  controller?.abort();
+  ServerMessageHandler.broadcast('onAsyncTaskOutput', 'checkFileNamingConsistency:stop');
+}
+
+/**
+ * 批量检查中英文文档名称一致性
+ * @param {vscode.ExtensionContext} context 上下文
+ * @param {vscode.Uri} uri 目标目录 uri
+ */
+export async function checkNameConsistency(context: vscode.ExtensionContext, uri: vscode.Uri) {
+  if (!fs.existsSync(uri.fsPath)) {
+    vscode.window.showErrorMessage(`路径不存在：${uri.fsPath}`);
+    return;
+  }
+
+  const fsPath = fs.realpathSync.native(uri.fsPath).replace(/\\/g, '/');
+  if (!fs.statSync(fsPath).isDirectory()) {
+    vscode.window.showErrorMessage(`非目录路径：${fsPath}`);
+    return;
+  }
+
+  const isDarkTheme = vscode.workspace.getConfiguration().get<string>('workbench.colorTheme', '').toLowerCase().includes('dark');
+  const webviewPanel = createWebviewPanel({
+    context,
+    viewType: 'Doc Tools：检查结果',
+    title: 'Doc Tools：检查结果',
+    showOptions: vscode.ViewColumn.Beside,
+    iconPath: vscode.Uri.file(path.join(context.extensionPath, 'resources', isDarkTheme ? 'icon-preview-dark.svg' : 'icon-preview-light.svg')),
+    injectData: {
+      path: '/check-name-consistency-result',
+      theme: isDarkTheme ? 'dark' : 'light',
+      locale: fsPath.includes('/en/') ? 'en' : 'zh',
+      extras: {
+        fsPath,
+      },
+    },
+    onBeforeLoad(webviewPanel, isDev) {
+      ServerMessageHandler.bind(webviewPanel, isDev);
+    },
+  });
+
+  webviewPanel.onDidDispose(() => {
+    controller?.abort();
+    controller = null;
+  });
+
+  webviewPanel.webview.onDidReceiveMessage((message: MessageT<BroadcastT<string>>) => {
+    if (message.source !== SOURCE_TYPE.client || message.operation !== OPERATION_TYPE.broadcast) {
+      return;
+    }
+
+    const { name, extras } = message.data;
+    if (name === 'asyncTask:checkFileNamingConsistency' && typeof extras?.[0] === 'string') {
+      startWalk(extras[0]);
+    } else if (name === 'asyncTask:stopCheckFileNamingConsistency') {
+      stopWalk();
+    }
+  });
+}

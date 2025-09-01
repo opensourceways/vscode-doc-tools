@@ -17,7 +17,7 @@ import { checkPunctuationManualLink, getPunctuationMauanlLinkActions } from './c
 import { checkPunctuationConsecutive } from './check-punctuation-consecutive';
 import { checkPunctuationPair } from './check-punctuation-pair';
 import { checkFileNaming } from './check-file-naming';
-import { checkNameConsistency } from './check-name-consistency';
+import { checkFileNamingConsistency } from './check-file-naming-consistency';
 import { checkExtraSpaces, getExtraSpacesCodeActions } from './check-extra-spaces';
 
 // 用于存储延迟任务记录
@@ -106,7 +106,7 @@ async function checkMarkdown(event: EVENT_TYPE, document: vscode.TextDocument, d
   if (event === EVENT_TYPE.EVENT_ACTIVE || event === EVENT_TYPE.EVENT_OPEN_TEXT_DOC) {
     checkMdInToc(document);
     checkFileNaming(document);
-    checkNameConsistency(document);
+    checkFileNamingConsistency(document);
   }
 }
 

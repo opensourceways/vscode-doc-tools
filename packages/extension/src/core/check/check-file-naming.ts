@@ -10,12 +10,12 @@ import { isConfigEnabled } from '@/utils/common';
  */
 function isEnabled() {
   if (isConfigEnabled('docTools.check.name')) {
-    vscode.workspace.getConfiguration('docTools.check.fileNaming.enable').update('enable', true, vscode.ConfigurationTarget.Global)
+    vscode.workspace.getConfiguration('docTools.check.fileNaming').update('enable', true, vscode.ConfigurationTarget.Global)
     vscode.workspace.getConfiguration('docTools.check.name').update('enable', undefined, vscode.ConfigurationTarget.Global);
     return true;
   }
 
-  return isConfigEnabled('docTools.check.fileNaming.enable');
+  return isConfigEnabled('docTools.check.fileNaming');
 }
 
 /**

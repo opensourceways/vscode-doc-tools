@@ -1,11 +1,15 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
-import { isArray, OTable, OLink } from '@opensig/opendesign';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { OTable, OLink } from '@opensig/opendesign';
 
 import { injectData } from '@/utils/inject';
-import { ResourceBridge } from 'webview-bridge';
+import { Bridge, BroadcastBridge, ResourceBridge } from 'webview-bridge';
+
+const working = ref(false);
+const currentScanning = ref('');
 
 // -------------------- 表格相关 --------------------
+const data = ref<Record<string, any>[]>([]);
 const columns = [
   { label: '类型', key: 'type', style: 'width:10%' },
   { label: '名称', key: 'name', style: 'width:20%' },
@@ -15,26 +19,45 @@ const columns = [
   { label: '操作', key: 'action', style: 'width:10%' },
 ];
 
-const data = ref<Record<string, any>[]>([]);
-if (isArray(injectData.extras?.results)) {
-  injectData.extras.results.sort((a, b) => {
-    return (a.extras ? 0 : 1) - (b.extras ? 0 : 1);
-  });
-
-  data.value = injectData.extras.results.map((item) => {
-    return {
-      type: item.message,
-      name: item.content.split('/').pop(),
-      path: item.content,
-      similarName: item.extras?.split('/')?.pop() || '',
-      similarPath: item.extras,
-    };
-  });
-}
-
 const unmatchedCounts = computed(() => {
   return data.value.filter((item) => item.type === '中英文名称不一致').length;
 });
+
+const onAsyncTaskOutput = (name: string, extras: any) => {
+  if (name === 'checkFileNamingConsistency:stop') {
+    working.value = false;
+    currentScanning.value = '';
+  } else if (name === 'checkFileNamingConsistency:scanTarget') {
+    working.value = true;
+    currentScanning.value = extras;
+  } else if (name === 'checkFileNamingConsistency:addItem') {
+    data.value.push({
+      type: extras.message,
+      name: extras.content.split('/').pop(),
+      path: extras.content,
+      similarName: extras.extras?.split('/')?.pop() || '',
+      similarPath: extras.extras,
+    });
+  }
+};
+
+onMounted(() => {
+  BroadcastBridge.addAsyncTaskOutputListener(onAsyncTaskOutput);
+});
+
+onBeforeUnmount(() => {
+  BroadcastBridge.removeAsyncTaskOutputListener(onAsyncTaskOutput);
+});
+
+// -------------------- 开始/停止 --------------------
+const onClickStartLink = () => {
+  data.value = [];
+  Bridge.getInstance().broadcast('asyncTask:checkFileNamingConsistency', injectData.extras?.fsPath);
+};
+
+const onClickStopLink = () => {
+  Bridge.getInstance().broadcast('asyncTask:stopCheckFileNamingConsistency');
+};
 
 const onClickSourceLink = (path: string) => {
   ResourceBridge.viewSource(path);
@@ -48,13 +71,19 @@ const onRemoveItem = (row: Record<string, any>) => {
 <template>
   <div class="check-result">
     <h1 class="title">检查项：中英文文档名称一致性</h1>
-    <div class="text">【检查路径】：{{ injectData.extras?.fsPath }}</div>
+    <div class="text single-line">【检查路径】：{{ injectData.extras?.fsPath }}</div>
+    <div class="text single-line" :title="currentScanning">【正在检查】：{{ working ? currentScanning : '无' }}</div>
     <div class="text">
       【检查结果】：共检查出 <span class="red">{{ data.length }}</span> 项；其中 <span class="red">{{ unmatchedCounts }}</span> 项为中英文文档名称不一致，<span
         class="red"
         >{{ data.length - unmatchedCounts }}</span
       >
       项为不存在对应的中文/英文文档
+    </div>
+    <div class="text single-line">
+      <span>【控制开关】：</span>
+      <OLink v-if="working" color="danger" @click="onClickStopLink">停止检查</OLink>
+      <OLink v-else color="primary" @click="onClickStartLink">开始检查</OLink>
     </div>
     <OTable :columns="columns" :data="data" border="all">
       <template #td_name="{ row }">
@@ -110,5 +139,9 @@ const onRemoveItem = (row: Record<string, any>) => {
 
 .o-link:not(:last-child) {
   margin-right: 8px;
+}
+
+.single-line {
+  @include text-truncate(1);
 }
 </style>

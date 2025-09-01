@@ -1,3 +1,4 @@
+export * from './core/markdownlint';
 export * from './core/codespell-check';
 export * from './core/link-validity-check';
 export * from './core/md-in-toc-check';
@@ -9,7 +10,6 @@ export * from './core/punctuation-pair-check';
 export * from './core/resource-existence-check';
 export * from './core/tag-closed-check';
 export * from './core/toc-check';
-export * from './core/markdownlint';
 export * from './core/file-naming-check';
-export * from './core/name-consistency';
+export * from './core/file-naming-consistency-check';
 export * from './core/extra-spaces-check';

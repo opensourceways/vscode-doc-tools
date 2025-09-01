@@ -261,7 +261,7 @@
           "default": [],
           "description": "文件/目录命名规范白名单（添加后忽略对该名称的检查）"
         },
-        "docTools.check.nameConsistency.enable": {
+        "docTools.check.fileNamingConsistency.enable": {
           "type": "boolean",
           "default": false,
           "description": "启用中英文文档名称一致性检查"
