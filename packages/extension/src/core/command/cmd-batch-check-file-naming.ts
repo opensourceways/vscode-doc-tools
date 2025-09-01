@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import fs from 'fs';
 import path from 'path';
-import { execFileNamingCheck } from 'checkers';
+import { execCheckFileNaming } from 'checkers';
 import { BroadcastT, MessageT, OPERATION_TYPE, ServerMessageHandler, SOURCE_TYPE } from 'webview-bridge';
 import { readdirAsync, sleep } from 'shared';
 
@@ -20,7 +20,7 @@ async function walkDir(dir: string, nameWhiteList: string[] = [], signal: AbortS
     ServerMessageHandler.broadcast('onAsyncTaskOutput', 'checkFileNaming:scanTarget', completePath);
 
     const stat = fs.statSync(completePath);
-    if ((stat.isDirectory() || name.endsWith('.md')) && !execFileNamingCheck(name, nameWhiteList)) {
+    if ((stat.isDirectory() || name.endsWith('.md')) && !execCheckFileNaming(name, nameWhiteList)) {
       ServerMessageHandler.broadcast('onAsyncTaskOutput', 'checkFileNaming:addItem', {
         name,
         path: completePath,

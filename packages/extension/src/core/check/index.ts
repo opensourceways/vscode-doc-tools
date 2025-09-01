@@ -4,7 +4,7 @@ import { getMarkdownFilterContent } from 'shared';
 import { EVENT_TYPE } from '@/@types/event';
 import { isConfigEnabled } from '@/utils/common';
 
-import { getMarkdownlintCodeActions, lintMarkdown } from './lint-markdown';
+import { getMarkdownlintCodeActions, markdownlint } from './markdownlint';
 import { checkTagClosed, getTagClosedCodeActions } from './check-tag-closed';
 import { checkCodespell, getCodespellCodeActions } from './check-codespell';
 import { checkResourceExistence, getResourceExistenceCodeActions } from './check-resource-existence';
@@ -79,6 +79,7 @@ async function checkMarkdown(event: EVENT_TYPE, document: vscode.TextDocument, d
 
   // 先执行不耗时的检查
   const diagnostics: vscode.Diagnostic[] = await Promise.all([
+    markdownlint(document),
     checkPunctuationSpaces(content, document),
     checkPunctuationMixing(content, document),
     checkPunctuationManualLink(content, document),
@@ -87,7 +88,6 @@ async function checkMarkdown(event: EVENT_TYPE, document: vscode.TextDocument, d
     checkExtraSpaces(content, document),
     checkTagClosed(content, document),
     checkCodespell(content, document),
-    lintMarkdown(document),
   ]).then((result) => {
     return result.flat();
   });

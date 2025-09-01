@@ -11,6 +11,6 @@ export function isSnakeCase(str: string) {
  * @param {string[]} nameWhiteList 名字白名单
  * @returns {boolean} 返回检查结果
  */
-export function execFileNamingCheck(name: string, nameWhiteList: string[] = []) {
+export function execCheckFileNaming(name: string, nameWhiteList: string[] = []) {
   return nameWhiteList.includes(name) || isSnakeCase(name);
 }

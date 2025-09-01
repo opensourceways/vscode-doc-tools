@@ -7,7 +7,7 @@ export const TAG_CLOSED_CHECK = 'tag-closed-check';
  * @param {string} content markdown 内容
  * @returns {ResultT[]} 返回检查结果
  */
-export function execTagClosedCheck(content: string) {
+export function execCheckTagClosed(content: string) {
   const results: ResultT[] = [];
 
   const record: { tag: string; match: RegExpExecArray }[] = []; // 保存标签及其起始位置

@@ -14,7 +14,7 @@ const REGEX = [
  * @param {string} content 内容
  * @returns {ResultT<string>[]} 返回检查结果
  */
-export function execPunctuationManualLinkCheck(content: string) {
+export function execCheckPunctuationManualLink(content: string) {
   const results: ResultT<string>[] = [];
   if (!hasChinese(content)) {
     return results;

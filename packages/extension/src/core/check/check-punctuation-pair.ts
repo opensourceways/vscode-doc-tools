@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { execPunctuationPairCheck, PUNCTUATION_PAIR_CHECK } from 'checkers';
+import { execCheckPunctuationPair, PUNCTUATION_PAIR_CHECK } from 'checkers';
 
 import { isConfigEnabled } from '@/utils/common';
 
@@ -14,7 +14,7 @@ export async function checkPunctuationPair(content: string, document: vscode.Tex
     return [];
   }
 
-  return execPunctuationPairCheck(content).map((item) => {
+  return execCheckPunctuationPair(content).map((item) => {
     const range = new vscode.Range(document.positionAt(item.start), document.positionAt(item.end));
     const diagnostic = new vscode.Diagnostic(range, item.message.zh, vscode.DiagnosticSeverity.Information);
     diagnostic.code = item.content;

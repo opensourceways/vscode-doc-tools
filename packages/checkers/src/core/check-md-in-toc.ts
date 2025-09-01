@@ -31,7 +31,7 @@ function isMdInToc(toc: TocItem, dirPath: string, mdPath: string) {
  * @param {string} markdownPath markdown 路径
  * @returns {Promise<[boolean, string?]>} 返回检查结果，第一个元素为是否加入，第二个元素为 _toc.yaml 路径
  */
-export async function execMdInTocCheck(markdownPath: string): Promise<[boolean, string?]> {
+export async function execCheckMdInToc(markdownPath: string): Promise<[boolean, string?]> {
   const mdPath = markdownPath.replace(/\\/g, '/');
   let isInToc = false;
   let dirArr = mdPath.split('/');

@@ -28,7 +28,7 @@ const REGEX = [
  * @param {AbortSignal} opts.signal 中断信号
  * @returns {ResultT<number>[]} 返回检查结果
  */
-export async function execLinkValidityCheck(
+export async function execCheckLinkValidity(
   content: string,
   opts: {
     prefixPath: string;

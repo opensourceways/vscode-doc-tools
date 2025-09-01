@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { execPunctuationConsecutiveCheck, PUNCTUATION_CONSECTIVE_CHECK } from 'checkers';
+import { execCheckPunctuationConsecutive, PUNCTUATION_CONSECTIVE_CHECK } from 'checkers';
 
 import { isConfigEnabled } from '@/utils/common';
 
@@ -14,7 +14,7 @@ export async function checkPunctuationConsecutive(content: string, document: vsc
     return [];
   }
 
-  return execPunctuationConsecutiveCheck(content).map((item) => {
+  return execCheckPunctuationConsecutive(content).map((item) => {
     const range = new vscode.Range(document.positionAt(item.start), document.positionAt(item.end));
     const diagnostic = new vscode.Diagnostic(range, item.message.zh, vscode.DiagnosticSeverity.Information);
     diagnostic.code = item.content;

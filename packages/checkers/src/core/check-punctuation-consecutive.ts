@@ -38,7 +38,7 @@ const PUNCTUATIONS = new Set(Object.keys(PUNCTUATIONS_MAP));
  * @param {string} content 内容
  * @returns {ResultT[]} 返回检测到的连续标点符号
  */
-export function execPunctuationConsecutiveCheck(content: string): ResultT[] {
+export function execCheckPunctuationConsecutive(content: string): ResultT[] {
   const results: ResultT[] = [];
   const filterContent = getMarkdownFilterContent(content, {
     disableLink: true,

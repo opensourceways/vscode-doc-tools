@@ -324,7 +324,7 @@ async function visitToc(node: ParsedNode, tocDir: string, results: ResultT[], si
  * @param {AbortSignal} signal 中断信号
  * @returns {ResultT[]} 返回检查结果
  */
-export async function execTocCheck(content: string, tocDir: string, signal?: AbortSignal) {
+export async function execCheckToc(content: string, tocDir: string, signal?: AbortSignal) {
   const results: ResultT[] = [];
 
   try {

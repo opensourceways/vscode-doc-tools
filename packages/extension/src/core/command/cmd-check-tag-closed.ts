@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import { existsAsync, getFileContentAsync, getMarkdownFilterContent, readdirAsync } from 'shared';
 import { BroadcastT, MessageT, OPERATION_TYPE, ServerMessageHandler, SOURCE_TYPE } from 'webview-bridge';
-import { execTagClosedCheck } from 'checkers';
+import { execCheckTagClosed } from 'checkers';
 
 import { createWebviewPanel } from '@/utils/webview';
 
@@ -26,7 +26,7 @@ async function walkDir(dir: string, signal: AbortSignal) {
         disableHtmlComment: true,
         disableCode: true,
       });
-      const results = await execTagClosedCheck(content);
+      const results = await execCheckTagClosed(content);
       if (signal.aborted) {
         throw new Error('aborted');
       }

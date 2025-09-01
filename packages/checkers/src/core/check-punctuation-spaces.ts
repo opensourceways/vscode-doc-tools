@@ -160,6 +160,6 @@ function execEnCheck(content: string) {
  * @param {string} content 内容
  * @returns {ResultT[]} 返回检查结果
  */
-export function execPunctuationSpacesCheck(content: string) {
+export function execCheckPunctuationSpaces(content: string) {
   return hasChinese(content) ? execZhCheck(content) : execEnCheck(content);
 }

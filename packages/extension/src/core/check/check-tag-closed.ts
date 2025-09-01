@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { execTagClosedCheck, TAG_CLOSED_CHECK } from 'checkers';
+import { execCheckTagClosed, TAG_CLOSED_CHECK } from 'checkers';
 
 import { isConfigEnabled } from '@/utils/common';
 
@@ -15,7 +15,7 @@ export async function checkTagClosed(content: string, document: vscode.TextDocum
     return diagnostics;
   }
 
-  return execTagClosedCheck(content).map((item) => {
+  return execCheckTagClosed(content).map((item) => {
     const range = new vscode.Range(document.positionAt(item.start), document.positionAt(item.end));
     const diagnostic = new vscode.Diagnostic(range, item.message.zh, vscode.DiagnosticSeverity.Error);
     diagnostic.source = TAG_CLOSED_CHECK;

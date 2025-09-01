@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import fs from 'fs';
-import { execFileNamingConsistencyCheck } from 'checkers';
+import { execCheckFileNamingConsistency } from 'checkers';
 
 import { isConfigEnabled } from '@/utils/common';
 
@@ -33,7 +33,7 @@ export async function checkFileNamingConsistency(document: vscode.TextDocument) 
     return;
   }
 
-  const [result, filePath] = await execFileNamingConsistencyCheck(fsPath, ['README.md']);
+  const [result, filePath] = await execCheckFileNamingConsistency(fsPath, ['README.md']);
   if (result) {
     return;
   }

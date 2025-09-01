@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import fs from 'fs';
-import { execFileNamingCheck } from 'checkers';
+import { execCheckFileNaming } from 'checkers';
 
 import { isConfigEnabled } from '@/utils/common';
 
@@ -32,7 +32,7 @@ export async function checkFileNaming(document: vscode.TextDocument) {
   const whiteList = config.get<string[]>('whiteList', []);
   const fsPath = fs.realpathSync.native(document.uri.fsPath).replace(/\\/g, '/');
 
-  if (!execFileNamingCheck(fsPath.split('/').pop() || '', whiteList)) {
+  if (!execCheckFileNaming(fsPath.split('/').pop() || '', whiteList)) {
     vscode.window.showInformationMessage(`友情提示：${fsPath.split('/').pop()} 不符合小写字母加下划线连接的命名规范`);
   }
 }

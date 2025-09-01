@@ -9,7 +9,7 @@ export const FILE_NAMING_CONSISTENCY_CHECK = 'file-naming-consistency-check';
  * @param {string[]} nameWhiteList 名字白名单
  * @returns {Promise<[boolean, string?]>} 返回检查结果，第一个成员代码是否一致，第二个成员是返回名字相近的文件路径
  */
-export async function execFileNamingConsistencyCheck(mdPath: string, nameWhiteList: string[] = []): Promise<[boolean, string?]> {
+export async function execCheckFileNamingConsistency(mdPath: string, nameWhiteList: string[] = []): Promise<[boolean, string?]> {
   const mdName = mdPath.replace(/\\/g, '/').split('/').pop()!;
   if (nameWhiteList.includes(mdName)) {
     return [true];

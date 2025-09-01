@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import { existsAsync, getFileContentAsync, getMarkdownFilterContent, readdirAsync } from 'shared';
 import { BroadcastT, MessageT, OPERATION_TYPE, ServerMessageHandler, SOURCE_TYPE } from 'webview-bridge';
-import { execLinkValidityCheck, execResourceExistenceCheck } from 'checkers';
+import { execCheckLinkValidity, execCheckResourceExistence } from 'checkers';
 
 import defaultWhitelistUrls from '@/config/whitelist-urls';
 import { createWebviewPanel } from '@/utils/webview';
@@ -40,7 +40,7 @@ async function walkDir(
       });
 
       const results = await Promise.all([
-        execLinkValidityCheck(content, {
+        execCheckLinkValidity(content, {
           whiteList: opts.whiteList,
           signal: opts.signal,
           prefixPath: dir,
@@ -48,7 +48,7 @@ async function walkDir(
           disableCheckInternalUrl: opts.disableCheckInternalUrl,
           disableCheckAnchor: opts.disableCheckAnchor,
         }),
-        execResourceExistenceCheck(content, {
+        execCheckResourceExistence(content, {
           whiteList: opts.whiteList,
           signal: opts.signal,
           prefixPath: dir,

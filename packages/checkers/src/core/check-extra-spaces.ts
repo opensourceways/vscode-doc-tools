@@ -9,7 +9,7 @@ export const EXTRA_SPACES_CHECK = 'extra-spaces-check';
  * @param content 待检查的文本内容
  * @returns {ResultT[]} 检查结果
  */
-export function execExtraSpacesCheck(content: string): ResultT[] {
+export function execCheckExtraSpaces(content: string): ResultT[] {
   const results: ResultT[] = [];
   for (const match of content.matchAll(ZH_SPACE_REGEX)) {
     const start = match.index + match[0].indexOf(match[1]);

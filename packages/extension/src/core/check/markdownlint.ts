@@ -12,7 +12,7 @@ export const lintHistory = new Map<string, LintError[]>();
  * @param {vscode.TextDocument} document 文档对象
  * @returns {vscode.Diagnostic[]} 返回错误 Diagnostic 提示数组
  */
-export async function lintMarkdown(document: vscode.TextDocument) {
+export async function markdownlint(document: vscode.TextDocument) {
   if (!isConfigEnabled('docTools.markdownlint')) {
     return Promise.resolve([]);
   }

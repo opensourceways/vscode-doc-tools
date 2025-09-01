@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { execExtraSpacesCheck, EXTRA_SPACES_CHECK } from 'checkers';
+import { execCheckExtraSpaces, EXTRA_SPACES_CHECK } from 'checkers';
 
 import { isConfigEnabled } from '@/utils/common';
 
@@ -28,7 +28,7 @@ export async function checkExtraSpaces(content: string, document: vscode.TextDoc
     return [];
   }
 
-  return execExtraSpacesCheck(content).map((item) => {
+  return execCheckExtraSpaces(content).map((item) => {
     const range = new vscode.Range(document.positionAt(item.start), document.positionAt(item.end));
     const diagnostic = new vscode.Diagnostic(range, item.message.zh, vscode.DiagnosticSeverity.Information);
     diagnostic.code = item.content;

@@ -28,7 +28,7 @@ const CLOSE_SYMBOLS = new Set(Object.values(PAIR_SYMBOLS));
  * @param content 待检查的文本内容
  * @returns 检查结果
  */
-export function execPunctuationPairCheck(content: string): ResultT[] {
+export function execCheckPunctuationPair(content: string): ResultT[] {
   const stack: { char: string; position: number }[] = [];
   const results: ResultT[] = [];
 

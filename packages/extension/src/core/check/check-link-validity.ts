@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import path from 'path';
-import { execLinkValidityCheck, LINK_VALIDITY_CHECK } from 'checkers';
+import { execCheckLinkValidity, LINK_VALIDITY_CHECK } from 'checkers';
 
 import defaultWhitelistUrls from '@/config/whitelist-urls';
 import { isConfigEnabled } from '@/utils/common';
@@ -18,7 +18,7 @@ export async function checkLinkValidity(content: string, document: vscode.TextDo
 
   const whiteListConfig = vscode.workspace.getConfiguration('docTools.check.url').get<string[]>('whiteList', []);
   const whiteList = Array.isArray(whiteListConfig) ? [...whiteListConfig, ...defaultWhitelistUrls] : defaultWhitelistUrls;
-  let results = await execLinkValidityCheck(content, {
+  let results = await execCheckLinkValidity(content, {
     whiteList,
     prefixPath: path.dirname(document.uri.fsPath),
   });

@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import path from 'path';
-import { execResourceExistenceCheck, RESOURCE_EXISTENCE_CHECK } from 'checkers';
+import { execCheckResourceExistence, RESOURCE_EXISTENCE_CHECK } from 'checkers';
 
 import { isConfigEnabled } from '@/utils/common';
 import defaultWhitelistUrls from '@/config/whitelist-urls';
@@ -19,7 +19,7 @@ export async function checkResourceExistence(content: string, document: vscode.T
 
   const whiteListConfig = vscode.workspace.getConfiguration('docTools.check.url').get<string[]>('whiteList', []);
   const whiteList = Array.isArray(whiteListConfig) ? [...whiteListConfig, ...defaultWhitelistUrls] : defaultWhitelistUrls;
-  let results = await execResourceExistenceCheck(content, {
+  let results = await execCheckResourceExistence(content, {
     whiteList,
     prefixPath: path.dirname(document.uri.fsPath),
   });

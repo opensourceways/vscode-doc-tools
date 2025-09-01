@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import { existsAsync, getFileContentAsync, readdirAsync } from 'shared';
 import { BroadcastT, MessageT, OPERATION_TYPE, ServerMessageHandler, SOURCE_TYPE } from 'webview-bridge';
-import { execTocCheck } from 'checkers';
+import { execCheckToc } from 'checkers';
 
 import { createWebviewPanel } from '@/utils/webview';
 
@@ -23,7 +23,7 @@ async function walkDir(dir: string, signal: AbortSignal) {
       await walkDir(completePath, signal);
     } else if (name === '_toc.yaml') {
       const content = await getFileContentAsync(completePath);
-      const results = await execTocCheck(content, dir, signal);
+      const results = await execCheckToc(content, dir, signal);
       if (signal.aborted) {
         throw new Error('aborted');
       }

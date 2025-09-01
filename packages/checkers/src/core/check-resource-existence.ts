@@ -21,7 +21,7 @@ const REGEX = [
  * @param {AbortSignal} opts.signal 中断信号
  * @returns {ResultT<number>[]} 返回检查结果
  */
-export async function execResourceExistenceCheck(
+export async function execCheckResourceExistence(
   content: string,
   opts: {
     prefixPath: string;

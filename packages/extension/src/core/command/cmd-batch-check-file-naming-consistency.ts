@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import fs from 'fs';
 import path from 'path';
-import { execFileNamingConsistencyCheck } from 'checkers';
+import { execCheckFileNamingConsistency } from 'checkers';
 import { BroadcastT, MessageT, OPERATION_TYPE, ServerMessageHandler, SOURCE_TYPE } from 'webview-bridge';
 import { readdirAsync, sleep } from 'shared';
 
@@ -22,7 +22,7 @@ async function walkDir(dir: string, nameWhiteList: string[] = [], signal: AbortS
     if (fs.statSync(completePath).isDirectory()) {
       await walkDir(completePath, nameWhiteList, signal);
     } else if (name.endsWith('.md')) {
-      const [result, filePath] = await execFileNamingConsistencyCheck(completePath, nameWhiteList);
+      const [result, filePath] = await execCheckFileNamingConsistency(completePath, nameWhiteList);
       if (!result) {
         ServerMessageHandler.broadcast('onAsyncTaskOutput', 'checkFileNamingConsistency:addItem', {
           content: completePath,
