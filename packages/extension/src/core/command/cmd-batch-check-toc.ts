@@ -1,9 +1,9 @@
 import * as vscode from 'vscode';
 import fs from 'fs';
 import path from 'path';
-import { existsAsync, getFileContentAsync, getMarkdownFilterContent, readdirAsync } from 'shared';
+import { existsAsync, getFileContentAsync, readdirAsync } from 'shared';
 import { BroadcastT, MessageT, OPERATION_TYPE, ServerMessageHandler, SOURCE_TYPE } from 'webview-bridge';
-import { execCheckTagClosed } from 'checkers';
+import { execCheckToc } from 'checkers';
 
 import { createWebviewPanel } from '@/utils/webview';
 
@@ -13,26 +13,23 @@ async function walkDir(dir: string, signal: AbortSignal) {
   const names = await readdirAsync(dir);
   for (const name of names) {
     if (signal.aborted) {
-      throw new Error('aborted');
+      return;
     }
 
     const completePath = path.join(dir, name).replace(/\\/g, '/');
-    ServerMessageHandler.broadcast('onAsyncTaskOutput', 'checkTagClosed:scanTarget', completePath);
+    ServerMessageHandler.broadcast('onAsyncTaskOutput', 'batchCheckToc:scanTarget', completePath);
 
     if (fs.statSync(completePath).isDirectory()) {
       await walkDir(completePath, signal);
-    } else if (name.endsWith('.md')) {
-      const content = getMarkdownFilterContent(await getFileContentAsync(completePath), {
-        disableHtmlComment: true,
-        disableCode: true,
-      });
-      const results = await execCheckTagClosed(content);
+    } else if (name === '_toc.yaml') {
+      const content = await getFileContentAsync(completePath);
+      const results = await execCheckToc(content, dir, signal);
       if (signal.aborted) {
-        throw new Error('aborted');
+        return;
       }
 
       results.forEach((item) => {
-        ServerMessageHandler.broadcast('onAsyncTaskOutput', 'checkTagClosed:addItem', {
+        ServerMessageHandler.broadcast('onAsyncTaskOutput', 'batchCheckToc:addItem', {
           start: item.start,
           end: item.end,
           file: completePath,
@@ -47,13 +44,9 @@ async function startWalk(targetPath: string) {
   try {
     controller?.abort();
     controller = new AbortController();
-    controller.signal.addEventListener('abort', () => {
-      throw new Error('abort');
-    });
-
     await walkDir(targetPath, controller.signal);
     if (controller && !controller.signal.aborted) {
-      ServerMessageHandler.broadcast('onAsyncTaskOutput', 'checkTagClosed:stop');
+      ServerMessageHandler.broadcast('onAsyncTaskOutput', 'batchCheckToc:stop');
     }
   } catch {
     stopWalk();
@@ -61,16 +54,19 @@ async function startWalk(targetPath: string) {
 }
 
 function stopWalk() {
-  controller?.abort();
-  ServerMessageHandler.broadcast('onAsyncTaskOutput', 'checkTagClosed:stop');
+  if (controller && !controller.signal.aborted) {
+    controller.abort();
+  }
+  controller = null;
+  ServerMessageHandler.broadcast('onAsyncTaskOutput', 'batchCheckToc:stop');
 }
 
 /**
- * 检查链接可访问性
+ * 创建批量检查 _toc.yaml webview
  * @param {vscode.ExtensionContext} context 上下文
  * @param {vscode.Uri} uri 目标目录 uri
  */
-export async function checkTagClosed(context: vscode.ExtensionContext, uri: vscode.Uri) {
+export async function createCheckTocWebview(context: vscode.ExtensionContext, uri: vscode.Uri) {
   if (!(await existsAsync(uri.fsPath))) {
     vscode.window.showErrorMessage(`路径不存在：${uri.fsPath}`);
     return;
@@ -91,7 +87,7 @@ export async function checkTagClosed(context: vscode.ExtensionContext, uri: vsco
     showOptions: vscode.ViewColumn.Beside,
     iconPath: vscode.Uri.file(path.join(context.extensionPath, 'resources', isDarkTheme ? 'icon-preview-dark.svg' : 'icon-preview-light.svg')),
     injectData: {
-      path: '/check-tag-closed',
+      path: '/batch-check-toc-reuslt',
       theme: isDarkTheme ? 'dark' : 'light',
       locale: fsPath.includes('/en/') ? 'en' : 'zh',
       extras: {
@@ -114,9 +110,9 @@ export async function checkTagClosed(context: vscode.ExtensionContext, uri: vsco
     }
 
     const { name, extras } = message.data;
-    if (name === 'asyncTask:checkTagClosed' && typeof extras?.[0] === 'string') {
+    if (name === 'asyncTask:batchCheckToc' && typeof extras?.[0] === 'string') {
       startWalk(extras[0]);
-    } else if (name === 'asyncTask:stopCheckTagClosed') {
+    } else if (name === 'asyncTask:stopBatchCheckToc') {
       stopWalk();
     }
   });

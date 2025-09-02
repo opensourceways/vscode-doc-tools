@@ -13,15 +13,15 @@ async function walkDir(dir: string, nameWhiteList: string[] = [], signal: AbortS
   const names = await readdirAsync(dir);
   for (const name of names) {
     if (signal.aborted) {
-      throw new Error('aborted');
+      return;
     }
 
     const completePath = path.join(dir, name).replace(/\\/g, '/');
-    ServerMessageHandler.broadcast('onAsyncTaskOutput', 'checkFileNaming:scanTarget', completePath);
+    ServerMessageHandler.broadcast('onAsyncTaskOutput', 'batchCheckFileNaming:scanTarget', completePath);
 
     const stat = fs.statSync(completePath);
     if ((stat.isDirectory() || name.endsWith('.md')) && !execCheckFileNaming(name, nameWhiteList)) {
-      ServerMessageHandler.broadcast('onAsyncTaskOutput', 'checkFileNaming:addItem', {
+      ServerMessageHandler.broadcast('onAsyncTaskOutput', 'batchCheckFileNaming:addItem', {
         name,
         path: completePath,
         fileType: stat.isDirectory() ? '目录' : '文件',
@@ -32,7 +32,9 @@ async function walkDir(dir: string, nameWhiteList: string[] = [], signal: AbortS
       await walkDir(completePath, nameWhiteList, signal);
     } 
 
-    await sleep(3);
+    if (!signal.aborted) {
+      await sleep(3);
+    }
   }
 }
 
@@ -40,15 +42,11 @@ async function startWalk(targetPath: string) {
   try {
     controller?.abort();
     controller = new AbortController();
-    controller.signal.addEventListener('abort', () => {
-      throw new Error('abort');
-    });
-
     const config = vscode.workspace.getConfiguration('docTools.check.name');
     const whiteList = config.get<string[]>('whiteList', []);
     await walkDir(targetPath, whiteList, controller.signal);
     if (controller && !controller.signal.aborted) {
-      ServerMessageHandler.broadcast('onAsyncTaskOutput', 'checkFileNaming:stop');
+      ServerMessageHandler.broadcast('onAsyncTaskOutput', 'batchCheckFileNaming:stop');
     }
   } catch {
     stopWalk();
@@ -56,12 +54,15 @@ async function startWalk(targetPath: string) {
 }
 
 function stopWalk() {
-  controller?.abort();
-  ServerMessageHandler.broadcast('onAsyncTaskOutput', 'checkFileNaming:stop');
+  if (controller && !controller.signal.aborted) {
+    controller.abort();
+  }
+  controller = null;
+  ServerMessageHandler.broadcast('onAsyncTaskOutput', 'batchCheckFileNaming:stop');
 }
 
 /**
- * 检查目录名、文件名命名规范
+ * 创建批量检查目录名、文件名命名规范 webview
  * @param {vscode.ExtensionContext} context 上下文
  * @param {vscode.Uri} uri 目标目录 uri
  */
@@ -85,7 +86,7 @@ export async function createBatchCheckFileNamingWebview(context: vscode.Extensio
     showOptions: vscode.ViewColumn.Beside,
     iconPath: vscode.Uri.file(path.join(context.extensionPath, 'resources', isDarkTheme ? 'icon-preview-dark.svg' : 'icon-preview-light.svg')),
     injectData: {
-      path: '/check-name-result',
+      path: '/batch-check-file-naming-result',
       theme: isDarkTheme ? 'dark' : 'light',
       locale: fsPath.includes('/en/') ? 'en' : 'zh',
       extras: {
@@ -108,9 +109,9 @@ export async function createBatchCheckFileNamingWebview(context: vscode.Extensio
     }
 
     const { name, extras } = message.data;
-    if (name === 'asyncTask:checkFileNaming' && typeof extras?.[0] === 'string') {
+    if (name === 'asyncTask:batchCheckFileNaming' && typeof extras?.[0] === 'string') {
       startWalk(extras[0]);
-    } else if (name === 'asyncTask:stopCheckFileNaming') {
+    } else if (name === 'asyncTask:stopBatchCheckFileNaming') {
       stopWalk();
     }
   });

@@ -17,13 +17,13 @@ const columns = [
 ];
 
 const onAsyncTaskOutput = (name: string, extras: any) => {
-  if (name === 'checkToc:stop') {
+  if (name === 'batchCheckToc:stop') {
     working.value = false;
     currentScanning.value = '';
-  } else if (name === 'checkToc:scanTarget') {
+  } else if (name === 'batchCheckToc:scanTarget') {
     working.value = true;
     currentScanning.value = extras;
-  } else if (name === 'checkToc:addItem') {
+  } else if (name === 'batchCheckToc:addItem') {
     data.value.push(extras);
   }
 };
@@ -47,11 +47,11 @@ const onRemoveItem = (row: Record<string, any>) => {
 // -------------------- 开始/停止 --------------------
 const onClickStartLink = () => {
   data.value = [];
-  Bridge.getInstance().broadcast('asyncTask:checkToc', injectData.extras?.fsPath);
+  Bridge.getInstance().broadcast('asyncTask:batchCheckToc', injectData.extras?.fsPath);
 };
 
 const onClickStopLink = () => {
-  Bridge.getInstance().broadcast('asyncTask:stopCheckToc');
+  Bridge.getInstance().broadcast('asyncTask:stopBatchCheckToc');
 };
 </script>
 
@@ -62,8 +62,9 @@ const onClickStopLink = () => {
       <OIcon v-if="working" class="o-rotating" title="检查中..."><OIconRefresh /></OIcon>
     </h1>
     <div class="text">【开始路径】：{{ injectData.extras?.fsPath }}</div>
-    <div class="text single-line" :title="currentScanning">【正在检查】：{{ working ? currentScanning : '无' }}</div>
-    <div class="text single-line">
+    <div class="text" :title="currentScanning">【正在检查】：{{ working ? currentScanning : '无' }}</div>
+    <div class="text">【检查结果】：共检查出 <span class="red">{{ data.length }}</span> 个问题</div>
+    <div class="text">
       <span>【控制开关】：</span>
       <OLink v-if="working" color="danger" @click="onClickStopLink">停止检查</OLink>
       <OLink v-else color="primary" @click="onClickStartLink">开始检查</OLink>
@@ -103,6 +104,7 @@ const onClickStopLink = () => {
 
 .text {
   margin-bottom: 12px;
+  @include text-truncate(1);
   @include text1;
 }
 
@@ -122,9 +124,5 @@ const onClickStopLink = () => {
 
 .o-link:not(:last-child) {
   margin-right: 8px;
-}
-
-.single-line {
-  @include text-truncate(1);
 }
 </style>

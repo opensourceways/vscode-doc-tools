@@ -22,15 +22,15 @@ const columns = [
 ];
 
 const onAsyncTaskOutput = (name: string, extras: any) => {
-  if (name === 'batchExecMarkdownlint:stop') {
+  if (name === 'batchMarkdownlint:stop') {
     working.value = false;
     currentScanning.value = '';
-  } else if (name === 'batchExecMarkdownlint:scanTarget') {
+  } else if (name === 'batchMarkdownlint:scanTarget') {
     working.value = true;
     currentScanning.value = extras;
-  } else if (name === 'batchExecMarkdownlint:addItem') {
+  } else if (name === 'batchMarkdownlint:addItem') {
     data.value.push(extras);
-  } else if (name === 'batchExecMarkdownlint:fixItem') {
+  } else if (name === 'batchMarkdownlint:fixItem') {
     if (extras.msgs.length === 0) {
       data.value = data.value.filter((item) => item.file !== extras.file);
       if (extras.tip) {
@@ -61,18 +61,22 @@ onBeforeUnmount(() => {
 });
 
 const onClickSourceLink = (row: Record<string, any>) => {
-  ResourceBridge.viewSource(row.file, row?.start, row?.end);
+  if (Array.isArray(row.msgs) && row.msgs.length > 0) {
+    ResourceBridge.viewSource(row.msgs[0].file, row.msgs[0]?.start, row.msgs[0]?.end);
+  } else {
+    ResourceBridge.viewSource(row.file, row?.start, row?.end);
+  }
 };
 
 const onRemoveItem = (row: Record<string, any>) => {
-  data.value = data.value.filter((item) => item.url !== row.url && item.file !== row.file);
+  data.value = data.value.filter((item) => item.file !== row.file);
 };
 
 // -------------------- 检查 --------------------
 const onClickStartCheckLink = () => {
   workingType.value = '检查';
   data.value = [];
-  Bridge.getInstance().broadcast('asyncTask:batchExecMarkdownlint', injectData.extras?.fsPath);
+  Bridge.getInstance().broadcast('asyncTask:batchMarkdownlint', injectData.extras?.fsPath);
 };
 
 // -------------------- 修复 --------------------
@@ -91,7 +95,7 @@ const onClickFixLink = (row: Record<string, any>) => {
 // -------------------- 停止 --------------------
 const onClickStopLink = () => {
   if (workingType.value === '检查') {
-    Bridge.getInstance().broadcast('asyncTask:stopBatchExecMarkdownlint');
+    Bridge.getInstance().broadcast('asyncTask:stopBatchMarkdownlint');
   } else {
     Bridge.getInstance().broadcast('asyncTask:stopBatchFixMarkdownlint');
   }
@@ -105,8 +109,9 @@ const onClickStopLink = () => {
       <OIcon v-if="working" class="o-rotating" :title="`${workingType}中...`"><OIconRefresh /></OIcon>
     </h1>
     <div class="text">【开始路径】：{{ injectData.extras?.fsPath }}</div>
-    <div class="text single-line" :title="currentScanning">【正在{{ workingType }}】：{{ working ? currentScanning : '无' }}</div>
-    <div class="text single-line">
+    <div class="text" :title="currentScanning">【正在{{ workingType }}】：{{ working ? currentScanning : '无' }}</div>
+    <div class="text">【检查结果】：共检查出 <span class="red">{{ data.length }}</span> 篇问题文档</div>
+    <div class="text">
       <span>【控制开关】：</span>
       <OLink v-if="working" color="danger" @click="onClickStopLink">停止{{ workingType }}</OLink>
       <OLink v-else color="primary" @click="onClickStartCheckLink">开始检查</OLink>
@@ -164,6 +169,7 @@ const onClickStopLink = () => {
 
 .text {
   margin-bottom: 12px;
+  @include text-truncate(1);
   @include text1;
 }
 
@@ -183,13 +189,5 @@ const onClickStopLink = () => {
 
 .o-link:not(:last-child) {
   margin-right: 8px;
-}
-
-.single-line {
-  @include text-truncate(1);
-}
-
-.confirm-text {
-  height: 200px;
 }
 </style>

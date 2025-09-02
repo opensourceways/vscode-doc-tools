@@ -13,18 +13,18 @@ async function walkDir(dir: string, nameWhiteList: string[] = [], signal: AbortS
   const names = await readdirAsync(dir);
   for (const name of names) {
     if (signal.aborted) {
-      throw new Error('aborted');
+      return;
     }
 
     const completePath = path.join(dir, name).replace(/\\/g, '/');
-    ServerMessageHandler.broadcast('onAsyncTaskOutput', 'checkFileNamingConsistency:scanTarget', completePath);
+    ServerMessageHandler.broadcast('onAsyncTaskOutput', 'batchCheckFileNamingConsistency:scanTarget', completePath);
 
     if (fs.statSync(completePath).isDirectory()) {
       await walkDir(completePath, nameWhiteList, signal);
     } else if (name.endsWith('.md')) {
       const [result, filePath] = await execCheckFileNamingConsistency(completePath, nameWhiteList);
       if (!result) {
-        ServerMessageHandler.broadcast('onAsyncTaskOutput', 'checkFileNamingConsistency:addItem', {
+        ServerMessageHandler.broadcast('onAsyncTaskOutput', 'batchCheckFileNamingConsistency:addItem', {
           content: completePath,
           message: filePath ? '中英文文档名称不一致' : completePath.includes('/zh/') ? '不存在对应的英文文档' : '不存在对应的中文文档',
           start: 0,
@@ -42,15 +42,11 @@ async function startWalk(targetPath: string) {
   try {
     controller?.abort();
     controller = new AbortController();
-    controller.signal.addEventListener('abort', () => {
-      throw new Error('abort');
-    });
-
     const config = vscode.workspace.getConfiguration('docTools.check.name');
     const whiteList = config.get<string[]>('whiteList', []);
     await walkDir(targetPath, whiteList, controller.signal);
     if (controller && !controller.signal.aborted) {
-      ServerMessageHandler.broadcast('onAsyncTaskOutput', 'checkFileNamingConsistency:stop');
+      ServerMessageHandler.broadcast('onAsyncTaskOutput', 'batchCheckFileNamingConsistency:stop');
     }
   } catch {
     stopWalk();
@@ -58,16 +54,19 @@ async function startWalk(targetPath: string) {
 }
 
 function stopWalk() {
-  controller?.abort();
-  ServerMessageHandler.broadcast('onAsyncTaskOutput', 'checkFileNamingConsistency:stop');
+  if (controller && !controller.signal.aborted) {
+    controller.abort();
+  }
+  controller = null;
+  ServerMessageHandler.broadcast('onAsyncTaskOutput', 'batchCheckFileNamingConsistency:stop');
 }
 
 /**
- * 批量检查中英文文档名称一致性
+ * 创建批量检查中英文文档名称一致性 webview
  * @param {vscode.ExtensionContext} context 上下文
  * @param {vscode.Uri} uri 目标目录 uri
  */
-export async function checkNameConsistency(context: vscode.ExtensionContext, uri: vscode.Uri) {
+export async function createBatchCheckFileNamingConsistencyWebview(context: vscode.ExtensionContext, uri: vscode.Uri) {
   if (!fs.existsSync(uri.fsPath)) {
     vscode.window.showErrorMessage(`路径不存在：${uri.fsPath}`);
     return;
@@ -87,7 +86,7 @@ export async function checkNameConsistency(context: vscode.ExtensionContext, uri
     showOptions: vscode.ViewColumn.Beside,
     iconPath: vscode.Uri.file(path.join(context.extensionPath, 'resources', isDarkTheme ? 'icon-preview-dark.svg' : 'icon-preview-light.svg')),
     injectData: {
-      path: '/check-name-consistency-result',
+      path: '/batch-check-file-naming-consistency-result',
       theme: isDarkTheme ? 'dark' : 'light',
       locale: fsPath.includes('/en/') ? 'en' : 'zh',
       extras: {
@@ -110,9 +109,9 @@ export async function checkNameConsistency(context: vscode.ExtensionContext, uri
     }
 
     const { name, extras } = message.data;
-    if (name === 'asyncTask:checkFileNamingConsistency' && typeof extras?.[0] === 'string') {
+    if (name === 'asyncTask:batchCheckFileNamingConsistency' && typeof extras?.[0] === 'string') {
       startWalk(extras[0]);
-    } else if (name === 'asyncTask:stopCheckFileNamingConsistency') {
+    } else if (name === 'asyncTask:stopBatchCheckFileNamingConsistency') {
       stopWalk();
     }
   });

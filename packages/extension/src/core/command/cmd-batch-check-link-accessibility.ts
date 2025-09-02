@@ -25,11 +25,11 @@ async function walkDir(
   const names = await readdirAsync(dir);
   for (const name of names) {
     if (opts.signal.aborted) {
-      throw new Error('aborted');
+      return;
     }
 
     const completePath = path.join(dir, name).replace(/\\/g, '/');
-    ServerMessageHandler.broadcast('onAsyncTaskOutput', 'checkLinkAccessibility:scanTarget', completePath);
+    ServerMessageHandler.broadcast('onAsyncTaskOutput', 'batchCheckLinkAccessibility:scanTarget', completePath);
 
     if (fs.statSync(completePath).isDirectory()) {
       await walkDir(completePath, opts);
@@ -58,13 +58,13 @@ async function walkDir(
       ]);
 
       if (opts.signal.aborted) {
-        throw new Error('aborted');
+        return;
       }
 
       results.forEach((r) => {
         r.forEach((item) => {
           if ((!opts.disableCheck404 && item.extras === 404) || !opts.disableCheckOtherStatus) {
-            ServerMessageHandler.broadcast('onAsyncTaskOutput', 'checkLinkAccessibility:addItem', {
+            ServerMessageHandler.broadcast('onAsyncTaskOutput', 'batchCheckLinkAccessibility:addItem', {
               url: item.content,
               status: item.extras,
               start: item.start,
@@ -92,10 +92,6 @@ async function startWalk(
   try {
     controller?.abort();
     controller = new AbortController();
-    controller.signal.addEventListener('abort', () => {
-      throw new Error('abort');
-    });
-
     const whiteListConfig = vscode.workspace.getConfiguration('docTools.check.url').get<string[]>('whiteList', []);
     const whiteList = Array.isArray(whiteListConfig) ? [...whiteListConfig, ...defaultWhitelistUrls] : defaultWhitelistUrls;
     await walkDir(targetPath, {
@@ -105,7 +101,7 @@ async function startWalk(
     });
 
     if (controller && !controller.signal.aborted) {
-      ServerMessageHandler.broadcast('onAsyncTaskOutput', 'checkLinkAccessibility:stop');
+      ServerMessageHandler.broadcast('onAsyncTaskOutput', 'batchCheckLinkAccessibility:stop');
     }
   } catch {
     stopWalk();
@@ -113,16 +109,19 @@ async function startWalk(
 }
 
 function stopWalk() {
-  controller?.abort();
-  ServerMessageHandler.broadcast('onAsyncTaskOutput', 'checkLinkAccessibility:stop');
+  if (controller && !controller.signal.aborted) {
+    controller.abort();
+  }
+  controller = null;
+  ServerMessageHandler.broadcast('onAsyncTaskOutput', 'batchCheckLinkAccessibility:stop');
 }
 
 /**
- * 检查链接可访问性
+ * 创建批量检查链接可访问性 webview
  * @param {vscode.ExtensionContext} context 上下文
  * @param {vscode.Uri} uri 目标目录 uri
  */
-export async function checkLinkAccessibility(context: vscode.ExtensionContext, uri: vscode.Uri) {
+export async function createBatchCheckLinkAccessibilityWebview(context: vscode.ExtensionContext, uri: vscode.Uri) {
   if (!(await existsAsync(uri.fsPath))) {
     vscode.window.showErrorMessage(`路径不存在：${uri.fsPath}`);
     return;
@@ -143,7 +142,7 @@ export async function checkLinkAccessibility(context: vscode.ExtensionContext, u
     showOptions: vscode.ViewColumn.Beside,
     iconPath: vscode.Uri.file(path.join(context.extensionPath, 'resources', isDarkTheme ? 'icon-preview-dark.svg' : 'icon-preview-light.svg')),
     injectData: {
-      path: '/check-link-accessibility',
+      path: '/batch-check-link-accessibility-result',
       theme: isDarkTheme ? 'dark' : 'light',
       locale: fsPath.includes('/en/') ? 'en' : 'zh',
       extras: {
@@ -167,7 +166,7 @@ export async function checkLinkAccessibility(context: vscode.ExtensionContext, u
 
     const { name, extras } = message.data;
     if (
-      name === 'asyncTask:checkLinkAccessibility' &&
+      name === 'asyncTask:batchCheckLinkAccessibility' &&
       typeof extras?.[0] === 'string' &&
       Array.isArray(extras?.[1]) &&
       Array.isArray(extras?.[2])
@@ -179,7 +178,7 @@ export async function checkLinkAccessibility(context: vscode.ExtensionContext, u
         disableCheck404: !extras[2].includes('404'),
         disableCheckOtherStatus: !extras[2].includes('others'),
       });
-    } else if (name === 'asyncTask:stopCheckLinkAccessibility') {
+    } else if (name === 'asyncTask:stopBatchCheckLinkAccessibility') {
       stopWalk();
     }
   });

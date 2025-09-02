@@ -61,27 +61,27 @@
         "title": "修复MarkdownLint错误"
       },
       {
-        "command": "doc.tools.batch.exec.markdownlint",
+        "command": "doc.tools.batch.markdownlint",
         "title": "批量执行 Markdownlint"
       },
       {
-        "command": "doc.tools.check.name",
+        "command": "doc.tools.batch.check.fileNaming",
         "title": "批量检查目录和文件是否符合命名规范"
       },
       {
-        "command": "doc.tools.check.nameConsistency",
+        "command": "doc.tools.batch.check.fileNamingConsistency",
         "title": "批量检查中英文文档名称一致性"
       },
       {
-        "command": "doc.tools.check.linkAccessibility",
+        "command": "doc.tools.batch.check.linkAccessibility",
         "title": "批量检查链接可访问性"
       },
       {
-        "command": "doc.tools.check.toc",
+        "command": "doc.tools.batch.check.toc",
         "title": "批量检查 _toc.yaml"
       },
       {
-        "command": "doc.tools.check.tagClosed",
+        "command": "doc.tools.batch.check.tagClosed",
         "title": "批量检查 Html 标签闭合"
       },
       {
@@ -117,27 +117,27 @@
           "group": "doc.tools.gen"
         },
         {
-          "command": "doc.tools.batch.exec.markdownlint",
+          "command": "doc.tools.batch.markdownlint",
           "group": "doc.tools.check"
         },
         {
-          "command": "doc.tools.check.name",
+          "command": "doc.tools.batch.check.fileNaming",
           "group": "doc.tools.check"
         },
         {
-          "command": "doc.tools.check.nameConsistency",
+          "command": "doc.tools.batch.check.fileNamingConsistency",
           "group": "doc.tools.check"
         },
         {
-          "command": "doc.tools.check.linkAccessibility",
+          "command": "doc.tools.batch.check.linkAccessibility",
           "group": "doc.tools.check"
         },
         {
-          "command": "doc.tools.check.toc",
+          "command": "doc.tools.batch.check.toc",
           "group": "doc.tools.check"
         },
         {
-          "command": "doc.tools.check.tagClosed",
+          "command": "doc.tools.batch.check.tagClosed",
           "group": "doc.tools.check"
         }
       ],

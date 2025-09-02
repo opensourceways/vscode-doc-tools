@@ -9,13 +9,14 @@ import { addCodespellWhitelist } from '@/core/command/cmd-add-codespell-whitlist
 import { addUrlWhitelist } from '@/core/command/cmd-add-url-whilelist';
 import { previewMarkdown, triggerPreviewMarkdownContentChange } from '@/core/command/cmd-preview-markdown';
 import { fixMarkdownlint } from '@/core/command/cmd-fix-markdownlint';
-import { createBatchCheckFileNamingWebview } from '@/core/command/cmd-batch-check-file-naming';
-import { checkNameConsistency } from '@/core/command/cmd-batch-check-file-naming-consistency';
-import { checkLinkAccessibility } from '@/core/command/cmd-check-link-accessibility';
 import { genMarkdownAnchorId } from '@/core/command/cmd-gen-markdown-anchor-id';
-import { checkToc } from './core/command/cmd-check-toc';
-import { checkTagClosed } from './core/command/cmd-check-tag-closed';
-import { batchExecMarkdownlint } from './core/command/cmd-batch-exec-markdownlint';
+
+import { createBatchCheckFileNamingWebview } from '@/core/command/cmd-batch-check-file-naming';
+import { createBatchCheckFileNamingConsistencyWebview } from '@/core/command/cmd-batch-check-file-naming-consistency';
+import { createBatchCheckLinkAccessibilityWebview } from '@/core/command/cmd-batch-check-link-accessibility';
+import { createCheckTocWebview } from '@/core/command/cmd-batch-check-toc';
+import { cretaeBatchCheckTagClosedWebview } from '@/core/command/cmd-batch-check-tag-closed';
+import { createBatchMarkdownlintWebview } from '@/core/command/cmd-batch-markdownlint';
 
 // 用于存储错误信息
 const diagnosticsCollection = vscode.languages.createDiagnosticCollection('doc-tools');
@@ -97,43 +98,43 @@ function registerCommand(context: vscode.ExtensionContext) {
 
   // 注册 批量执行 Markdownlint 命令
   context.subscriptions.push(
-    vscode.commands.registerCommand('doc.tools.batch.exec.markdownlint', (uri: vscode.Uri) => {
-      batchExecMarkdownlint(context, uri);
+    vscode.commands.registerCommand('doc.tools.batch.markdownlint', (uri: vscode.Uri) => {
+      createBatchMarkdownlintWebview(context, uri);
     })
   );
 
   // 注册 批量检查目录名、文件名命名规范 命令
   context.subscriptions.push(
-    vscode.commands.registerCommand('doc.tools.check.name', (uri: vscode.Uri) => {
+    vscode.commands.registerCommand('doc.tools.batch.check.fileNaming', (uri: vscode.Uri) => {
       createBatchCheckFileNamingWebview(context, uri);
     })
   );
 
   // 注册 批量检查中英文文档名称一致性 命令
   context.subscriptions.push(
-    vscode.commands.registerCommand('doc.tools.check.nameConsistency', (uri: vscode.Uri) => {
-      checkNameConsistency(context, uri);
+    vscode.commands.registerCommand('doc.tools.batch.check.fileNamingConsistency', (uri: vscode.Uri) => {
+      createBatchCheckFileNamingConsistencyWebview(context, uri);
     })
   );
 
   // 注册 批量检查链接可访问性 命令
   context.subscriptions.push(
-    vscode.commands.registerCommand('doc.tools.check.linkAccessibility', (uri: vscode.Uri) => {
-      checkLinkAccessibility(context, uri);
+    vscode.commands.registerCommand('doc.tools.batch.check.linkAccessibility', (uri: vscode.Uri) => {
+      createBatchCheckLinkAccessibilityWebview(context, uri);
     })
   );
 
   // 注册 批量检查toc 命令
   context.subscriptions.push(
-    vscode.commands.registerCommand('doc.tools.check.toc', (uri: vscode.Uri) => {
-      checkToc(context, uri);
+    vscode.commands.registerCommand('doc.tools.batch.check.toc', (uri: vscode.Uri) => {
+      createCheckTocWebview(context, uri);
     })
   );
 
   // 注册 批量检查 Html 标签闭合 命令
   context.subscriptions.push(
-    vscode.commands.registerCommand('doc.tools.check.tagClosed', (uri: vscode.Uri) => {
-      checkTagClosed(context, uri);
+    vscode.commands.registerCommand('doc.tools.batch.check.tagClosed', (uri: vscode.Uri) => {
+      cretaeBatchCheckTagClosedWebview(context, uri);
     })
   );
 

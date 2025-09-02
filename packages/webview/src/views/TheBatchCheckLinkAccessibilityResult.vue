@@ -20,13 +20,13 @@ const columns = [
 ];
 
 const onAsyncTaskOutput = (name: string, extras: any) => {
-  if (name === 'checkLinkAccessibility:stop') {
+  if (name === 'batchCheckLinkAccessibility:stop') {
     working.value = false;
     currentScanning.value = '';
-  } else if (name === 'checkLinkAccessibility:scanTarget') {
+  } else if (name === 'batchCheckLinkAccessibility:scanTarget') {
     working.value = true;
     currentScanning.value = extras;
-  } else if (name === 'checkLinkAccessibility:addItem') {
+  } else if (name === 'batchCheckLinkAccessibility:addItem') {
     data.value.push(extras);
   }
 };
@@ -65,7 +65,7 @@ const onConfirmIgnore = async () => {
 const onClickStartLink = () => {
   data.value = [];
   Bridge.getInstance().broadcast(
-    'asyncTask:checkLinkAccessibility',
+    'asyncTask:batchCheckLinkAccessibility',
     injectData.extras?.fsPath,
     [...workingLink.value], // 得copy一下，不然postMessage的时候会提示无法clone
     [...workingStatus.value]
@@ -73,7 +73,7 @@ const onClickStartLink = () => {
 };
 
 const onClickStopLink = () => {
-  Bridge.getInstance().broadcast('asyncTask:stopCheckLinkAccessibility');
+  Bridge.getInstance().broadcast('asyncTask:stopBatchCheckLinkAccessibility');
 };
 </script>
 
@@ -85,8 +85,8 @@ const onClickStopLink = () => {
     </h1>
 
     <div class="text">【开始路径】：{{ injectData.extras?.fsPath }}</div>
-    <div class="text single-line" :title="currentScanning">【正在检查】：{{ working ? currentScanning : '无' }}</div>
-    <div class="text single-line">
+    <div class="text" :title="currentScanning">【正在检查】：{{ working ? currentScanning : '无' }}</div>
+    <div class="text">
       <span>【链接类型】：</span>
       <OCheckboxGroup v-model="workingLink" :disabled="working">
         <OCheckbox value="http">http(s)链接</OCheckbox>
@@ -94,14 +94,15 @@ const onClickStopLink = () => {
         <OCheckbox value="anchor">链接锚点</OCheckbox>
       </OCheckboxGroup>
     </div>
-    <div class="text single-line">
+    <div class="text">
       <span>【检查状态】：</span>
       <OCheckboxGroup v-model="workingStatus" :disabled="working">
         <OCheckbox value="404">无法访问</OCheckbox>
         <OCheckbox value="others">访问超时等其它错误</OCheckbox>
       </OCheckboxGroup>
     </div>
-    <div class="text single-line">
+    <div class="text">【检查结果】：共检查出 <span class="red">{{ data.length }}</span> 条异常链接</div>
+    <div class="text">
       <span>【控制开关】：</span>
       <OLink v-if="working" color="danger" @click="onClickStopLink">停止检查</OLink>
       <OLink v-else color="primary" @click="onClickStartLink">开始检查</OLink>
@@ -115,8 +116,8 @@ const onClickStopLink = () => {
         <OLink class="link" color="primary" @click="onClickSourceLink(row)">{{ row.file }}</OLink>
       </template>
       <template #td_action="{ row }">
-        <OLink v-if="row.url.startsWith('http')" class="link" color="primary" @click="onShowIgnoreDlg(row)">添加白名单</OLink>
-        <OLink class="link" color="danger" @click="onRemoveItem(row)">移除</OLink>
+        <OLink v-if="row.url.startsWith('http')" color="primary" @click="onShowIgnoreDlg(row)">添加白名单</OLink>
+        <OLink color="danger" @click="onRemoveItem(row)">移除</OLink>
       </template>
     </OTable>
   </div>
@@ -156,6 +157,7 @@ const onClickStopLink = () => {
 
 .text {
   margin-bottom: 12px;
+  @include text-truncate(1);
   @include text1;
 }
 
@@ -180,9 +182,5 @@ const onClickStopLink = () => {
 
 .o-link:not(:last-child) {
   margin-right: 8px;
-}
-
-.single-line {
-  @include text-truncate(1);
 }
 </style>
