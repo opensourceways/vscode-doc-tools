@@ -13,23 +13,57 @@ const ID = 'batch-markdownlint-result';
 let controller: AbortController | null = null;
 let errorsMap: Map<string, LintError[]> | null;
 
+const sendAsyncTaskOutput = (() => {
+  let messages: any[] = [];
+  let timer: number | NodeJS.Timeout | undefined;
+  let lastTime = 0;
+
+  return (data: any, imediately = false) => {
+    if (data?.evt === 'scanTarget') {
+      messages = messages.filter((item) => item?.evt !== 'scanTarget');
+    }
+    messages.push(data);
+
+    if (timer && !imediately && messages.length < 1000) {
+      return;
+    }
+
+    if (imediately || lastTime === 0 || Date.now() - lastTime > 200 || messages.length >= 1000) {
+      clearTimeout(timer);
+      ServerMessenger.broadcast(ID, 'onAsyncTaskOutput', messages);
+      messages = [];
+      timer = undefined;
+      lastTime = Date.now();
+    } else {
+      timer = setTimeout(() => {
+        ServerMessenger.broadcast(ID, 'onAsyncTaskOutput', messages);
+        messages = [];
+        timer = undefined;
+      }, 200);
+    }
+  };
+})();
+
 function stop() {
   if (controller && !controller?.signal.aborted) {
     controller.abort();
   }
   controller = null;
-  ServerMessenger.broadcast(ID, 'onAsyncTaskOutput', 'batchMarkdownlint:stop');
+  sendAsyncTaskOutput({ evt: 'stop' }, true);
 }
 
 async function walkDir(dir: string, config: Configuration, signal: AbortSignal) {
   const names = await readdirAsync(dir);
   for (const name of names) {
     if (signal.aborted) {
-      throw new Error('aborted');
+      return;
     }
 
     const completePath = path.join(dir, name).replace(/\\/g, '/');
-    ServerMessenger.broadcast(ID, 'onAsyncTaskOutput', 'batchMarkdownlint:scanTarget', completePath);
+    sendAsyncTaskOutput({
+      evt: 'scanTarget',
+      data: completePath,
+    });
 
     if (fs.statSync(completePath).isDirectory()) {
       await walkDir(completePath, config, signal);
@@ -37,25 +71,30 @@ async function walkDir(dir: string, config: Configuration, signal: AbortSignal) 
       const content = await getFileContentAsync(completePath);
       const [results, errors] = await execMarkdownlint(content, config);
       if (signal.aborted) {
-        throw new Error('aborted');
+        return;
       }
 
       if (results.length > 0) {
         results.reverse();
         errorsMap!.set(completePath, errors);
-        ServerMessenger.broadcast(ID, 'onAsyncTaskOutput', 'batchMarkdownlint:addItem', {
-          file: completePath,
-          msgs: results.map((item) => {
-            return {
-              start: item.start,
-              end: item.end,
-              file: completePath,
-              msg: `${item.extras?.split(',')[0]}：${item.message.zh}`,
-            };
-          }),
+        sendAsyncTaskOutput({
+          evt: 'addItem',
+          data: {
+            file: completePath,
+            msgs: results.map((item) => {
+              return {
+                start: item.start,
+                end: item.end,
+                file: completePath,
+                msg: `${item.extras?.split(',')[0]}：${item.message.zh}`,
+              };
+            }),
+          },
         });
       }
     }
+
+    await sleep(1);
   }
 }
 
@@ -68,7 +107,7 @@ async function startWalk(targetPath: string) {
     const config = Object.keys(settingConfig).length > 0 ? settingConfig : MD_DEFAULT_CONFIG;
     await walkDir(targetPath, config, controller.signal);
     if (controller && !controller.signal.aborted) {
-      ServerMessenger.broadcast(ID, 'onAsyncTaskOutput', 'batchMarkdownlint:stop');
+      sendAsyncTaskOutput({ evt: 'stop' }, true);
     }
   } catch {
     stop();
@@ -92,17 +131,20 @@ async function fixMarkdown(targetPath: string, tip: boolean) {
     errorsMap.delete(targetPath);
   }
 
-  ServerMessenger.broadcast(ID, 'onAsyncTaskOutput', 'batchMarkdownlint:fixItem', {
-    tip,
-    file: targetPath,
-    msgs: results.map((item) => {
-      return {
-        start: item.start,
-        end: item.end,
-        file: targetPath,
-        msg: `${item.extras?.split(',')[0]}：${item.message.zh}`,
-      };
-    }),
+  sendAsyncTaskOutput({
+    evt: 'updateItem',
+    data: {
+      tip,
+      file: targetPath,
+      msgs: results.map((item) => {
+        return {
+          start: item.start,
+          end: item.end,
+          file: targetPath,
+          msg: `${item.extras?.split(',')[0]}：${item.message.zh}`,
+        };
+      }),
+    },
   });
 
   await fs.promises.writeFile(targetPath, content, 'utf-8');
@@ -117,13 +159,16 @@ async function batchFixMarkdown(targetPaths: string[]) {
         return;
       }
 
-      ServerMessenger.broadcast(ID, 'onAsyncTaskOutput', 'batchMarkdownlint:scanTarget', targetPath);
+      sendAsyncTaskOutput({
+        evt: 'scanTarget',
+        data: targetPath,
+      });
       await fixMarkdown(targetPath, false);
       await sleep(50);
     }
 
     if (controller && !controller.signal.aborted) {
-      ServerMessenger.broadcast(ID, 'onAsyncTaskOutput', 'batchMarkdownlint:stop');
+      sendAsyncTaskOutput({ evt: 'stop' }, true);
     }
   } catch {
     stop();
@@ -180,13 +225,13 @@ export async function createBatchMarkdownlintWebview(context: vscode.ExtensionCo
     }
 
     const { name, extras } = message.data;
-    if (name === 'asyncTask:batchMarkdownlint' && typeof extras?.[0] === 'string') {
+    if (name === 'start' && typeof extras?.[0] === 'string') {
       startWalk(extras[0]);
-    } else if (name === 'asyncTask:stopBatchMarkdownlint' || name === 'asyncTask:stopBatchFixMarkdownlint') {
+    } else if (name === 'stop') {
       stop();
-    } else if (name === 'asyncTask:fixMarkdownlint' && typeof extras?.[0] === 'string') {
+    } else if (name === 'fix' && typeof extras?.[0] === 'string') {
       fixMarkdown(extras[0], true);
-    } else if (name === 'asyncTask:batchFixMarkdownlint' && Array.isArray(extras)) {
+    } else if (name === 'batchFix' && Array.isArray(extras)) {
       batchFixMarkdown(extras[0]);
     }
   });

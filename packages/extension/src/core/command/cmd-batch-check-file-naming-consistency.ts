@@ -10,6 +10,37 @@ import { createWebviewPanel } from '@/utils/webview';
 const ID = 'batch-check-file-naming-consistency-result';
 let controller: AbortController | null = null;
 
+const sendAsyncTaskOutput = (() => {
+  let messages: any[] = [];
+  let timer: number | NodeJS.Timeout | undefined;
+  let lastTime = 0;
+
+  return (data: any, imediately = false) => {
+    if (data?.evt === 'scanTarget') {
+      messages = messages.filter(item => item?.evt !== 'scanTarget');
+    }
+    messages.push(data);
+    
+    if (timer && !imediately && messages.length < 1000) {
+      return;
+    }
+
+    if (imediately || lastTime === 0 || Date.now() - lastTime > 200 || messages.length >= 1000) {
+      clearTimeout(timer);
+      ServerMessenger.broadcast(ID, 'onAsyncTaskOutput', messages);
+      messages = [];
+      timer = undefined;
+      lastTime = Date.now();
+    } else {
+      timer = setTimeout(() => {
+        ServerMessenger.broadcast(ID, 'onAsyncTaskOutput', messages);
+        messages = [];
+        timer = undefined;
+      }, 200);
+    }
+  };
+})();
+
 async function walkDir(dir: string, nameWhiteList: string[] = [], signal: AbortSignal) {
   const names = await readdirAsync(dir);
   for (const name of names) {
@@ -18,24 +49,32 @@ async function walkDir(dir: string, nameWhiteList: string[] = [], signal: AbortS
     }
 
     const completePath = path.join(dir, name).replace(/\\/g, '/');
-    ServerMessenger.broadcast(ID, 'onAsyncTaskOutput', 'batchCheckFileNamingConsistency:scanTarget', completePath);
+    sendAsyncTaskOutput({
+      evt: 'scanTarget',
+      data: completePath,
+    });
 
     if (fs.statSync(completePath).isDirectory()) {
       await walkDir(completePath, nameWhiteList, signal);
     } else if (name.endsWith('.md')) {
       const [result, filePath] = await execCheckFileNamingConsistency(completePath, nameWhiteList);
       if (!result) {
-        ServerMessenger.broadcast(ID, 'onAsyncTaskOutput', 'batchCheckFileNamingConsistency:addItem', {
-          content: completePath,
-          message: filePath ? '中英文文档名称不一致' : completePath.includes('/zh/') ? '不存在对应的英文文档' : '不存在对应的中文文档',
-          start: 0,
-          end: 0,
-          extras: filePath || '',
+        sendAsyncTaskOutput({
+          evt: 'addItem',
+          data: {
+            name,
+            path: completePath,
+            similarName: filePath?.split('/').pop() || '',
+            similarPath: filePath || '',
+            type: filePath ? '中英文文档名称不一致' : completePath.includes('/zh/') ? '不存在对应的英文文档' : '不存在对应的中文文档',
+          },
         });
       }
     }
 
-    await sleep(1);
+    if (!signal.aborted) {
+      await sleep(1);
+    }
   }
 }
 
@@ -47,7 +86,7 @@ async function startWalk(targetPath: string) {
     const whiteList = config.get<string[]>('whiteList', []);
     await walkDir(targetPath, whiteList, controller.signal);
     if (controller && !controller.signal.aborted) {
-      ServerMessenger.broadcast(ID, 'onAsyncTaskOutput', 'batchCheckFileNamingConsistency:stop');
+      sendAsyncTaskOutput({ evt: 'stop' }, true);
     }
   } catch {
     stopWalk();
@@ -59,7 +98,7 @@ function stopWalk() {
     controller.abort();
   }
   controller = null;
-  ServerMessenger.broadcast(ID, 'onAsyncTaskOutput', 'batchCheckFileNamingConsistency:stop');
+  sendAsyncTaskOutput({ evt: 'stop' }, true);
 }
 
 /**
@@ -110,9 +149,9 @@ export async function createBatchCheckFileNamingConsistencyWebview(context: vsco
     }
 
     const { name, extras } = message.data;
-    if (name === 'asyncTask:batchCheckFileNamingConsistency' && typeof extras?.[0] === 'string') {
+    if (name === 'start' && typeof extras?.[0] === 'string') {
       startWalk(extras[0]);
-    } else if (name === 'asyncTask:stopBatchCheckFileNamingConsistency') {
+    } else if (name === 'stop') {
       stopWalk();
     }
   });

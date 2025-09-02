@@ -9,7 +9,7 @@ const working = ref(false);
 const currentScanning = ref('');
 
 // -------------------- 表格相关 --------------------
-const data = ref<Record<string, any>[]>([]);
+const tableData = ref<Record<string, any>[]>([]);
 const columns = [
   { label: '类型', key: 'type', style: 'width:10%' },
   { label: '名称', key: 'name', style: 'width:20%' },
@@ -20,25 +20,22 @@ const columns = [
 ];
 
 const unmatchedCounts = computed(() => {
-  return data.value.filter((item) => item.type === '中英文名称不一致').length;
+  return tableData.value.filter((item) => item.type === '中英文名称不一致').length;
 });
 
-const onAsyncTaskOutput = (name: string, extras: any) => {
-  if (name === 'batchCheckFileNamingConsistency:stop') {
-    working.value = false;
-    currentScanning.value = '';
-  } else if (name === 'batchCheckFileNamingConsistency:scanTarget') {
-    working.value = true;
-    currentScanning.value = extras;
-  } else if (name === 'batchCheckFileNamingConsistency:addItem') {
-    data.value.push({
-      type: extras.message,
-      name: extras.content.split('/').pop(),
-      path: extras.content,
-      similarName: extras.extras?.split('/')?.pop() || '',
-      similarPath: extras.extras,
-    });
-  }
+const onAsyncTaskOutput = (extras: any[]) => {
+  extras.forEach((item) => {
+    const { evt, data } = item;
+    if (evt === 'stop') {
+      working.value = false;
+      currentScanning.value = '';
+    } else if (evt === 'scanTarget') {
+      working.value = true;
+      currentScanning.value = data;
+    } else if (evt === 'addItem') {
+      tableData.value.push(data);
+    }
+  });
 };
 
 onMounted(() => {
@@ -51,12 +48,12 @@ onBeforeUnmount(() => {
 
 // -------------------- 开始/停止 --------------------
 const onClickStartLink = () => {
-  data.value = [];
-  Bridge.getInstance().broadcast('asyncTask:batchCheckFileNamingConsistency', injectData.extras?.fsPath);
+  tableData.value = [];
+  Bridge.getInstance().broadcast('start', injectData.extras?.fsPath);
 };
 
 const onClickStopLink = () => {
-  Bridge.getInstance().broadcast('asyncTask:stopBatchCheckFileNamingConsistency');
+  Bridge.getInstance().broadcast('stop');
 };
 
 const onClickSourceLink = (path: string) => {
@@ -64,7 +61,7 @@ const onClickSourceLink = (path: string) => {
 };
 
 const onRemoveItem = (row: Record<string, any>) => {
-  data.value = data.value.filter((item) => item.path !== row.path);
+  tableData.value = tableData.value.filter((item) => item !== row);
 };
 </script>
 
@@ -74,9 +71,9 @@ const onRemoveItem = (row: Record<string, any>) => {
     <div class="text">【检查路径】：{{ injectData.extras?.fsPath }}</div>
     <div class="text" :title="currentScanning">【正在检查】：{{ working ? currentScanning : '无' }}</div>
     <div class="text">
-      【检查结果】：共检查出 <span class="red">{{ data.length }}</span> 项；其中 <span class="red">{{ unmatchedCounts }}</span> 项为中英文文档名称不一致，<span
+      【检查结果】：共检查出 <span class="red">{{ tableData.length }}</span> 项；其中 <span class="red">{{ unmatchedCounts }}</span> 项为中英文文档名称不一致，<span
         class="red"
-        >{{ data.length - unmatchedCounts }}</span
+        >{{ tableData.length - unmatchedCounts }}</span
       >
       项为不存在对应的中文/英文文档
     </div>
@@ -85,7 +82,7 @@ const onRemoveItem = (row: Record<string, any>) => {
       <OLink v-if="working" color="danger" @click="onClickStopLink">停止检查</OLink>
       <OLink v-else color="primary" @click="onClickStartLink">开始检查</OLink>
     </div>
-    <OTable :columns="columns" :data="data" border="all">
+    <OTable :columns="columns" :data="tableData" border="all">
       <template #td_name="{ row }">
         <OLink class="link" color="primary" @click="onClickSourceLink(row.path)">{{ row.name }}</OLink>
       </template>

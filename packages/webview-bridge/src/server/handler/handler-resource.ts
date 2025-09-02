@@ -1,8 +1,8 @@
 import * as vscode from 'vscode';
 import { rename } from 'fs/promises';
 
-import { InvokeT, MessageT, OPERATION_TYPE, SOURCE_TYPE } from '../@types/message';
-import { createInvokeMessage } from '../utils/message';
+import { InvokeT, MessageT, OPERATION_TYPE, SOURCE_TYPE } from '../../@types/message';
+import { createInvokeMessage } from '../../utils/message';
 
 /**
  * 处理 invoke 消息：资源相关

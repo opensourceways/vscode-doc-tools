@@ -2,11 +2,11 @@ import * as vscode from 'vscode';
 
 import { createBroadcastMessage } from '../utils/message';
 import { SOURCE_TYPE } from '../@types/message';
-import { handlePageMessage } from './handler-page';
-import { handleResourceMessage } from './handler-resource';
-import { handleMarkdownMessage } from './handler-markdown';
-import { handleTocMessage } from './handler-toc';
-import { handleConfigMessage } from './handler-config';
+import { handlePageMessage } from './handler/handler-page';
+import { handleResourceMessage } from './handler/handler-resource';
+import { handleMarkdownMessage } from './handler/handler-markdown';
+import { handleTocMessage } from './handler/handler-toc';
+import { handleConfigMessage } from './handler/handler-config';
 
 const symbolWebviewPanelMap = Symbol('symbolWebviewPanelMap');
 

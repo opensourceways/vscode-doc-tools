@@ -14,42 +14,45 @@ const showConfirmFixDlg = ref(false);
 
 // -------------------- 表格相关 --------------------
 const currentScanning = ref('');
-const data = ref<Record<string, any>[]>([]);
+const tableData = ref<Record<string, any>[]>([]);
 const columns = [
   { label: '文件', key: 'file', style: 'width:30%' },
   { label: '错误信息', key: 'msgs', style: 'width:60%' },
   { label: '操作', key: 'action', style: 'width:10%' },
 ];
 
-const onAsyncTaskOutput = (name: string, extras: any) => {
-  if (name === 'batchMarkdownlint:stop') {
-    working.value = false;
-    currentScanning.value = '';
-  } else if (name === 'batchMarkdownlint:scanTarget') {
-    working.value = true;
-    currentScanning.value = extras;
-  } else if (name === 'batchMarkdownlint:addItem') {
-    data.value.push(extras);
-  } else if (name === 'batchMarkdownlint:fixItem') {
-    if (extras.msgs.length === 0) {
-      data.value = data.value.filter((item) => item.file !== extras.file);
-      if (extras.tip) {
-        message.success({
-          content: '修复成功',
-        });
-      }
-    } else {
-      const item = data.value.find((item) => item.file === extras.file);
-      if (item) {
-        item.msgs = extras.msgs;
-        if (extras.tip) {
-          message.danger({
-            content: '存在无法自动修复的错误，请手动修复',
+const onAsyncTaskOutput = (extras: any[]) => {
+  extras.forEach((item) => {
+    const { evt, data } = item;
+    if (evt === 'stop') {
+      working.value = false;
+      currentScanning.value = '';
+    } else if (evt === 'scanTarget') {
+      working.value = true;
+      currentScanning.value = data;
+    } else if (evt === 'addItem') {
+      tableData.value.push(data);
+    } else if (evt === 'updateItem') {
+      if (data.msgs.length === 0) {
+        tableData.value = tableData.value.filter((item) => item.file !== data.file);
+        if (data.tip) {
+          message.success({
+            content: '修复成功',
           });
+        }
+      } else {
+        const item = tableData.value.find((item) => item.file === data.file);
+        if (item) {
+          item.msgs = data.msgs;
+          if (data.tip) {
+            message.danger({
+              content: '存在无法自动修复的错误，请手动修复',
+            });
+          }
         }
       }
     }
-  }
+  });
 };
 
 onMounted(() => {
@@ -69,36 +72,32 @@ const onClickSourceLink = (row: Record<string, any>) => {
 };
 
 const onRemoveItem = (row: Record<string, any>) => {
-  data.value = data.value.filter((item) => item.file !== row.file);
+  tableData.value = tableData.value.filter((item) => item.file !== row.file);
 };
 
 // -------------------- 检查 --------------------
 const onClickStartCheckLink = () => {
   workingType.value = '检查';
-  data.value = [];
-  Bridge.getInstance().broadcast('asyncTask:batchMarkdownlint', injectData.extras?.fsPath);
+  tableData.value = [];
+  Bridge.getInstance().broadcast('start', injectData.extras?.fsPath);
 };
 
 // -------------------- 修复 --------------------
 const onClickBatchFixLink = () => {
   workingType.value = '修复';
   Bridge.getInstance().broadcast(
-    'asyncTask:batchFixMarkdownlint',
-    data.value.map((item) => item.file)
+    'batchFix',
+    tableData.value.map((item) => item.file)
   );
 };
 
 const onClickFixLink = (row: Record<string, any>) => {
-  Bridge.getInstance().broadcast('asyncTask:fixMarkdownlint', row.file);
+  Bridge.getInstance().broadcast('fix', row.file);
 };
 
 // -------------------- 停止 --------------------
 const onClickStopLink = () => {
-  if (workingType.value === '检查') {
-    Bridge.getInstance().broadcast('asyncTask:stopBatchMarkdownlint');
-  } else {
-    Bridge.getInstance().broadcast('asyncTask:stopBatchFixMarkdownlint');
-  }
+  Bridge.getInstance().broadcast('stop');
 };
 </script>
 
@@ -110,15 +109,17 @@ const onClickStopLink = () => {
     </h1>
     <div class="text">【开始路径】：{{ injectData.extras?.fsPath }}</div>
     <div class="text" :title="currentScanning">【正在{{ workingType }}】：{{ working ? currentScanning : '无' }}</div>
-    <div class="text">【检查结果】：共检查出 <span class="red">{{ data.length }}</span> 篇问题文档</div>
+    <div class="text">
+      【检查结果】：共检查出 <span class="red">{{ tableData.length }}</span> 篇问题文档
+    </div>
     <div class="text">
       <span>【控制开关】：</span>
       <OLink v-if="working" color="danger" @click="onClickStopLink">停止{{ workingType }}</OLink>
       <OLink v-else color="primary" @click="onClickStartCheckLink">开始检查</OLink>
-      <OLink v-if="!working && data.length" color="primary" @click="showConfirmFixDlg = true">一键修复</OLink>
+      <OLink v-if="!working && tableData.length" color="primary" @click="showConfirmFixDlg = true">一键修复</OLink>
     </div>
 
-    <OTable :columns="columns" :data="data" border="all">
+    <OTable :columns="columns" :data="tableData" border="all">
       <template #td_file="{ row }">
         <OLink class="link" color="primary" :title="row.file" @click="onClickSourceLink(row)">{{ row.file.split('/').pop() }}</OLink>
       </template>

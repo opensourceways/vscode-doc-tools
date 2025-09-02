@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import fs from 'fs';
 import path from 'path';
-import { existsAsync, getFileContentAsync, getMarkdownFilterContent, readdirAsync } from 'shared';
+import { existsAsync, getFileContentAsync, getMarkdownFilterContent, readdirAsync, sleep } from 'shared';
 import { BroadcastT, MessageT, OPERATION_TYPE, ServerMessenger, SOURCE_TYPE } from 'webview-bridge';
 import { execCheckLinkValidity, execCheckResourceExistence } from 'checkers';
 
@@ -10,6 +10,37 @@ import { createWebviewPanel } from '@/utils/webview';
 
 const ID = 'batch-check-link-accessibility-result';
 let controller: AbortController | null = null;
+
+const sendAsyncTaskOutput = (() => {
+  let messages: any[] = [];
+  let timer: number | NodeJS.Timeout | undefined;
+  let lastTime = 0;
+
+  return (data: any, imediately = false) => {
+    if (data?.evt === 'scanTarget') {
+      messages = messages.filter(item => item?.evt !== 'scanTarget');
+    }
+    messages.push(data);
+    
+    if (timer && !imediately && messages.length < 1000) {
+      return;
+    }
+
+    if (imediately || lastTime === 0 || Date.now() - lastTime > 200 || messages.length >= 1000) {
+      clearTimeout(timer);
+      ServerMessenger.broadcast(ID, 'onAsyncTaskOutput', messages);
+      messages = [];
+      timer = undefined;
+      lastTime = Date.now();
+    } else {
+      timer = setTimeout(() => {
+        ServerMessenger.broadcast(ID, 'onAsyncTaskOutput', messages);
+        messages = [];
+        timer = undefined;
+      }, 200);
+    }
+  };
+})();
 
 async function walkDir(
   dir: string,
@@ -30,7 +61,10 @@ async function walkDir(
     }
 
     const completePath = path.join(dir, name).replace(/\\/g, '/');
-    ServerMessenger.broadcast(ID, 'onAsyncTaskOutput', 'batchCheckLinkAccessibility:scanTarget', completePath);
+    sendAsyncTaskOutput({
+      evt: 'scanTarget',
+      data: completePath,
+    });
 
     if (fs.statSync(completePath).isDirectory()) {
       await walkDir(completePath, opts);
@@ -65,17 +99,24 @@ async function walkDir(
       results.forEach((r) => {
         r.forEach((item) => {
           if ((!opts.disableCheck404 && item.extras === 404) || !opts.disableCheckOtherStatus) {
-            ServerMessenger.broadcast(ID, 'onAsyncTaskOutput', 'batchCheckLinkAccessibility:addItem', {
-              url: item.content,
-              status: item.extras,
-              start: item.start,
-              end: item.end,
-              file: completePath,
-              msg: item.message.zh,
+            sendAsyncTaskOutput({
+              evt: 'addItem',
+              data: {
+                url: item.content,
+                status: item.extras,
+                start: item.start,
+                end: item.end,
+                file: completePath,
+                msg: item.message.zh,
+              },
             });
           }
         });
       });
+    }
+
+    if (!opts.signal.aborted) {
+      await sleep(1);
     }
   }
 }
@@ -102,7 +143,7 @@ async function startWalk(
     });
 
     if (controller && !controller.signal.aborted) {
-      ServerMessenger.broadcast(ID, 'onAsyncTaskOutput', 'batchCheckLinkAccessibility:stop');
+      sendAsyncTaskOutput({ evt: 'stop' }, true);
     }
   } catch {
     stopWalk();
@@ -114,7 +155,7 @@ function stopWalk() {
     controller.abort();
   }
   controller = null;
-  ServerMessenger.broadcast(ID, 'onAsyncTaskOutput', 'batchCheckLinkAccessibility:stop');
+  sendAsyncTaskOutput({ evt: 'stop' }, true);
 }
 
 /**
@@ -166,12 +207,7 @@ export async function createBatchCheckLinkAccessibilityWebview(context: vscode.E
     }
 
     const { name, extras } = message.data;
-    if (
-      name === 'asyncTask:batchCheckLinkAccessibility' &&
-      typeof extras?.[0] === 'string' &&
-      Array.isArray(extras?.[1]) &&
-      Array.isArray(extras?.[2])
-    ) {
+    if (name === 'start' && typeof extras?.[0] === 'string' && Array.isArray(extras?.[1]) && Array.isArray(extras?.[2])) {
       startWalk(extras[0], {
         disableCheckExternalUrl: !extras[1].includes('http'),
         disableCheckInternalUrl: !extras[1].includes('relative-link'),
@@ -179,7 +215,7 @@ export async function createBatchCheckLinkAccessibilityWebview(context: vscode.E
         disableCheck404: !extras[2].includes('404'),
         disableCheckOtherStatus: !extras[2].includes('others'),
       });
-    } else if (name === 'asyncTask:stopBatchCheckLinkAccessibility') {
+    } else if (name === 'stop') {
       stopWalk();
     }
   });

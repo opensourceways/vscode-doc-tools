@@ -1,8 +1,8 @@
 import * as vscode from 'vscode';
 
-import { InvokeT, MessageT, OPERATION_TYPE, SOURCE_TYPE } from '../@types/message';
-import { createInvokeMessage } from '../utils/message';
-import { getTocByMdPath } from '../utils/toc';
+import { InvokeT, MessageT, OPERATION_TYPE, SOURCE_TYPE } from '../../@types/message';
+import { createInvokeMessage } from '../../utils/message';
+import { getTocByMdPath } from '../../utils/toc';
 
 /**
  * 处理 invoke 消息：toc 相关

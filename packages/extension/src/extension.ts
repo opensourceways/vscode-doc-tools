@@ -4,7 +4,6 @@ import { ServerMessenger } from 'webview-bridge';
 import { EVENT_TYPE } from '@/@types/event';
 import { getCodeActions, triggerCheck } from '@/core/check';
 import { genTocManual } from '@/core/command/cmd-gen-toc-manual';
-import { checkMarkdown } from '@/core/command/cmd-check-markdown';
 import { addCodespellWhitelist } from '@/core/command/cmd-add-codespell-whitlist';
 import { addUrlWhitelist } from '@/core/command/cmd-add-url-whilelist';
 import { previewMarkdown, triggerPreviewMarkdownContentChange } from '@/core/command/cmd-preview-markdown';
@@ -54,13 +53,6 @@ function registerEvent(context: vscode.ExtensionContext) {
  * @param {vscode.ExtensionContext} context 上下文对象
  */
 function registerCommand(context: vscode.ExtensionContext) {
-  // 注册 运行Markdown检查 命令
-  context.subscriptions.push(
-    vscode.commands.registerCommand('doc.tools.check', () => {
-      checkMarkdown(diagnosticsCollection);
-    })
-  );
-
   // 注册 生成指南 _toc.yaml 命令
   context.subscriptions.push(
     vscode.commands.registerCommand('doc.tools.gen.toc.manual', (uri: vscode.Uri) => {

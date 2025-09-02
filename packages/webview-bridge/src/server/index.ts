@@ -1,2 +1,2 @@
 export * from '../@types/message';
-export * from './handler-message';
+export * from './server-messenger';

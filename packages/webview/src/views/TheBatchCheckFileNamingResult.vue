@@ -12,7 +12,7 @@ const working = ref(false);
 const currentScanning = ref('');
 
 // -------------------- 表格相关 --------------------
-const data = ref<Record<string, any>[]>([]);
+const tableData = ref<Record<string, any>[]>([]);
 const columns = [
   { label: '类型', key: 'fileType', style: 'width:15%' },
   { label: '名称', key: 'name', style: 'width: 30%' },
@@ -20,16 +20,19 @@ const columns = [
   { label: '操作', key: 'action', style: 'width:20%' },
 ];
 
-const onAsyncTaskOutput = (name: string, extras: any) => {
-  if (name === 'batchCheckFileNaming:stop') {
-    working.value = false;
-    currentScanning.value = '';
-  } else if (name === 'batchCheckFileNaming:scanTarget') {
-    working.value = true;
-    currentScanning.value = extras;
-  } else if (name === 'batchCheckFileNaming:addItem') {
-    data.value.push(extras);
-  }
+const onAsyncTaskOutput = (extras: any[]) => {
+  extras.forEach((item) => {
+    const { evt, data } = item;
+    if (evt === 'stop') {
+      working.value = false;
+      currentScanning.value = '';
+    } else if (evt === 'scanTarget') {
+      working.value = true;
+      currentScanning.value = data;
+    } else if (evt === 'addItem') {
+      tableData.value.push(data);
+    }
+  });
 };
 
 onMounted(() => {
@@ -41,11 +44,11 @@ onBeforeUnmount(() => {
 });
 
 const fileItemsCounts = computed(() => {
-  return data.value.filter((item) => item.fileType === '文件').length;
+  return tableData.value.filter((item) => item.fileType === '文件').length;
 });
 
 const dirItemsCounts = computed(() => {
-  return data.value.filter((item) => item.fileType === '目录').length;
+  return tableData.value.filter((item) => item.fileType === '目录').length;
 });
 
 const onClickLink = (row: Record<string, any>) => {
@@ -58,12 +61,12 @@ const onClickLink = (row: Record<string, any>) => {
 
 // -------------------- 开始/停止 --------------------
 const onClickStartLink = () => {
-  data.value = [];
-  Bridge.getInstance().broadcast('asyncTask:batchCheckFileNaming', injectData.extras?.fsPath);
+  tableData.value = [];
+  Bridge.getInstance().broadcast('start', injectData.extras?.fsPath);
 };
 
 const onClickStopLink = () => {
-  Bridge.getInstance().broadcast('asyncTask:stopBatchCheckFileNaming');
+  Bridge.getInstance().broadcast('stop');
 };
 
 // -------------------- 修改名称 --------------------
@@ -101,7 +104,7 @@ const onUpdateName = async () => {
       content: '修改成功',
     });
 
-    data.value = data.value.filter((item) => {
+    tableData.value = tableData.value.filter((item) => {
       if (updateItem.value!.fileType === '目录' && item.path !== oldPath && item.path.startsWith(oldPath) && item.fileType === '文件') {
         item.path = item.path.replace(oldPath, newPath);
       }
@@ -127,7 +130,7 @@ const onShowIgnoreDlg = (row: Record<string, any>) => {
 
 const onConfirmIgnore = async () => {
   await ConfigBridge.addCheckNameWhiteList(ignoreItem.value!.name);
-  data.value = data.value.filter((item) => item.name !== ignoreItem.value!.name);
+  tableData.value = tableData.value.filter((item) => item.name !== ignoreItem.value!.name);
   showIgnoreDlg.value = false;
 };
 </script>
@@ -139,7 +142,7 @@ const onConfirmIgnore = async () => {
     <div class="text">【检查路径】：{{ injectData.extras?.fsPath }}</div>
     <div class="text" :title="currentScanning">【正在检查】：{{ working ? currentScanning : '无' }}</div>
     <div class="text">
-      【检查结果】：共检查出 <span class="red">{{ data.length }}</span> 项不符合；其中 <span class="red">{{ fileItemsCounts }}</span> 项为文件，<span
+      【检查结果】：共检查出 <span class="red">{{ tableData.length }}</span> 项不符合；其中 <span class="red">{{ fileItemsCounts }}</span> 项为文件，<span
         class="red"
         >{{ dirItemsCounts }}</span
       >
@@ -150,7 +153,7 @@ const onConfirmIgnore = async () => {
       <OLink v-if="working" color="danger" @click="onClickStopLink">停止检查</OLink>
       <OLink v-else color="primary" @click="onClickStartLink">开始检查</OLink>
     </div>
-    <OTable :columns="columns" :data="data" border="all">
+    <OTable :columns="columns" :data="tableData" border="all">
       <template #td_name="{ row }">
         <OLink class="link" color="primary" @click="onClickLink(row)">{{ row.name }}</OLink>
       </template>

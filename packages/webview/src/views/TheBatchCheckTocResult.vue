@@ -9,23 +9,26 @@ const working = ref(false);
 
 // -------------------- 表格相关 --------------------
 const currentScanning = ref('');
-const data = ref<Record<string, any>[]>([]);
+const tableData = ref<Record<string, any>[]>([]);
 const columns = [
   { label: '错误信息', key: 'msg', style: 'width:45%' },
   { label: '文件', key: 'file', style: 'width:45%' },
   { label: '操作', key: 'action', style: 'width:10%' },
 ];
 
-const onAsyncTaskOutput = (name: string, extras: any) => {
-  if (name === 'batchCheckToc:stop') {
-    working.value = false;
-    currentScanning.value = '';
-  } else if (name === 'batchCheckToc:scanTarget') {
-    working.value = true;
-    currentScanning.value = extras;
-  } else if (name === 'batchCheckToc:addItem') {
-    data.value.push(extras);
-  }
+const onAsyncTaskOutput = (extras: any[]) => {
+  extras.forEach((item) => {
+    const { evt, data } = item;
+    if (evt === 'stop') {
+      working.value = false;
+      currentScanning.value = '';
+    } else if (evt === 'scanTarget') {
+      working.value = true;
+      currentScanning.value = data;
+    } else if (evt === 'addItem') {
+      tableData.value.push(data);
+    }
+  });
 };
 
 onMounted(() => {
@@ -41,17 +44,17 @@ const onClickSourceLink = (row: Record<string, any>) => {
 };
 
 const onRemoveItem = (row: Record<string, any>) => {
-  data.value = data.value.filter((item) => item.url !== row.url && item.file !== row.file);
+  tableData.value = tableData.value.filter((item) => item !== row);
 };
 
 // -------------------- 开始/停止 --------------------
 const onClickStartLink = () => {
-  data.value = [];
-  Bridge.getInstance().broadcast('asyncTask:batchCheckToc', injectData.extras?.fsPath);
+  tableData.value = [];
+  Bridge.getInstance().broadcast('start', injectData.extras?.fsPath);
 };
 
 const onClickStopLink = () => {
-  Bridge.getInstance().broadcast('asyncTask:stopBatchCheckToc');
+  Bridge.getInstance().broadcast('stop');
 };
 </script>
 
@@ -63,14 +66,14 @@ const onClickStopLink = () => {
     </h1>
     <div class="text">【开始路径】：{{ injectData.extras?.fsPath }}</div>
     <div class="text" :title="currentScanning">【正在检查】：{{ working ? currentScanning : '无' }}</div>
-    <div class="text">【检查结果】：共检查出 <span class="red">{{ data.length }}</span> 个问题</div>
+    <div class="text">【检查结果】：共检查出 <span class="red">{{ tableData.length }}</span> 个问题</div>
     <div class="text">
       <span>【控制开关】：</span>
       <OLink v-if="working" color="danger" @click="onClickStopLink">停止检查</OLink>
       <OLink v-else color="primary" @click="onClickStartLink">开始检查</OLink>
     </div>
 
-    <OTable :columns="columns" :data="data" border="all">
+    <OTable :columns="columns" :data="tableData" border="all">
       <template #td_file="{ row }">
         <OLink class="link" color="primary" @click="onClickSourceLink(row)">{{ row.file }}</OLink>
       </template>

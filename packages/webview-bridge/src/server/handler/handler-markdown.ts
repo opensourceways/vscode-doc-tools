@@ -1,9 +1,9 @@
 import * as vscode from 'vscode';
 import fs from 'fs';
 
-import { InvokeT, MessageT, OPERATION_TYPE, SOURCE_TYPE } from '../@types/message';
-import { createInvokeMessage } from '../utils/message';
-import { createDocMarkdownRenderer } from '../utils/markdown';
+import { InvokeT, MessageT, OPERATION_TYPE, SOURCE_TYPE } from '../../@types/message';
+import { createInvokeMessage } from '../../utils/message';
+import { createDocMarkdownRenderer } from '../../utils/markdown';
 
 /**
  * 处理 invoke 消息：markdown 相关

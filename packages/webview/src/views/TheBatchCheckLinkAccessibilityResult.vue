@@ -11,7 +11,7 @@ const workingStatus = ref(['404']);
 
 // -------------------- 表格相关 --------------------
 const currentScanning = ref('');
-const data = ref<Record<string, any>[]>([]);
+const tableData = ref<Record<string, any>[]>([]);
 const columns = [
   { label: '地址', key: 'url', style: 'width:30%' },
   { label: '错误信息', key: 'msg', style: 'width:30%' },
@@ -19,16 +19,19 @@ const columns = [
   { label: '操作', key: 'action', style: 'width:10%' },
 ];
 
-const onAsyncTaskOutput = (name: string, extras: any) => {
-  if (name === 'batchCheckLinkAccessibility:stop') {
-    working.value = false;
-    currentScanning.value = '';
-  } else if (name === 'batchCheckLinkAccessibility:scanTarget') {
-    working.value = true;
-    currentScanning.value = extras;
-  } else if (name === 'batchCheckLinkAccessibility:addItem') {
-    data.value.push(extras);
-  }
+const onAsyncTaskOutput = (extras: any[]) => {
+  extras.forEach((item) => {
+    const { evt, data } = item;
+    if (evt === 'stop') {
+      working.value = false;
+      currentScanning.value = '';
+    } else if (evt === 'scanTarget') {
+      working.value = true;
+      currentScanning.value = data;
+    } else if (evt === 'addItem') {
+      tableData.value.push(data);
+    }
+  });
 };
 
 onMounted(() => {
@@ -44,7 +47,7 @@ const onClickSourceLink = (row: Record<string, any>) => {
 };
 
 const onRemoveItem = (row: Record<string, any>) => {
-  data.value = data.value.filter((item) => item.url !== row.url && item.file !== row.file);
+  tableData.value = tableData.value.filter((item) => item !== row);
 };
 
 // -------------------- 添加白名单 --------------------
@@ -57,15 +60,15 @@ const onShowIgnoreDlg = (row: Record<string, any>) => {
 
 const onConfirmIgnore = async () => {
   await ConfigBridge.addUrlWhiteList(ignoreItem.value!.url);
-  data.value = data.value.filter((item) => item.url !== ignoreItem.value!.url);
+  tableData.value = tableData.value.filter((item) => item.url !== ignoreItem.value!.url);
   showIgnoreDlg.value = false;
 };
 
 // -------------------- 开始/停止 --------------------
 const onClickStartLink = () => {
-  data.value = [];
+  tableData.value = [];
   Bridge.getInstance().broadcast(
-    'asyncTask:batchCheckLinkAccessibility',
+    'start',
     injectData.extras?.fsPath,
     [...workingLink.value], // 得copy一下，不然postMessage的时候会提示无法clone
     [...workingStatus.value]
@@ -73,7 +76,7 @@ const onClickStartLink = () => {
 };
 
 const onClickStopLink = () => {
-  Bridge.getInstance().broadcast('asyncTask:stopBatchCheckLinkAccessibility');
+  Bridge.getInstance().broadcast('stop');
 };
 </script>
 
@@ -101,14 +104,14 @@ const onClickStopLink = () => {
         <OCheckbox value="others">访问超时等其它错误</OCheckbox>
       </OCheckboxGroup>
     </div>
-    <div class="text">【检查结果】：共检查出 <span class="red">{{ data.length }}</span> 条异常链接</div>
+    <div class="text">【检查结果】：共检查出 <span class="red">{{ tableData.length }}</span> 条异常链接</div>
     <div class="text">
       <span>【控制开关】：</span>
       <OLink v-if="working" color="danger" @click="onClickStopLink">停止检查</OLink>
       <OLink v-else color="primary" @click="onClickStartLink">开始检查</OLink>
     </div>
 
-    <OTable :columns="columns" :data="data" border="all">
+    <OTable :columns="columns" :data="tableData" border="all">
       <template #td_url="{ row }">
         <OLink class="link" color="primary" :href="row.url.startsWith('http') ? row.url : undefined" target="_blank">{{ row.url }}</OLink>
       </template>

@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 
-import { InvokeT, MessageT, OPERATION_TYPE, SOURCE_TYPE } from '../@types/message';
-import { createInvokeMessage } from '../utils/message';
+import { InvokeT, MessageT, OPERATION_TYPE, SOURCE_TYPE } from '../../@types/message';
+import { createInvokeMessage } from '../../utils/message';
 
 /**
  * 处理 invoke 消息：配置相关

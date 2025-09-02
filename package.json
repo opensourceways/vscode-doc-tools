@@ -33,10 +33,6 @@
     },
     "commands": [
       {
-        "command": "doc.tools.check",
-        "title": "运行Markdown检查"
-      },
-      {
         "command": "doc.tools.gen.toc.manual",
         "title": "生成手册 _toc.yaml"
       },
@@ -118,27 +114,27 @@
         },
         {
           "command": "doc.tools.batch.markdownlint",
-          "group": "doc.tools.check"
+          "group": "doc.tools.batch.check"
         },
         {
           "command": "doc.tools.batch.check.fileNaming",
-          "group": "doc.tools.check"
+          "group": "doc.tools.batch.check"
         },
         {
           "command": "doc.tools.batch.check.fileNamingConsistency",
-          "group": "doc.tools.check"
+          "group": "doc.tools.batch.check"
         },
         {
           "command": "doc.tools.batch.check.linkAccessibility",
-          "group": "doc.tools.check"
+          "group": "doc.tools.batch.check"
         },
         {
           "command": "doc.tools.batch.check.toc",
-          "group": "doc.tools.check"
+          "group": "doc.tools.batch.check"
         },
         {
           "command": "doc.tools.batch.check.tagClosed",
-          "group": "doc.tools.check"
+          "group": "doc.tools.batch.check"
         }
       ],
       "doc.tools.markdown": [

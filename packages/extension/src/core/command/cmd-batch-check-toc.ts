@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import fs from 'fs';
 import path from 'path';
-import { existsAsync, getFileContentAsync, readdirAsync } from 'shared';
+import { existsAsync, getFileContentAsync, readdirAsync, sleep } from 'shared';
 import { BroadcastT, MessageT, OPERATION_TYPE, ServerMessenger, SOURCE_TYPE } from 'webview-bridge';
 import { execCheckToc } from 'checkers';
 
@@ -9,6 +9,37 @@ import { createWebviewPanel } from '@/utils/webview';
 
 const ID = 'batch-check-toc-reuslt';
 let controller: AbortController | null = null;
+
+const sendAsyncTaskOutput = (() => {
+  let messages: any[] = [];
+  let timer: number | NodeJS.Timeout | undefined;
+  let lastTime = 0;
+
+  return (data: any, imediately = false) => {
+    if (data?.evt === 'scanTarget') {
+      messages = messages.filter((item) => item?.evt !== 'scanTarget');
+    }
+    messages.push(data);
+
+    if (timer && !imediately && messages.length < 1000) {
+      return;
+    }
+
+    if (imediately || lastTime === 0 || Date.now() - lastTime > 200 || messages.length >= 1000) {
+      clearTimeout(timer);
+      ServerMessenger.broadcast(ID, 'onAsyncTaskOutput', messages);
+      messages = [];
+      timer = undefined;
+      lastTime = Date.now();
+    } else {
+      timer = setTimeout(() => {
+        ServerMessenger.broadcast(ID, 'onAsyncTaskOutput', messages);
+        messages = [];
+        timer = undefined;
+      }, 200);
+    }
+  };
+})();
 
 async function walkDir(dir: string, signal: AbortSignal) {
   const names = await readdirAsync(dir);
@@ -18,7 +49,10 @@ async function walkDir(dir: string, signal: AbortSignal) {
     }
 
     const completePath = path.join(dir, name).replace(/\\/g, '/');
-    ServerMessenger.broadcast(ID, 'onAsyncTaskOutput', 'batchCheckToc:scanTarget', completePath);
+    sendAsyncTaskOutput({
+      evt: 'scanTarget',
+      data: completePath,
+    });
 
     if (fs.statSync(completePath).isDirectory()) {
       await walkDir(completePath, signal);
@@ -30,13 +64,20 @@ async function walkDir(dir: string, signal: AbortSignal) {
       }
 
       results.forEach((item) => {
-        ServerMessenger.broadcast(ID, 'onAsyncTaskOutput', 'batchCheckToc:addItem', {
-          start: item.start,
-          end: item.end,
-          file: completePath,
-          msg: item.message.zh,
+        sendAsyncTaskOutput({
+          evt: 'addItem',
+          data: {
+            start: item.start,
+            end: item.end,
+            file: completePath,
+            msg: item.message.zh,
+          },
         });
       });
+    }
+
+    if (!signal.aborted) {
+      await sleep(1);
     }
   }
 }
@@ -47,7 +88,7 @@ async function startWalk(targetPath: string) {
     controller = new AbortController();
     await walkDir(targetPath, controller.signal);
     if (controller && !controller.signal.aborted) {
-      ServerMessenger.broadcast(ID, 'onAsyncTaskOutput', 'batchCheckToc:stop');
+      sendAsyncTaskOutput({ evt: 'stop' }, true);
     }
   } catch {
     stopWalk();
@@ -59,7 +100,7 @@ function stopWalk() {
     controller.abort();
   }
   controller = null;
-  ServerMessenger.broadcast(ID, 'onAsyncTaskOutput', 'batchCheckToc:stop');
+  sendAsyncTaskOutput({ evt: 'stop' }, true);
 }
 
 /**
@@ -111,9 +152,9 @@ export async function createCheckTocWebview(context: vscode.ExtensionContext, ur
     }
 
     const { name, extras } = message.data;
-    if (name === 'asyncTask:batchCheckToc' && typeof extras?.[0] === 'string') {
+    if (name === 'start' && typeof extras?.[0] === 'string') {
       startWalk(extras[0]);
-    } else if (name === 'asyncTask:stopBatchCheckToc') {
+    } else if (name === 'stop') {
       stopWalk();
     }
   });
