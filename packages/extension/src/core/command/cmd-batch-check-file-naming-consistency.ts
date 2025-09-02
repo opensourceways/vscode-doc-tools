@@ -2,11 +2,12 @@ import * as vscode from 'vscode';
 import fs from 'fs';
 import path from 'path';
 import { execCheckFileNamingConsistency } from 'checkers';
-import { BroadcastT, MessageT, OPERATION_TYPE, ServerMessageHandler, SOURCE_TYPE } from 'webview-bridge';
+import { BroadcastT, MessageT, OPERATION_TYPE, ServerMessenger, SOURCE_TYPE } from 'webview-bridge';
 import { readdirAsync, sleep } from 'shared';
 
 import { createWebviewPanel } from '@/utils/webview';
 
+const ID = 'batch-check-file-naming-consistency-result';
 let controller: AbortController | null = null;
 
 async function walkDir(dir: string, nameWhiteList: string[] = [], signal: AbortSignal) {
@@ -17,14 +18,14 @@ async function walkDir(dir: string, nameWhiteList: string[] = [], signal: AbortS
     }
 
     const completePath = path.join(dir, name).replace(/\\/g, '/');
-    ServerMessageHandler.broadcast('onAsyncTaskOutput', 'batchCheckFileNamingConsistency:scanTarget', completePath);
+    ServerMessenger.broadcast(ID, 'onAsyncTaskOutput', 'batchCheckFileNamingConsistency:scanTarget', completePath);
 
     if (fs.statSync(completePath).isDirectory()) {
       await walkDir(completePath, nameWhiteList, signal);
     } else if (name.endsWith('.md')) {
       const [result, filePath] = await execCheckFileNamingConsistency(completePath, nameWhiteList);
       if (!result) {
-        ServerMessageHandler.broadcast('onAsyncTaskOutput', 'batchCheckFileNamingConsistency:addItem', {
+        ServerMessenger.broadcast(ID, 'onAsyncTaskOutput', 'batchCheckFileNamingConsistency:addItem', {
           content: completePath,
           message: filePath ? '中英文文档名称不一致' : completePath.includes('/zh/') ? '不存在对应的英文文档' : '不存在对应的中文文档',
           start: 0,
@@ -46,7 +47,7 @@ async function startWalk(targetPath: string) {
     const whiteList = config.get<string[]>('whiteList', []);
     await walkDir(targetPath, whiteList, controller.signal);
     if (controller && !controller.signal.aborted) {
-      ServerMessageHandler.broadcast('onAsyncTaskOutput', 'batchCheckFileNamingConsistency:stop');
+      ServerMessenger.broadcast(ID, 'onAsyncTaskOutput', 'batchCheckFileNamingConsistency:stop');
     }
   } catch {
     stopWalk();
@@ -58,7 +59,7 @@ function stopWalk() {
     controller.abort();
   }
   controller = null;
-  ServerMessageHandler.broadcast('onAsyncTaskOutput', 'batchCheckFileNamingConsistency:stop');
+  ServerMessenger.broadcast(ID, 'onAsyncTaskOutput', 'batchCheckFileNamingConsistency:stop');
 }
 
 /**
@@ -83,7 +84,7 @@ export async function createBatchCheckFileNamingConsistencyWebview(context: vsco
     context,
     viewType: 'Doc Tools：检查结果',
     title: 'Doc Tools：检查结果',
-    showOptions: vscode.ViewColumn.Beside,
+    showOptions: vscode.ViewColumn.Two,
     iconPath: vscode.Uri.file(path.join(context.extensionPath, 'resources', isDarkTheme ? 'icon-preview-dark.svg' : 'icon-preview-light.svg')),
     injectData: {
       path: '/batch-check-file-naming-consistency-result',
@@ -94,7 +95,7 @@ export async function createBatchCheckFileNamingConsistencyWebview(context: vsco
       },
     },
     onBeforeLoad(webviewPanel, isDev) {
-      ServerMessageHandler.bind(webviewPanel, isDev);
+      ServerMessenger.bind(ID, webviewPanel, isDev);
     },
   });
 

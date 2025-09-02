@@ -2,11 +2,12 @@ import * as vscode from 'vscode';
 import fs from 'fs';
 import path from 'path';
 import { execCheckFileNaming } from 'checkers';
-import { BroadcastT, MessageT, OPERATION_TYPE, ServerMessageHandler, SOURCE_TYPE } from 'webview-bridge';
+import { BroadcastT, MessageT, OPERATION_TYPE, ServerMessenger, SOURCE_TYPE } from 'webview-bridge';
 import { readdirAsync, sleep } from 'shared';
 
 import { createWebviewPanel } from '@/utils/webview';
 
+const ID = 'batch-check-file-naming-result';
 let controller: AbortController | null = null;
 
 async function walkDir(dir: string, nameWhiteList: string[] = [], signal: AbortSignal) {
@@ -17,11 +18,11 @@ async function walkDir(dir: string, nameWhiteList: string[] = [], signal: AbortS
     }
 
     const completePath = path.join(dir, name).replace(/\\/g, '/');
-    ServerMessageHandler.broadcast('onAsyncTaskOutput', 'batchCheckFileNaming:scanTarget', completePath);
+    ServerMessenger.broadcast(ID, 'onAsyncTaskOutput', 'batchCheckFileNaming:scanTarget', completePath);
 
     const stat = fs.statSync(completePath);
     if ((stat.isDirectory() || name.endsWith('.md')) && !execCheckFileNaming(name, nameWhiteList)) {
-      ServerMessageHandler.broadcast('onAsyncTaskOutput', 'batchCheckFileNaming:addItem', {
+      ServerMessenger.broadcast(ID, 'onAsyncTaskOutput', 'batchCheckFileNaming:addItem', {
         name,
         path: completePath,
         fileType: stat.isDirectory() ? '目录' : '文件',
@@ -46,7 +47,7 @@ async function startWalk(targetPath: string) {
     const whiteList = config.get<string[]>('whiteList', []);
     await walkDir(targetPath, whiteList, controller.signal);
     if (controller && !controller.signal.aborted) {
-      ServerMessageHandler.broadcast('onAsyncTaskOutput', 'batchCheckFileNaming:stop');
+      ServerMessenger.broadcast(ID, 'onAsyncTaskOutput', 'batchCheckFileNaming:stop');
     }
   } catch {
     stopWalk();
@@ -58,7 +59,7 @@ function stopWalk() {
     controller.abort();
   }
   controller = null;
-  ServerMessageHandler.broadcast('onAsyncTaskOutput', 'batchCheckFileNaming:stop');
+  ServerMessenger.broadcast(ID, 'onAsyncTaskOutput', 'batchCheckFileNaming:stop');
 }
 
 /**
@@ -83,7 +84,7 @@ export async function createBatchCheckFileNamingWebview(context: vscode.Extensio
     context,
     viewType: 'Doc Tools：检查结果',
     title: 'Doc Tools：检查结果',
-    showOptions: vscode.ViewColumn.Beside,
+    showOptions: vscode.ViewColumn.Two,
     iconPath: vscode.Uri.file(path.join(context.extensionPath, 'resources', isDarkTheme ? 'icon-preview-dark.svg' : 'icon-preview-light.svg')),
     injectData: {
       path: '/batch-check-file-naming-result',
@@ -94,7 +95,7 @@ export async function createBatchCheckFileNamingWebview(context: vscode.Extensio
       },
     },
     onBeforeLoad(webviewPanel, isDev) {
-      ServerMessageHandler.bind(webviewPanel, isDev);
+      ServerMessenger.bind(ID, webviewPanel, isDev);
     },
   });
 

@@ -3,12 +3,13 @@ import fs from 'fs';
 import path from 'path';
 import { applyFixes, type Configuration, type LintError } from 'markdownlint';
 import { existsAsync, getFileContentAsync, readdirAsync, sleep } from 'shared';
-import { BroadcastT, MessageT, OPERATION_TYPE, ServerMessageHandler, SOURCE_TYPE } from 'webview-bridge';
+import { BroadcastT, MessageT, OPERATION_TYPE, ServerMessenger, SOURCE_TYPE } from 'webview-bridge';
 import { execMarkdownlint } from 'checkers';
 
 import { createWebviewPanel } from '@/utils/webview';
 import { MD_DEFAULT_CONFIG } from '@/config/markdownlint';
 
+const ID = 'batch-markdownlint-result';
 let controller: AbortController | null = null;
 let errorsMap: Map<string, LintError[]> | null;
 
@@ -17,7 +18,7 @@ function stop() {
     controller.abort();
   }
   controller = null;
-  ServerMessageHandler.broadcast('onAsyncTaskOutput', 'batchMarkdownlint:stop');
+  ServerMessenger.broadcast(ID, 'onAsyncTaskOutput', 'batchMarkdownlint:stop');
 }
 
 async function walkDir(dir: string, config: Configuration, signal: AbortSignal) {
@@ -28,7 +29,7 @@ async function walkDir(dir: string, config: Configuration, signal: AbortSignal) 
     }
 
     const completePath = path.join(dir, name).replace(/\\/g, '/');
-    ServerMessageHandler.broadcast('onAsyncTaskOutput', 'batchMarkdownlint:scanTarget', completePath);
+    ServerMessenger.broadcast(ID, 'onAsyncTaskOutput', 'batchMarkdownlint:scanTarget', completePath);
 
     if (fs.statSync(completePath).isDirectory()) {
       await walkDir(completePath, config, signal);
@@ -42,7 +43,7 @@ async function walkDir(dir: string, config: Configuration, signal: AbortSignal) 
       if (results.length > 0) {
         results.reverse();
         errorsMap!.set(completePath, errors);
-        ServerMessageHandler.broadcast('onAsyncTaskOutput', 'batchMarkdownlint:addItem', {
+        ServerMessenger.broadcast(ID, 'onAsyncTaskOutput', 'batchMarkdownlint:addItem', {
           file: completePath,
           msgs: results.map((item) => {
             return {
@@ -67,7 +68,7 @@ async function startWalk(targetPath: string) {
     const config = Object.keys(settingConfig).length > 0 ? settingConfig : MD_DEFAULT_CONFIG;
     await walkDir(targetPath, config, controller.signal);
     if (controller && !controller.signal.aborted) {
-      ServerMessageHandler.broadcast('onAsyncTaskOutput', 'batchMarkdownlint:stop');
+      ServerMessenger.broadcast(ID, 'onAsyncTaskOutput', 'batchMarkdownlint:stop');
     }
   } catch {
     stop();
@@ -91,7 +92,7 @@ async function fixMarkdown(targetPath: string, tip: boolean) {
     errorsMap.delete(targetPath);
   }
 
-  ServerMessageHandler.broadcast('onAsyncTaskOutput', 'batchMarkdownlint:fixItem', {
+  ServerMessenger.broadcast(ID, 'onAsyncTaskOutput', 'batchMarkdownlint:fixItem', {
     tip,
     file: targetPath,
     msgs: results.map((item) => {
@@ -116,13 +117,13 @@ async function batchFixMarkdown(targetPaths: string[]) {
         return;
       }
 
-      ServerMessageHandler.broadcast('onAsyncTaskOutput', 'batchMarkdownlint:scanTarget', targetPath);
+      ServerMessenger.broadcast(ID, 'onAsyncTaskOutput', 'batchMarkdownlint:scanTarget', targetPath);
       await fixMarkdown(targetPath, false);
       await sleep(50);
     }
 
     if (controller && !controller.signal.aborted) {
-      ServerMessageHandler.broadcast('onAsyncTaskOutput', 'batchMarkdownlint:stop');
+      ServerMessenger.broadcast(ID, 'onAsyncTaskOutput', 'batchMarkdownlint:stop');
     }
   } catch {
     stop();
@@ -152,7 +153,7 @@ export async function createBatchMarkdownlintWebview(context: vscode.ExtensionCo
     context,
     viewType: 'Doc Tools：检查结果',
     title: 'Doc Tools：检查结果',
-    showOptions: vscode.ViewColumn.Beside,
+    showOptions: vscode.ViewColumn.Two,
     iconPath: vscode.Uri.file(path.join(context.extensionPath, 'resources', isDarkTheme ? 'icon-preview-dark.svg' : 'icon-preview-light.svg')),
     injectData: {
       path: '/batch-markdownlint-result',
@@ -163,7 +164,7 @@ export async function createBatchMarkdownlintWebview(context: vscode.ExtensionCo
       },
     },
     onBeforeLoad(webviewPanel, isDev) {
-      ServerMessageHandler.bind(webviewPanel, isDev);
+      ServerMessenger.bind(ID, webviewPanel, isDev);
     },
   });
 

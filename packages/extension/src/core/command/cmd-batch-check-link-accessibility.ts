@@ -2,12 +2,13 @@ import * as vscode from 'vscode';
 import fs from 'fs';
 import path from 'path';
 import { existsAsync, getFileContentAsync, getMarkdownFilterContent, readdirAsync } from 'shared';
-import { BroadcastT, MessageT, OPERATION_TYPE, ServerMessageHandler, SOURCE_TYPE } from 'webview-bridge';
+import { BroadcastT, MessageT, OPERATION_TYPE, ServerMessenger, SOURCE_TYPE } from 'webview-bridge';
 import { execCheckLinkValidity, execCheckResourceExistence } from 'checkers';
 
 import defaultWhitelistUrls from '@/config/whitelist-urls';
 import { createWebviewPanel } from '@/utils/webview';
 
+const ID = 'batch-check-link-accessibility-result';
 let controller: AbortController | null = null;
 
 async function walkDir(
@@ -29,7 +30,7 @@ async function walkDir(
     }
 
     const completePath = path.join(dir, name).replace(/\\/g, '/');
-    ServerMessageHandler.broadcast('onAsyncTaskOutput', 'batchCheckLinkAccessibility:scanTarget', completePath);
+    ServerMessenger.broadcast(ID, 'onAsyncTaskOutput', 'batchCheckLinkAccessibility:scanTarget', completePath);
 
     if (fs.statSync(completePath).isDirectory()) {
       await walkDir(completePath, opts);
@@ -64,7 +65,7 @@ async function walkDir(
       results.forEach((r) => {
         r.forEach((item) => {
           if ((!opts.disableCheck404 && item.extras === 404) || !opts.disableCheckOtherStatus) {
-            ServerMessageHandler.broadcast('onAsyncTaskOutput', 'batchCheckLinkAccessibility:addItem', {
+            ServerMessenger.broadcast(ID, 'onAsyncTaskOutput', 'batchCheckLinkAccessibility:addItem', {
               url: item.content,
               status: item.extras,
               start: item.start,
@@ -101,7 +102,7 @@ async function startWalk(
     });
 
     if (controller && !controller.signal.aborted) {
-      ServerMessageHandler.broadcast('onAsyncTaskOutput', 'batchCheckLinkAccessibility:stop');
+      ServerMessenger.broadcast(ID, 'onAsyncTaskOutput', 'batchCheckLinkAccessibility:stop');
     }
   } catch {
     stopWalk();
@@ -113,7 +114,7 @@ function stopWalk() {
     controller.abort();
   }
   controller = null;
-  ServerMessageHandler.broadcast('onAsyncTaskOutput', 'batchCheckLinkAccessibility:stop');
+  ServerMessenger.broadcast(ID, 'onAsyncTaskOutput', 'batchCheckLinkAccessibility:stop');
 }
 
 /**
@@ -139,7 +140,7 @@ export async function createBatchCheckLinkAccessibilityWebview(context: vscode.E
     context,
     viewType: 'Doc Tools：检查结果',
     title: 'Doc Tools：检查结果',
-    showOptions: vscode.ViewColumn.Beside,
+    showOptions: vscode.ViewColumn.Two,
     iconPath: vscode.Uri.file(path.join(context.extensionPath, 'resources', isDarkTheme ? 'icon-preview-dark.svg' : 'icon-preview-light.svg')),
     injectData: {
       path: '/batch-check-link-accessibility-result',
@@ -150,7 +151,7 @@ export async function createBatchCheckLinkAccessibilityWebview(context: vscode.E
       },
     },
     onBeforeLoad(webviewPanel, isDev) {
-      ServerMessageHandler.bind(webviewPanel, isDev);
+      ServerMessenger.bind(ID, webviewPanel, isDev);
     },
   });
 

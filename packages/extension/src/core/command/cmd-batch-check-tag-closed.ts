@@ -2,11 +2,12 @@ import * as vscode from 'vscode';
 import fs from 'fs';
 import path from 'path';
 import { existsAsync, getFileContentAsync, getMarkdownFilterContent, readdirAsync } from 'shared';
-import { BroadcastT, MessageT, OPERATION_TYPE, ServerMessageHandler, SOURCE_TYPE } from 'webview-bridge';
+import { BroadcastT, MessageT, OPERATION_TYPE, ServerMessenger, SOURCE_TYPE } from 'webview-bridge';
 import { execCheckTagClosed } from 'checkers';
 
 import { createWebviewPanel } from '@/utils/webview';
 
+const ID = 'batch-check-tag-closed-result';
 let controller: AbortController | null = null;
 
 async function walkDir(dir: string, signal: AbortSignal) {
@@ -17,7 +18,7 @@ async function walkDir(dir: string, signal: AbortSignal) {
     }
 
     const completePath = path.join(dir, name).replace(/\\/g, '/');
-    ServerMessageHandler.broadcast('onAsyncTaskOutput', 'batchCheckTagClosed:scanTarget', completePath);
+    ServerMessenger.broadcast(ID, 'onAsyncTaskOutput', 'batchCheckTagClosed:scanTarget', completePath);
 
     if (fs.statSync(completePath).isDirectory()) {
       await walkDir(completePath, signal);
@@ -32,7 +33,7 @@ async function walkDir(dir: string, signal: AbortSignal) {
       }
 
       results.forEach((item) => {
-        ServerMessageHandler.broadcast('onAsyncTaskOutput', 'batchCheckTagClosed:addItem', {
+        ServerMessenger.broadcast(ID, 'onAsyncTaskOutput', 'batchCheckTagClosed:addItem', {
           start: item.start,
           end: item.end,
           file: completePath,
@@ -49,7 +50,7 @@ async function startWalk(targetPath: string) {
     controller = new AbortController();
     await walkDir(targetPath, controller.signal);
     if (controller && !controller.signal.aborted) {
-      ServerMessageHandler.broadcast('onAsyncTaskOutput', 'batchCheckTagClosed:stop');
+      ServerMessenger.broadcast(ID, 'onAsyncTaskOutput', 'batchCheckTagClosed:stop');
     }
   } catch {
     stopWalk();
@@ -61,7 +62,7 @@ function stopWalk() {
     controller.abort();
   }
   controller = null;
-  ServerMessageHandler.broadcast('onAsyncTaskOutput', 'batchCheckTagClosed:stop');
+  ServerMessenger.broadcast(ID, 'onAsyncTaskOutput', 'batchCheckTagClosed:stop');
 }
 
 /**
@@ -87,7 +88,7 @@ export async function cretaeBatchCheckTagClosedWebview(context: vscode.Extension
     context,
     viewType: 'Doc Tools：检查结果',
     title: 'Doc Tools：检查结果',
-    showOptions: vscode.ViewColumn.Beside,
+    showOptions: vscode.ViewColumn.Two,
     iconPath: vscode.Uri.file(path.join(context.extensionPath, 'resources', isDarkTheme ? 'icon-preview-dark.svg' : 'icon-preview-light.svg')),
     injectData: {
       path: '/batch-check-tag-closed-result',
@@ -98,7 +99,7 @@ export async function cretaeBatchCheckTagClosedWebview(context: vscode.Extension
       },
     },
     onBeforeLoad(webviewPanel, isDev) {
-      ServerMessageHandler.bind(webviewPanel, isDev);
+      ServerMessenger.bind(ID, webviewPanel, isDev);
     },
   });
 

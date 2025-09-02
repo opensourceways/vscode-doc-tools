@@ -8,47 +8,64 @@ import { handleMarkdownMessage } from './handler-markdown';
 import { handleTocMessage } from './handler-toc';
 import { handleConfigMessage } from './handler-config';
 
-const symbolWebviewPanel = Symbol('symbolWebviewPanel');
+const symbolWebviewPanelMap = Symbol('symbolWebviewPanelMap');
 
-export class ServerMessageHandler {
-  static [symbolWebviewPanel]: vscode.WebviewPanel | null;
+export class ServerMessenger {
+  static [symbolWebviewPanelMap] = new Map<string, vscode.WebviewPanel>();
 
   /**
    * 绑定webviewPanel
+   * @param {string} id 绑定id
    * @param {vscode.WebviewPanel} webviewPanel webviewPanel
    * @param {boolean} isDev 是否处于开发环境
    */
-  static bind(webviewPanel: vscode.WebviewPanel, isDev: boolean) {
-    if (this[symbolWebviewPanel]) {
-      this[symbolWebviewPanel].dispose();
+  static bind(id: string, webviewPanel: vscode.WebviewPanel, isDev: boolean) {
+    if (this[symbolWebviewPanelMap].has(id)) {
+      this[symbolWebviewPanelMap].get(id)!.dispose();
     }
 
-    this[symbolWebviewPanel] = webviewPanel;
+    this[symbolWebviewPanelMap].set(id, webviewPanel);
     handlePageMessage(webviewPanel);
     handleResourceMessage(webviewPanel);
     handleMarkdownMessage(webviewPanel, isDev);
     handleTocMessage(webviewPanel);
     handleConfigMessage(webviewPanel);
+
+    webviewPanel.onDidDispose(() => {
+      this[symbolWebviewPanelMap].delete(id);
+    });
   }
 
-  static unbind() {
-    if (this[symbolWebviewPanel]) {
-      this[symbolWebviewPanel].dispose();
-      this[symbolWebviewPanel] = null;
+  /**
+   * 解绑webviewPanel，为空时解绑所有
+   * @param {string} id id
+   */
+  static unbind(id?: string) {
+    if (id) {
+      if (this[symbolWebviewPanelMap].has(id)) {
+        this[symbolWebviewPanelMap].get(id)!.dispose();
+        this[symbolWebviewPanelMap].delete(id);
+      }
+    } else {
+      this[symbolWebviewPanelMap].forEach((webviewPanel) => {
+        webviewPanel.dispose();
+      });
+      this[symbolWebviewPanelMap].clear();
     }
   }
 
   /**
    * 广播消息
+   * @param {string} id id
    * @param {string} name 消息名称
    * @param {any[]} arg 附带参数
    */
-  static broadcast(name: string, ...arg: any[]) {
-    if (!this[symbolWebviewPanel]) {
+  static broadcast(id: string, name: string, ...arg: any[]) {
+    if (!this[symbolWebviewPanelMap].has(id)) {
       return;
     }
 
-    this[symbolWebviewPanel].webview.postMessage(
+    this[symbolWebviewPanelMap].get(id)!.webview.postMessage(
       createBroadcastMessage({
         source: SOURCE_TYPE.server,
         data: {

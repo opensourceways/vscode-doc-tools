@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { ServerMessageHandler } from 'webview-bridge';
+import { ServerMessenger } from 'webview-bridge';
 
 import { EVENT_TYPE } from '@/@types/event';
 import { getCodeActions, triggerCheck } from '@/core/check';
@@ -181,6 +181,6 @@ export function activate(context: vscode.ExtensionContext) {
  * 失活插件
  */
 export function deactivate() {
-  ServerMessageHandler.unbind();
+  ServerMessenger.unbind();
   diagnosticsCollection.dispose();
 }
