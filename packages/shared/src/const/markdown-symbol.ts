@@ -5,7 +5,7 @@ export const TEXT_REGEX_MD_COMMENT = '(<!--.*?-->)';
 export const TEXT_REGEX_MD_CODE = '(```[\\s\\S]*?```)';
 
 // 行内代码块
-export const TEXT_REGEX_MD_INLINE_CODE = '((?<!\\\\)`[^`\\n]+?(?<!\\\\)`(?=\\s|[^`]|$))';
+export const TEXT_REGEX_MD_INLINE_CODE = '((?<!\\\\)`{1,2}[^`\\n]+?(?<!\\\\)`{1,2}(?=\\s|[^`]|$))';
 
 // 标题：h1-h6
 export const TEXT_REGEX_MD_HEADING = '((?:^|\\n)\\s*#{1,6}\\s.*(?=\\n|$))';
