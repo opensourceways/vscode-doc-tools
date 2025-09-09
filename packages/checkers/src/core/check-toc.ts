@@ -103,6 +103,11 @@ const ALLOWED_KEYS_MAP: Record<
           zh: `upstream 值必须以 http 开头`,
           en: `upstream must start with http.`,
         };
+      } else if (!value.startsWith('https') && (value.includes('github.com') || value.includes('gitee.com') || value.includes('gitcode.com'))) {
+        return {
+          zh: `github、gitee、gitcode 链接必须以 https 开头`,
+          en: `github、gitee、gitcode links must start with https.`,
+        };
       }
 
       const status = await getLinkStatus(value, '', [], signal);
