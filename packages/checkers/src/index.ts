@@ -1,3 +1,9 @@
+export { DEFAULT_MD_CONFIG } from './config/markdownlint';
+export { DEFAULT_WHITELIST_NAMES } from './config/whitelist-names';
+export { DEFAULT_WHITELIST_URLS } from './config/whitelist-urls';
+export { DEFAULT_WHITELIST_WORDS } from './config/whitelist-words';
+
+export * from './@types/result';
 export * from './core/markdownlint';
 export * from './core/check-codespell';
 export * from './core/check-link-validity';

@@ -270,6 +270,7 @@
     "build:webview": "yarn workspace webview build",
     "dev:ext": "yarn workspace extension watch:esbuild",
     "build:ext": "yarn workspace extension package",
+    "build:docs-ci": "yarn workspace ci package",
     "build": "yarn build:ext && yarn build:webview && vsce package"
   }
 }

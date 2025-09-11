@@ -1,3 +1,5 @@
+import { type Configuration } from 'markdownlint';
+
 // markdown-lint 报错中文描述
 export const MD_DESC: Record<string, string> = {
   MD001: `标题等级只能每次扩大一个。{expected_actual}`,
@@ -52,4 +54,35 @@ export const MD_DESC: Record<string, string> = {
   MD056: `表格每一行的列数应该相同，请检查是否某一行列数不对`,
   MD058: `表格前后应该换行`,
   MD059: `链接文本应该是描述性的，禁止使用click here、here、link、more`,
+};
+
+export const DEFAULT_MD_CONFIG: Configuration = {
+  default: true,
+  MD003: { style: 'atx' },
+  MD029: { style: 'ordered' },
+  MD004: false,
+  MD007: false,
+  MD009: false,
+  MD013: false,
+  MD014: false,
+  MD020: false,
+  MD021: false,
+  MD024: false,
+  MD025: false,
+  MD033: false,
+  MD036: false,
+  MD042: false,
+  MD043: false,
+  MD044: false,
+  MD045: false,
+  MD046: false,
+  MD048: false,
+  MD049: false,
+  MD050: false,
+  MD051: false,
+  MD052: false,
+  MD053: false,
+  MD055: false,
+  MD056: false,
+  MD057: false,
 };

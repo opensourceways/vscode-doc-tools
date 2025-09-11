@@ -1,0 +1,17 @@
+{
+  "name": "ci",
+  "version": "0.1.1",
+  "license": "MIT",
+  "scripts": {
+    "package": "node esbuild.mjs --production"
+  },
+  "dependencies": {
+    "checkers": "*",
+    "shared": "*"
+  },
+  "devDependencies": {
+    "@types/node": "24.0.1",
+    "esbuild": "0.25.3",
+    "typescript": "5.8.3"
+  }
+}

@@ -1,8 +1,7 @@
 import * as vscode from 'vscode';
 import { type Configuration, type LintError } from 'markdownlint';
-import { execMarkdownlint, MARKDOWNLINT } from 'checkers';
+import { DEFAULT_MD_CONFIG, execMarkdownlint, MARKDOWNLINT } from 'checkers';
 
-import { MD_DEFAULT_CONFIG } from '@/config/markdownlint';
 import { isConfigEnabled } from '@/utils/common';
 
 export const lintHistory = new Map<string, LintError[]>();
@@ -18,7 +17,7 @@ export async function markdownlint(document: vscode.TextDocument) {
   }
 
   const settingConfig = vscode.workspace.getConfiguration('docTools.markdownlint').get<Configuration>('config', {});
-  const config = Object.keys(settingConfig).length > 0 ? settingConfig : MD_DEFAULT_CONFIG;
+  const config = Object.keys(settingConfig).length > 0 ? settingConfig : DEFAULT_MD_CONFIG;
   const [results, error] = await execMarkdownlint(document.getText(), config);
   lintHistory.set(document.uri.fsPath, error);
 

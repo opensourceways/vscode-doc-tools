@@ -1,7 +1,6 @@
 import * as vscode from 'vscode';
-import { CODESPELL_CHECK, execCheckCodespell } from 'checkers';
+import { CODESPELL_CHECK, DEFAULT_WHITELIST_WORDS, execCheckCodespell } from 'checkers';
 
-import defaultWhitelistWords from '@/config/whitelist-words';
 import { isConfigEnabled } from '@/utils/common';
 
 
@@ -20,7 +19,7 @@ export async function checkCodespell(content: string, document: vscode.TextDocum
   }
 
   const whiteListConfig = vscode.workspace.getConfiguration('docTools.check.codespell').get<string[]>('whiteList', []);
-  const whiteList = Array.isArray(whiteListConfig) ? [...whiteListConfig, ...defaultWhitelistWords] : defaultWhitelistWords;
+  const whiteList = Array.isArray(whiteListConfig) ? [...whiteListConfig, ...DEFAULT_WHITELIST_WORDS] : DEFAULT_WHITELIST_WORDS;
   const results = await execCheckCodespell(content, whiteList);
 
   return results.map(item => { 

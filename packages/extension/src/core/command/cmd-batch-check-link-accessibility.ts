@@ -3,9 +3,8 @@ import fs from 'fs';
 import path from 'path';
 import { existsAsync, getFileContentAsync, getMarkdownFilterContent, readdirAsync, sleep } from 'shared';
 import { BroadcastT, MessageT, OPERATION_TYPE, ServerMessenger, SOURCE_TYPE } from 'webview-bridge';
-import { execCheckLinkValidity, execCheckResourceExistence } from 'checkers';
+import { DEFAULT_WHITELIST_URLS, execCheckLinkValidity, execCheckResourceExistence } from 'checkers';
 
-import defaultWhitelistUrls from '@/config/whitelist-urls';
 import { createWebviewPanel } from '@/utils/webview';
 
 const ID = 'batch-check-link-accessibility-result';
@@ -18,10 +17,10 @@ const sendAsyncTaskOutput = (() => {
 
   return (data: any, imediately = false) => {
     if (data?.evt === 'scanTarget') {
-      messages = messages.filter(item => item?.evt !== 'scanTarget');
+      messages = messages.filter((item) => item?.evt !== 'scanTarget');
     }
     messages.push(data);
-    
+
     if (timer && !imediately && messages.length < 1000) {
       return;
     }
@@ -135,7 +134,7 @@ async function startWalk(
     controller?.abort();
     controller = new AbortController();
     const whiteListConfig = vscode.workspace.getConfiguration('docTools.check.url').get<string[]>('whiteList', []);
-    const whiteList = Array.isArray(whiteListConfig) ? [...whiteListConfig, ...defaultWhitelistUrls] : defaultWhitelistUrls;
+    const whiteList = Array.isArray(whiteListConfig) ? [...whiteListConfig, ...DEFAULT_WHITELIST_URLS] : DEFAULT_WHITELIST_URLS;
     await walkDir(targetPath, {
       ...opts,
       whiteList,

@@ -1,5 +1,5 @@
 // 检测链接白名单
-export default [
+export const DEFAULT_WHITELIST_URLS = [
   'https://$(host_ip):8080',
   'https://域名',
   'http://ip:8888',

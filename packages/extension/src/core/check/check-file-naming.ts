@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import fs from 'fs';
-import { execCheckFileNaming } from 'checkers';
+import { DEFAULT_WHITELIST_NAMES, execCheckFileNaming } from 'checkers';
 
 import { isConfigEnabled } from '@/utils/common';
 
@@ -10,7 +10,7 @@ import { isConfigEnabled } from '@/utils/common';
  */
 function isEnabled() {
   if (isConfigEnabled('docTools.check.name')) {
-    vscode.workspace.getConfiguration('docTools.check.fileNaming').update('enable', true, vscode.ConfigurationTarget.Global)
+    vscode.workspace.getConfiguration('docTools.check.fileNaming').update('enable', true, vscode.ConfigurationTarget.Global);
     vscode.workspace.getConfiguration('docTools.check.name').update('enable', undefined, vscode.ConfigurationTarget.Global);
     return true;
   }
@@ -29,7 +29,7 @@ export async function checkFileNaming(document: vscode.TextDocument) {
   }
 
   const config = vscode.workspace.getConfiguration('docTools.check.name');
-  const whiteList = config.get<string[]>('whiteList', []);
+  const whiteList = [...config.get<string[]>('whiteList', []), ...DEFAULT_WHITELIST_NAMES];
   const fsPath = fs.realpathSync.native(document.uri.fsPath).replace(/\\/g, '/');
 
   if (!execCheckFileNaming(fsPath.split('/').pop() || '', whiteList)) {

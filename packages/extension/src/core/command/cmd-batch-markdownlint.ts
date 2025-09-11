@@ -4,10 +4,9 @@ import path from 'path';
 import { applyFixes, type Configuration, type LintError } from 'markdownlint';
 import { existsAsync, getFileContentAsync, readdirAsync, sleep } from 'shared';
 import { BroadcastT, MessageT, OPERATION_TYPE, ServerMessenger, SOURCE_TYPE } from 'webview-bridge';
-import { execMarkdownlint } from 'checkers';
+import { DEFAULT_MD_CONFIG, execMarkdownlint } from 'checkers';
 
 import { createWebviewPanel } from '@/utils/webview';
-import { MD_DEFAULT_CONFIG } from '@/config/markdownlint';
 
 const ID = 'batch-markdownlint-result';
 let controller: AbortController | null = null;
@@ -104,7 +103,7 @@ async function startWalk(targetPath: string) {
     controller = new AbortController();
     errorsMap = new Map();
     const settingConfig = vscode.workspace.getConfiguration('docTools.markdownlint').get<Configuration>('config', {});
-    const config = Object.keys(settingConfig).length > 0 ? settingConfig : MD_DEFAULT_CONFIG;
+    const config = Object.keys(settingConfig).length > 0 ? settingConfig : DEFAULT_MD_CONFIG;
     await walkDir(targetPath, config, controller.signal);
     if (controller && !controller.signal.aborted) {
       sendAsyncTaskOutput({ evt: 'stop' }, true);
@@ -121,7 +120,7 @@ async function fixMarkdown(targetPath: string, tip: boolean) {
 
   const content = applyFixes(await getFileContentAsync(targetPath), errorsMap.get(targetPath)!);
   const settingConfig = vscode.workspace.getConfiguration('docTools.markdownlint').get<Configuration>('config', {});
-  const config = Object.keys(settingConfig).length > 0 ? settingConfig : MD_DEFAULT_CONFIG;
+  const config = Object.keys(settingConfig).length > 0 ? settingConfig : DEFAULT_MD_CONFIG;
   const [results, errors] = await execMarkdownlint(content, config);
 
   if (results.length > 0) {

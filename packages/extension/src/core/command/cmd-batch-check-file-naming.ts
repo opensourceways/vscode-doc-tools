@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import fs from 'fs';
 import path from 'path';
-import { execCheckFileNaming } from 'checkers';
+import { DEFAULT_WHITELIST_NAMES, execCheckFileNaming } from 'checkers';
 import { BroadcastT, MessageT, OPERATION_TYPE, ServerMessenger, SOURCE_TYPE } from 'webview-bridge';
 import { readdirAsync, sleep } from 'shared';
 
@@ -17,10 +17,10 @@ const sendAsyncTaskOutput = (() => {
 
   return (data: any, imediately = false) => {
     if (data?.evt === 'scanTarget') {
-      messages = messages.filter(item => item?.evt !== 'scanTarget');
+      messages = messages.filter((item) => item?.evt !== 'scanTarget');
     }
     messages.push(data);
-    
+
     if (timer && !imediately && messages.length < 1000) {
       return;
     }
@@ -81,7 +81,7 @@ async function startWalk(targetPath: string) {
     controller?.abort();
     controller = new AbortController();
     const config = vscode.workspace.getConfiguration('docTools.check.name');
-    const whiteList = config.get<string[]>('whiteList', []);
+    const whiteList = [...config.get<string[]>('whiteList', []), ...DEFAULT_WHITELIST_NAMES];
     await walkDir(targetPath, whiteList, controller.signal);
     if (controller && !controller.signal.aborted) {
       sendAsyncTaskOutput({ evt: 'stop' }, true);
