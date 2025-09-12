@@ -7,12 +7,40 @@ import { execSync } from 'child_process';
  */
 export function getGitChangedFiles(repoPath: string) {
   try {
-    return execSync(`git log -1 --name-only --pretty=format: --diff-filter=AMR`, {
+    const lines = execSync(`git show --numstat`, {
       cwd: repoPath,
       encoding: 'utf-8',
     })
       .trim()
       .split('\n');
+
+    const changed: string[] = [];
+    for (const line of lines) {
+      const sp = line.split(/\t/);
+      if (sp.length < 3) {
+        continue;
+      }
+      
+      const additions = Number(sp[0].trim());
+      if (isNaN(additions)) {
+        continue;
+      }
+
+      const deletions = Number(sp[1].trim());
+      // 跳过删除
+      if (additions === 0 && deletions > 0) {
+        continue;
+      }
+
+      let filePath = sp[2].trim();
+      if (filePath.includes('=>')) {
+        filePath = filePath.split('{')[0] + filePath.split('=>')[1].replace('}', '').replace('{', '').trim();
+      }
+
+      changed.push(filePath);
+    }
+
+    return changed;
   } catch {
     return [];
   }

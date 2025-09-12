@@ -10,7 +10,9 @@ export async function execCheckResourceExistenceCi(content: string, basePath: st
     prefixPath: path.dirname(path.join(basePath, filePath)),
   });
 
-  return results.map((item) => {
+  return results.filter((item) => {
+    return item.extras === 404;
+  }).map((item) => {
     const output = createOutputItem({
       fileContent: content,
       filePath,

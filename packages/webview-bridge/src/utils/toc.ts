@@ -55,6 +55,7 @@ function getId(item: Record<string, any>, recordIds: Set<string>) {
       while (recordIds.has(`${item.label}${i}`)) {
         i++;
       }
+      recordIds.add(`${item.label}${i}`);
       return `${item.label}${i}`;
     }
   }
@@ -114,10 +115,18 @@ function parseToc(toc: Record<string, any>, tocDirPath: string, recordIds = new 
     if (!Array.isArray(toc.sections)) {
       if (fs.existsSync(toc.href)) {
         toc.sections = getMarkdownLevelTitles(fs.readFileSync(toc.href, 'utf-8'), 2).map((item) => {
+          let id = `${toc.id}#${getMarkdownTitleId(item)}`;
+          let i = 1;
+          while(recordIds.has(id)) {
+            id = `${toc.id}#${getMarkdownTitleId(item)}-${i}`;
+            i++;
+          }
+          
+          recordIds.add(id);
           return {
             type: 'anchor',
             label: item,
-            id: `${toc.id}#${getMarkdownTitleId(item)}`,
+            id,
             href: `${toc.href}#${getMarkdownTitleId(item)}`,
           };
         });

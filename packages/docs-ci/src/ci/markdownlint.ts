@@ -10,7 +10,7 @@ export async function execMarkdownlintCi(content: string, filePath: string) {
       fileContent: content,
       filePath,
       checkType: item.name,
-      message: item.message.zh,
+      message: `${item.extras?.split(',')?.[0] || ''}：${item.message.zh}`,
       errorContent: item.content,
       errorContentStartIndex: item.start,
       errorContentEndIndex: item.end,

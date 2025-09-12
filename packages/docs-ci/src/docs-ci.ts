@@ -22,8 +22,7 @@ import {
 } from 'checkers';
 
 (async () => {
-  const newBranches = ['master', 'stable-common', 'stable-25.03', '22.03_LTS_SP4', 'stable-24.03_LTS_SP1', 'stable-24.03_LTS_SP2'];
-  const [repoPath, checkDirsStr, targetBranch, detailUrl] = process.argv.slice(2);
+  const [repoPath, checkDirsStr, targetOwnerRepo, targetBranch, detailUrl] = process.argv.slice(2);
   if (!repoPath) {
     console.error('请提供仓库存放路径');
     return;
@@ -31,16 +30,10 @@ import {
 
   const checkDirs = checkDirsStr.trim() ? checkDirsStr.trim().split(',') : ['docs/zh', 'docs/en'];
   console.log(`检查目录: ${checkDirsStr}`);
+  console.log(`目标仓库: ${targetOwnerRepo}`);
   console.log(`目标分支: ${targetBranch}`);
 
-  // 获取变更文件
   const changed = getGitChangedFiles(repoPath);
-  if (changed.length === 0) {
-    console.log('暂无需要检查的变更文件');
-    return;
-  }
-
-  // 执行检查
   const outputItems: OutputItemT[] = [];
   for (const filePath of changed) {
     if (!checkDirs.some((dir) => filePath.startsWith(dir))) {
@@ -61,7 +54,7 @@ import {
         outputItems.push(...(await execCheckLinkValidityCi(content, repoPath, filePath)));
         // resource existence check
         outputItems.push(...(await execCheckResourceExistenceCi(content, repoPath, filePath)));
-        if (!newBranches.includes(targetBranch)) {
+        if (targetOwnerRepo === 'openeuler/docs-centralized') {
           continue;
         }
 
@@ -77,7 +70,7 @@ import {
       }
 
       // toc check
-      if (completeFilePath.endsWith('_toc.yaml') && newBranches.includes(targetBranch)) {
+      if (completeFilePath.endsWith('_toc.yaml') && targetOwnerRepo !== 'openeuler/docs-centralized') {
         outputItems.push(...(await execCheckTocCi(content, repoPath, filePath)));
         continue;
       }
@@ -92,24 +85,28 @@ import {
 
   // 检查执行结果
   const outputPath = './output.md';
-  if (outputItems.length === 0) {
-    console.log('✅ 门禁检查通过！');
-    fs.writeFileSync(outputPath, '✅ 门禁检查通过！');
-    return;
-  }
-
   const checkItems: Record<string, boolean> = {
     [MARKDOWNLINT]: true,
     [LINK_VALIDITY_CHECK]: true,
     [RESOURCE_EXISTENCE_CHECK]: true,
   };
 
-  if (newBranches.includes(targetBranch)) {
+  if (targetOwnerRepo !== 'openeuler/docs-centralized') {
     checkItems[CODESPELL_CHECK] = true;
     checkItems[TAG_CLOSED_CHECK] = true;
     checkItems[FILE_NAMING_CHECK] = true;
     checkItems[FILE_NAMING_CONSISTENCY_CHECK] = true;
     checkItems[TOC_CHECK] = true;
+  }
+
+  if (outputItems.length === 0) {
+    const outputCheckItemsTable = ['| 检查项 | 检查结果 | 详情 |', '| --- | --- | --- |'];
+    Object.keys(checkItems).forEach((item) => {
+      outputCheckItemsTable.push(`| ${item} | ${checkItems[item] ? '✅ 已通过' : '❌ 未通过'} | [查看详情](${detailUrl}) |`);
+    });
+    console.log('✅ 门禁检查通过！');
+    fs.writeFileSync(outputPath, `✅ 门禁检查通过！\n\n${outputCheckItemsTable.join('\n')}`);
+    return;
   }
 
   const outputErrorsTable = ['| 序号 | 错误详情 |', '| --- | --- |'];

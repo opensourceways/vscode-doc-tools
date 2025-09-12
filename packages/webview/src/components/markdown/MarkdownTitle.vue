@@ -38,7 +38,7 @@ const onMouseLeave = () => {
 const onClickAnchor = () => {
   const contentDom = document.querySelector('.markdown-body');
   if (contentDom) {
-    const target = contentDom.querySelector<HTMLElement>(`#${props.titleId}`) || contentDom.querySelector<HTMLElement>(`[name='${props.titleId}']`);
+    const target = contentDom.querySelector<HTMLElement>(`#user-content-${props.titleId}`) || contentDom.querySelector<HTMLElement>(`#${props.titleId}`) || contentDom.querySelector<HTMLElement>(`[name='${props.titleId}']`);
     const scrollContainer = document.querySelector<HTMLElement>('#app > .o-scroller > .o-scroller-container');
     if (target && scrollContainer) {
       scrollIntoView(target, scrollContainer);
@@ -48,7 +48,7 @@ const onClickAnchor = () => {
 
 const onClickCopyLink = (evt: Event) => {
   useClipboard({
-    text: `#${props.titleId}`,
+    text: `#${props.titleId.replace('user-content-', '')}`,
     target: evt as MouseEvent,
     success: () => {
       message.success({ content: t('docs.copyAnchorSuccess') });
