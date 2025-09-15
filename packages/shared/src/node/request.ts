@@ -11,7 +11,7 @@ export function createRequest(
   url: string,
   method: string,
   opts?: {
-    timeout: number;
+    timeout?: number;
     signal?: AbortSignal;
   }
 ) {
@@ -20,6 +20,7 @@ export function createRequest(
   const abortFunc = () => {
     controller.abort();
     signal?.removeEventListener('abort', abortFunc);
+    clearTimeout(timer);
   };
 
   signal?.addEventListener('abort', abortFunc);

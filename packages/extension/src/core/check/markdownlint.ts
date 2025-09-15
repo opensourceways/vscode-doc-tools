@@ -17,8 +17,7 @@ export async function markdownlint(document: vscode.TextDocument) {
   }
 
   const settingConfig = vscode.workspace.getConfiguration('docTools.markdownlint').get<Configuration>('config', {});
-  const config = Object.keys(settingConfig).length > 0 ? settingConfig : DEFAULT_MD_CONFIG;
-  const [results, error] = await execMarkdownlint(document.getText(), config);
+  const [results, error] = await execMarkdownlint(document.getText(), Object.keys(settingConfig).length > 0 ? settingConfig : {});
   lintHistory.set(document.uri.fsPath, error);
 
   return results.map((item) => {

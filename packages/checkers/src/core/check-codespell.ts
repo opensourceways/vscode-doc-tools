@@ -1,6 +1,7 @@
 import { spellCheckDocument, type ValidationIssue } from 'cspell-lib';
 
 import { type ResultT } from '../@types/result';
+import { getRemoteCodespellConfig } from '../config';
 
 export const CODESPELL_CHECK = 'codespell-check';
 
@@ -11,6 +12,7 @@ export const CODESPELL_CHECK = 'codespell-check';
  * @returns {ResultT<string[] | undefined>[]} 返回检查结果
  */
 export async function execCheckCodespell(content: string, whiteList: string[]) {
+  const remoteWhitelistConfig = await getRemoteCodespellConfig();
   const results = await spellCheckDocument(
     {
       uri: 'text.txt',
@@ -24,7 +26,7 @@ export async function execCheckCodespell(content: string, whiteList: string[]) {
     },
     {
       allowCompoundWords: true,
-      words: whiteList,
+      words: [...remoteWhitelistConfig, ...whiteList],
       suggestionsTimeout: 2000,
       ignoreRegExpList: [
         '/\\[.*?\\]\\(.*?\\)/g', // 匹配Markdown链接语法：[文本](URL)

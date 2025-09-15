@@ -1,6 +1,7 @@
 import { getLinkStatus } from 'shared';
 
 import { ResultT } from '../@types/result';
+import { getRemoteWhitelistUrlsConfig } from '../config';
 
 export const RESOURCE_EXISTENCE_CHECK = 'resource-existence-check';
 
@@ -39,7 +40,9 @@ export async function execCheckResourceExistence(
     signal, 
   } = opts;
   const results: ResultT<number>[] = [];
-  const set = new Set(whiteList);
+  const remoteWhileList = await getRemoteWhitelistUrlsConfig(signal);
+  const allWhitelist = [...whiteList, ...remoteWhileList];
+  const set = new Set(allWhitelist);
 
   for (const reg of REGEX) {
     for (const match of content.matchAll(reg)) {
@@ -64,7 +67,7 @@ export async function execCheckResourceExistence(
         continue;
       }
 
-      const status = await getLinkStatus(link, prefixPath, whiteList, signal);
+      const status = await getLinkStatus(link, prefixPath, allWhitelist, signal);
 
       // 跳过100 - 400之间的状态码
       if (status >= 100 && status < 400) {

@@ -2,13 +2,14 @@ import path from 'path';
 import { getFileContentAsync, getLinkStatus, getMarkdownIds } from 'shared';
 
 import { ResultT } from '../@types/result';
+import { getRemoteWhitelistUrlsConfig } from '../config';
 
 export const LINK_VALIDITY_CHECK = 'link-validity-check';
 
 const EN_DESCRIPTION: Record<string, string> = {
-  '锚点无法访问': 'Invalid anchor.',
-  '链接无法访问': 'Invalid link.',
-  '访问超时': 'Timeout.',
+  锚点无法访问: 'Invalid anchor.',
+  链接无法访问: 'Invalid link.',
+  访问超时: 'Timeout.',
 };
 
 const REGEX = [
@@ -41,7 +42,9 @@ export async function execCheckLinkValidity(
 ) {
   const { prefixPath, whiteList = [], disableCheckExternalUrl = false, disableCheckInternalUrl = false, disableCheckAnchor = false, signal } = opts;
   const results: ResultT<number>[] = [];
-  const set = new Set(whiteList);
+  const remoteWhileList = await getRemoteWhitelistUrlsConfig(signal);
+  const allWhitelist = [...whiteList, ...remoteWhileList];
+  const set = new Set(allWhitelist);
   let idsMap = new Map<string, Set<string>>();
 
   for (const reg of REGEX) {
@@ -74,7 +77,7 @@ export async function execCheckLinkValidity(
           continue;
         }
 
-        status = await getLinkStatus(link, prefixPath, whiteList, signal);
+        status = await getLinkStatus(link, prefixPath, allWhitelist, signal);
         if (status >= 100 && status < 400) {
           if (!disableCheckAnchor && link.startsWith('.') && anchor) {
             const mdPath = path.join(prefixPath, decodeURI(link.replace('.html', '.md')));

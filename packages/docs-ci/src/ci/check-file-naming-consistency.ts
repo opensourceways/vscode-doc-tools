@@ -5,6 +5,11 @@ import { formatLog } from '@/utils/common';
 export async function execCheckFileNamingConsistencyCi(filePath: string) {
   const [isFileNamingConsistency, similarfilePath] = await execCheckFileNamingConsistency(filePath, DEFAULT_WHITELIST_NAMES);
   if (!isFileNamingConsistency) {
+    // CI不检查中文文档是否缺少英文文档
+    if (!similarfilePath && filePath.includes('/zh/')) {
+      return [];
+    }
+
     const output = createOutputItem({
       filePath,
       checkType: 'file-naming-consistency-check',

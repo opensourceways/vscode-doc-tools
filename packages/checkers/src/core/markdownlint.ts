@@ -3,6 +3,7 @@ import { type LintError, type Configuration, type LintResults } from 'markdownli
 
 import { ResultT } from '../@types/result';
 import { MD_DESC } from '../config/markdownlint';
+import { getRemoteMarkdownlintConfig } from '../config';
 
 export const MARKDOWNLINT = 'markdownlint';
 
@@ -59,11 +60,16 @@ function parseLintResults(content: string, lintResults: LintResults) {
  * @returns {Promise<[ResultT<string>[], LintError[]]>} 返回检查结果
  */
 export function execMarkdownlint(content: string, config: Configuration): Promise<[ResultT<string>[], LintError[]]> {
-  return new Promise((resolve) => {
+  return new Promise(async (resolve) => {
+    const remoteConfig = await getRemoteMarkdownlintConfig();
+
     lint(
       {
         strings: { content },
-        config,
+        config: {
+          ...remoteConfig,
+          ...config,
+        },
       },
       (err, result) => {
         if (err) {

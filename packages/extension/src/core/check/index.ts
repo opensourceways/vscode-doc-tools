@@ -87,7 +87,6 @@ async function checkMarkdown(event: EVENT_TYPE, document: vscode.TextDocument, d
     checkPunctuationPair(content, document),
     checkExtraSpaces(content, document),
     checkTagClosed(content, document),
-    checkCodespell(content, document),
   ]).then((result) => {
     return result.flat();
   });
@@ -96,7 +95,11 @@ async function checkMarkdown(event: EVENT_TYPE, document: vscode.TextDocument, d
   diagnosticsCollection.set(document.uri, diagnostics);
 
   // 耗时久的另外执行
-  const diagnosticsLong = [...(await checkResourceExistence(content, document)), ...(await checkLinkValidity(content, document))];
+  const diagnosticsLong = [
+    ...(await checkCodespell(content, document)),
+    ...(await checkResourceExistence(content, document)), 
+    ...(await checkLinkValidity(content, document)),
+  ];
   if (diagnosticsLong.length > 0) {
     diagnostics.push(...diagnosticsLong);
     diagnosticsCollection.set(document.uri, diagnostics);

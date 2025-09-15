@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import { existsAsync, getFileContentAsync, getMarkdownFilterContent, readdirAsync, sleep } from 'shared';
 import { BroadcastT, MessageT, OPERATION_TYPE, ServerMessenger, SOURCE_TYPE } from 'webview-bridge';
-import { DEFAULT_WHITELIST_URLS, execCheckLinkValidity, execCheckResourceExistence } from 'checkers';
+import { execCheckLinkValidity, execCheckResourceExistence } from 'checkers';
 
 import { createWebviewPanel } from '@/utils/webview';
 
@@ -134,10 +134,9 @@ async function startWalk(
     controller?.abort();
     controller = new AbortController();
     const whiteListConfig = vscode.workspace.getConfiguration('docTools.check.url').get<string[]>('whiteList', []);
-    const whiteList = Array.isArray(whiteListConfig) ? [...whiteListConfig, ...DEFAULT_WHITELIST_URLS] : DEFAULT_WHITELIST_URLS;
     await walkDir(targetPath, {
       ...opts,
-      whiteList,
+      whiteList: Array.isArray(whiteListConfig) ? whiteListConfig : [],
       signal: controller.signal,
     });
 
