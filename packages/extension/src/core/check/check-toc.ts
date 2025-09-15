@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import path from 'path';
-import { execTocCheck } from 'checkers';
+import { execCheckToc, TOC_CHECK } from 'checkers';
 
 import { isConfigEnabled } from '@/utils/common';
 
@@ -15,12 +15,12 @@ export async function checkToc(document: vscode.TextDocument) {
     return diagnostics;
   }
 
-  const results = await execTocCheck(document.getText(), path.dirname(document.uri.fsPath));
+  const results = await execCheckToc(document.getText(), path.dirname(document.uri.fsPath));
 
   return results.map((item) => {
     const range = new vscode.Range(document.positionAt(item.start), document.positionAt(item.end));
-    const diagnostic = new vscode.Diagnostic(range, item.message, vscode.DiagnosticSeverity.Error);
-    diagnostic.source = 'toc-check';
+    const diagnostic = new vscode.Diagnostic(range, item.message.zh, vscode.DiagnosticSeverity.Error);
+    diagnostic.source = TOC_CHECK;
 
     return diagnostic;
   });

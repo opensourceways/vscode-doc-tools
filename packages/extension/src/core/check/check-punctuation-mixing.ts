@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { execPunctuationMixingCheck } from 'checkers';
+import { execCheckPunctuationMixing, PUNCTUATION_MIXING_CHECK } from 'checkers';
 
 import { isConfigEnabled } from '@/utils/common';
 
@@ -14,11 +14,11 @@ export async function checkPunctuationMixing(content: string, document: vscode.T
     return [];
   }
 
-  return execPunctuationMixingCheck(content).map((item) => {
+  return execCheckPunctuationMixing(content).map((item) => {
     const range = new vscode.Range(document.positionAt(item.start), document.positionAt(item.end));
-    const diagnostic = new vscode.Diagnostic(range, item.message, vscode.DiagnosticSeverity.Information);
+    const diagnostic = new vscode.Diagnostic(range, item.message.zh, vscode.DiagnosticSeverity.Information);
     diagnostic.code = item.content;
-    diagnostic.source = 'punctuation-mixing-check';
+    diagnostic.source = PUNCTUATION_MIXING_CHECK;
     return diagnostic;
   });
 }

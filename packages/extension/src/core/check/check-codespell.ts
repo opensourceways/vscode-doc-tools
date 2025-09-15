@@ -1,12 +1,11 @@
 import * as vscode from 'vscode';
-import { execCodespellCheck } from 'checkers';
+import { CODESPELL_CHECK, execCheckCodespell } from 'checkers';
 
-import defaultWhitelistWords from '@/config/whitelist-words';
 import { isConfigEnabled } from '@/utils/common';
 
 
 // 错误单词提示记录
-const wordsMap = new Map<string, string[]>();
+const WORDS = new Map<string, string[]>();
 
 /**
  * codespell 检查
@@ -20,17 +19,16 @@ export async function checkCodespell(content: string, document: vscode.TextDocum
   }
 
   const whiteListConfig = vscode.workspace.getConfiguration('docTools.check.codespell').get<string[]>('whiteList', []);
-  const whiteList = Array.isArray(whiteListConfig) ? [...whiteListConfig, ...defaultWhitelistWords] : defaultWhitelistWords;
-  const results = await execCodespellCheck(content, whiteList);
+  const results = await execCheckCodespell(content, Array.isArray(whiteListConfig) ? whiteListConfig : []);
 
   return results.map(item => { 
     if (Array.isArray(item.extras)) {
-      wordsMap.set(item.content, item.extras);
+      WORDS.set(item.content, item.extras);
     }
 
     const range = new vscode.Range(document.positionAt(item.start), document.positionAt(item.end));
-    const diagnostic = new vscode.Diagnostic(range, item.message, vscode.DiagnosticSeverity.Information);
-    diagnostic.source = 'codespell-check';
+    const diagnostic = new vscode.Diagnostic(range, item.message.zh, vscode.DiagnosticSeverity.Information);
+    diagnostic.source = CODESPELL_CHECK;
     diagnostic.code = item.content;
     
     return diagnostic;
@@ -50,11 +48,11 @@ export function getCodespellCodeActions(context: vscode.CodeActionContext, docum
   }
 
   context.diagnostics.forEach((item) => {
-    if (item.source !== 'codespell-check') {
+    if (item.source !== CODESPELL_CHECK) {
       return;
     }
 
-    const suggestions = wordsMap.get(item.code as string);
+    const suggestions = WORDS.get(item.code as string);
     if (!Array.isArray(suggestions)) {
       return;
     }

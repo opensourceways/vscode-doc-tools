@@ -1,8 +1,7 @@
 import * as vscode from 'vscode';
 import path from 'path';
-import { execLinkValidityCheck } from 'checkers';
+import { execCheckLinkValidity, LINK_VALIDITY_CHECK } from 'checkers';
 
-import defaultWhitelistUrls from '@/config/whitelist-urls';
 import { isConfigEnabled } from '@/utils/common';
 
 /**
@@ -17,9 +16,8 @@ export async function checkLinkValidity(content: string, document: vscode.TextDo
   }
 
   const whiteListConfig = vscode.workspace.getConfiguration('docTools.check.url').get<string[]>('whiteList', []);
-  const whiteList = Array.isArray(whiteListConfig) ? [...whiteListConfig, ...defaultWhitelistUrls] : defaultWhitelistUrls;
-  let results = await execLinkValidityCheck(content, {
-    whiteList,
+  let results = await execCheckLinkValidity(content, {
+    whiteList: Array.isArray(whiteListConfig) ? whiteListConfig : [],
     prefixPath: path.dirname(document.uri.fsPath),
   });
 
@@ -29,8 +27,9 @@ export async function checkLinkValidity(content: string, document: vscode.TextDo
 
   return results.map((item) => {
     const range = new vscode.Range(document.positionAt(item.start), document.positionAt(item.end));
-    const diagnostic = new vscode.Diagnostic(range, item.message, item.extras === 499 ? vscode.DiagnosticSeverity.Warning : vscode.DiagnosticSeverity.Error);
-    diagnostic.source = 'link-validity-check';
+    const diagnostic = new vscode.Diagnostic(range, item.message.zh, item.type === 'error' ? vscode.DiagnosticSeverity.Error : vscode.DiagnosticSeverity.Warning);
+    diagnostic.source = LINK_VALIDITY_CHECK;
+    diagnostic.code = item.content;
 
     return diagnostic;
   });
@@ -48,11 +47,11 @@ export function getLinkValidityCodeActions(context: vscode.CodeActionContext) {
   }
 
   context.diagnostics.forEach((item) => {
-    if (item.source !== 'link-validity-check') {
+    if (item.source !== LINK_VALIDITY_CHECK) {
       return;
     }
 
-    const link = item.message.split(': ')[1];
+    const link = item.code as string;
     if (!link.startsWith('http')) {
       return;
     }

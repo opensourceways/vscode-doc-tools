@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { LINK_VALIDITY_CHECK, RESOURCE_EXISTENCE_CHECK } from 'checkers';
 
 /**
  * 加入链接白名单
@@ -19,11 +20,11 @@ export async function addUrlWhitelist(url: string, diagnosticsCollection: vscode
   // 更新标记
   diagnosticsCollection.forEach((uri, diagnostics) => {
     const filterDiagnostics = diagnostics.filter((item) => {
-      if (item.source !== 'link-validity-check' && item.source !== 'resource-existence-check') {
+      if (item.source !== LINK_VALIDITY_CHECK && item.source !== RESOURCE_EXISTENCE_CHECK) {
         return true;
       }
 
-      return item.message.split(': ')[1] !== url;
+      return item.code !== url;
     });
 
     if (filterDiagnostics.length !== diagnostics.length) {

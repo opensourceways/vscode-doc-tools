@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import path from 'path';
 import fs from 'fs';
-import { getBase64Image } from 'shared';
+import { getBase64Image, getMarkdownTitleId } from 'shared';
 
 import { createMarkdownRenderer } from 'markdown';
 
@@ -34,6 +34,9 @@ export function createDocMarkdownRenderer(srcDir: string, webview: vscode.Webvie
     theme: {
       light: 'light-plus',
       dark: 'dark-plus',
+    },
+    anchor: {
+      slugify: (s: string) => `user-content-${getMarkdownTitleId(s)}`
     },
     config: (md) => {
       md.renderer.rules.code_inline = (tokens, idx) => {

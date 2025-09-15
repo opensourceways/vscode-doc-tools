@@ -1,6 +1,6 @@
 {
   "name": "shared",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "author": "cctvcat",
   "license": "MIT",
   "main": "src/index.ts",
@@ -12,6 +12,8 @@
     }
   },
   "dependencies": {
+    "markdown-it": "14.1.0",
+    "markdown-it-anchor": "9.2.0",
     "yaml": "2.8.1"
   }
 }

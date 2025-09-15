@@ -1,8 +1,10 @@
 import * as vscode from 'vscode';
 import path from 'path';
 
-import { ServerMessageHandler } from 'webview-bridge';
+import { ServerMessenger } from 'webview-bridge';
 import { createWebviewPanel } from '@/utils/webview';
+
+const ID = 'markdown';
 
 /**
  * 预览 markdown
@@ -17,7 +19,7 @@ export function previewMarkdown(context: vscode.ExtensionContext, uri: vscode.Ur
     context,
     viewType: 'Doc Tools：预览 markdown',
     title: path.basename(uri.fsPath),
-    showOptions: vscode.ViewColumn.Beside,
+    showOptions: vscode.ViewColumn.Two,
     iconPath: vscode.Uri.file(path.join(context.extensionPath, 'resources', isDarkTheme ? 'icon-preview-dark.svg' : 'icon-preview-light.svg')),
     webviewPanelOptions: {
       retainContextWhenHidden: true,
@@ -33,7 +35,7 @@ export function previewMarkdown(context: vscode.ExtensionContext, uri: vscode.Ur
       },
     },
     onBeforeLoad(webviewPanel, isDev) {
-      ServerMessageHandler.bind(webviewPanel, isDev);
+      ServerMessenger.bind(ID, webviewPanel, isDev);
     },
   });
 }
@@ -57,7 +59,7 @@ export const triggerPreviewMarkdownContentChange = (() => {
       }
 
       timerTriggerMdContentChange = setTimeout(() => {
-        ServerMessageHandler.broadcast('onMarkdownContentChange', document.uri.fsPath.replace(/\\/g, '/'));
+        ServerMessenger.broadcast(ID, 'onMarkdownContentChange', document.uri.fsPath.replace(/\\/g, '/'));
         timerTriggerMdContentChange = null;
       }, 1000);
 
@@ -70,7 +72,7 @@ export const triggerPreviewMarkdownContentChange = (() => {
       }
 
       timerTriggerTocContentChange = setTimeout(() => {
-        ServerMessageHandler.broadcast('onTocContentChange', document.uri.fsPath.replace(/\\/g, '/'));
+        ServerMessenger.broadcast(ID, 'onTocContentChange', document.uri.fsPath.replace(/\\/g, '/'));
         timerTriggerTocContentChange = null;
       }, 1000);
       return;

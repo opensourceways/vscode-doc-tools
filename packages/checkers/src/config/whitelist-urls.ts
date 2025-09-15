@@ -1,0 +1,18 @@
+// 检测链接白名单
+export const DEFAULT_WHITELIST_URLS = [
+  'https://$(host_ip):8080',
+  'https://域名',
+  'http://ip:8888',
+  'http://shim/metrics":dial',
+  'http://path/to/repo',
+  'https://libvirt.org/sources/libvirt-x.x.x.tar.xz',
+  'https://dl-cdn.openeuler.openatom.cn/openEuler-{version}/OS/aarch64',
+  'http://server',
+  'http://[gala-gopher所在节点ip]:[端口号]/[function（采集特性)]',
+  'https://example.com/*',
+  '^(mailto:|file://|ftp://).*',
+  '^(https?://)?localhost.*',
+  '^(https?://)?192\\.168\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?).*',
+  '^(https?://)?172\\.(1[6-9]|2[0-9]|3[0-1])\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?).*',
+  '^(https?://)?10\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?).*',
+];

@@ -16,38 +16,45 @@ const routes = [
     },
   },
   {
-    path: '/check-name-result',
-    name: 'check-name-result',
+    path: '/batch-markdownlint-result',
+    name: 'batch-markdownlint-result',
     component: () => {
-      return import('@/views/TheCheckNameResult.vue')
+      return import('@/views/TheBatchMarkdownlintResult.vue')
     },
   },
   {
-    path: '/check-name-consistency-result',
-    name: 'check-name-consistency-result',
+    path: '/batch-check-file-naming-result',
+    name: 'batch-check-file-naming-result',
     component: () => {
-      return import('@/views/TheCheckNameConsistencyResult.vue')
+      return import('@/views/TheBatchCheckFileNamingResult.vue')
     },
   },
   {
-    path: '/check-link-accessibility',
-    name: 'check-link-accessibility',
+    path: '/batch-check-file-naming-consistency-result',
+    name: 'batch-check-file-naming-consistency-result',
     component: () => {
-      return import('@/views/TheCheckLinkAccessibilityResult.vue')
+      return import('@/views/TheBatchCheckFileNamingConsistencyResult.vue')
     },
   },
   {
-    path: '/check-toc',
-    name: 'check-toc',
+    path: '/batch-check-link-accessibility-result',
+    name: 'batch-check-link-accessibility-result',
     component: () => {
-      return import('@/views/TheCheckTocResult.vue')
+      return import('@/views/TheBatchCheckLinkAccessibilityResult.vue')
     },
   },
   {
-    path: '/check-tag-closed',
-    name: 'check-tag-closed',
+    path: '/batch-check-toc-reuslt',
+    name: 'batch-check-toc-reuslt',
     component: () => {
-      return import('@/views/TheCheckTagClosedResult.vue')
+      return import('@/views/TheBatchCheckTocResult.vue')
+    },
+  },
+  {
+    path: '/batch-check-tag-closed-result',
+    name: 'batch-check-tag-closed-result',
+    component: () => {
+      return import('@/views/TheBatchCheckTagClosedResult.vue')
     },
   },
 ]

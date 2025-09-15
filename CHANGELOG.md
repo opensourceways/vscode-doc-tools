@@ -111,3 +111,14 @@ All notable changes to the "docs-tools" extension will be documented in this fil
 ### Fix
 
 - 优化标点符号前后无空格检查
+
+## [0.1.1]
+
+### Feat
+
+- 增加批量执行 markdownlint 功能，检测结果将以页面形式展示
+
+### Fix
+
+- 修复批量检测点击停止会出现没有响应的问题
+- 修复某些情况下保存 _toc.yml 预览页面的菜单没有刷新的问题

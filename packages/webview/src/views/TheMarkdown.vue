@@ -124,7 +124,7 @@ const onScrollUpdateAnchor = () => {
 
     const [_, hash] = item.href.split('#');
     const id = decodeURIComponent(hash);
-    const target = contentDom.querySelector<HTMLElement>(`#${id}`);
+    const target = contentDom.querySelector<HTMLElement>(`#user-content-${id}`);
     if (!target) {
       continue;
     }
@@ -183,7 +183,7 @@ const scrollIntoTitle = async (titleId: string) => {
   isScrolling.value = true;
   const contentDom = document.querySelector('.ly-doc');
   if (contentDom) {
-    const target = contentDom.querySelector<HTMLElement>(`#${titleId}`) || contentDom.querySelector<HTMLElement>(`[name='${titleId.slice(1)}']`);
+    const target = contentDom.querySelector<HTMLElement>(`#user-content-${titleId}`) || contentDom.querySelector<HTMLElement>(titleId) || contentDom.querySelector<HTMLElement>(`[name='${titleId.slice(1)}']`);
     const scrollContainer = document.querySelector<HTMLElement>('#app > .o-scroller > .o-scroller-container');
     if (target && scrollContainer) {
       await scrollIntoView(target, scrollContainer);

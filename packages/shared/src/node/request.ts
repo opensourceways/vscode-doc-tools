@@ -11,7 +11,7 @@ export function createRequest(
   url: string,
   method: string,
   opts?: {
-    timeout: number;
+    timeout?: number;
     signal?: AbortSignal;
   }
 ) {
@@ -20,6 +20,7 @@ export function createRequest(
   const abortFunc = () => {
     controller.abort();
     signal?.removeEventListener('abort', abortFunc);
+    clearTimeout(timer);
   };
 
   signal?.addEventListener('abort', abortFunc);
@@ -41,15 +42,6 @@ export function createRequest(
 }
 
 /**
- * 判断是不是一个内网地址
- * @param {string} ip ip
- * @returns {boolean} 返回判断结果
- */
-export function isPrivateIP(ip: string) {
-  return /^(10\.\d{1,3}\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3}|192\.168\.\d{1,3}\.\d{1,3})$/.test(ip);
-}
-
-/**
  * 获取链接状态码
  * @param {string} link 链接地址
  * @param {string} prefixPath 文件前缀地址，可空
@@ -58,24 +50,14 @@ export function isPrivateIP(ip: string) {
  * @returns {Promise<number>} 返回访问状态码
  */
 export async function getLinkStatus(link: string, prefixPath = '', whitelist: string[] = [], signal?: AbortSignal) {
-  // localhost跳过
-  const noHttpUrl = link.replace('http://', '').replace('https://', '');
-  if (noHttpUrl.startsWith('localhost')) {
-    return 200;
-  }
-
-  // 内网地址跳过
-  if (isPrivateIP(noHttpUrl.split(':')?.[0]) || isPrivateIP(noHttpUrl.split('/')?.[0])) {
-    return 200;
-  }
-
   // 白名单跳过
-  if (whitelist.some((item) => new RegExp(item).test(link))) {
-    return 200;
-  }
-
-  // 跳过某些协议的检查
-  if (link.startsWith('mailto:') || link.startsWith('file://') || link.startsWith('ftp://')) {
+  if (whitelist.some((item) => {
+    try {
+      return new RegExp(item).test(link)
+    } catch {
+      return false;
+    }
+  })) {
     return 200;
   }
 

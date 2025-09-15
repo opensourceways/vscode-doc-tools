@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { applyFixes } from 'markdownlint';
 
-import { lintHistory } from '@/core/check/lint-markdown';
+import { lintHistory } from '@/core/check/markdownlint';
 
 /**
  * 修复所有 markdown-lint 错误

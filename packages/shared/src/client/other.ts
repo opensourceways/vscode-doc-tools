@@ -15,3 +15,12 @@ export function getGitUrlInfo(gitUrl: string) {
     locations,
   };
 }
+
+/**
+ * 休眠
+ * @param {number} ms 毫秒数
+ * @returns Promise
+ */
+export function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}

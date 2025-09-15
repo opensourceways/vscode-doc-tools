@@ -4,21 +4,21 @@ import { getMarkdownFilterContent } from 'shared';
 import { EVENT_TYPE } from '@/@types/event';
 import { isConfigEnabled } from '@/utils/common';
 
-import { getMarkdownlintCodeActions, lintMarkdown } from './lint-markdown';
+import { getMarkdownlintCodeActions, markdownlint } from './markdownlint';
 import { checkTagClosed, getTagClosedCodeActions } from './check-tag-closed';
 import { checkCodespell, getCodespellCodeActions } from './check-codespell';
 import { checkResourceExistence, getResourceExistenceCodeActions } from './check-resource-existence';
 import { checkLinkValidity, getLinkValidityCodeActions } from './check-link-validity';
 import { checkToc } from './check-toc';
 import { checkMdInToc } from './check-md-in-toc';
-import { checkPunctuationBlankSpace, getPunctuationBlankSpaceCodeActions } from './check-punctuation-blank-space';
+import { checkPunctuationSpaces, getPunctuationSpacesCodeActions } from './check-punctuation-spaces';
 import { checkPunctuationMixing } from './check-punctuation-mixing';
 import { checkPunctuationManualLink, getPunctuationMauanlLinkActions } from './check-punctuation-manual-link';
 import { checkPunctuationConsecutive } from './check-punctuation-consecutive';
 import { checkPunctuationPair } from './check-punctuation-pair';
-import { checkName } from './check-name';
-import { checkNameConsistency } from './check-name-consistency';
-import { checkExtraBlankSpace } from './check-extra-blank-space';
+import { checkFileNaming } from './check-file-naming';
+import { checkFileNamingConsistency } from './check-file-naming-consistency';
+import { checkExtraSpaces, getExtraSpacesCodeActions } from './check-extra-spaces';
 
 // 用于存储延迟任务记录
 const timerMap = new Map<string, NodeJS.Timeout>();
@@ -79,15 +79,14 @@ async function checkMarkdown(event: EVENT_TYPE, document: vscode.TextDocument, d
 
   // 先执行不耗时的检查
   const diagnostics: vscode.Diagnostic[] = await Promise.all([
-    checkPunctuationBlankSpace(content, document),
+    markdownlint(document),
+    checkPunctuationSpaces(content, document),
     checkPunctuationMixing(content, document),
     checkPunctuationManualLink(content, document),
     checkPunctuationConsecutive(content, document),
     checkPunctuationPair(content, document),
-    checkExtraBlankSpace(content, document),
+    checkExtraSpaces(content, document),
     checkTagClosed(content, document),
-    checkCodespell(content, document),
-    lintMarkdown(document),
   ]).then((result) => {
     return result.flat();
   });
@@ -96,7 +95,11 @@ async function checkMarkdown(event: EVENT_TYPE, document: vscode.TextDocument, d
   diagnosticsCollection.set(document.uri, diagnostics);
 
   // 耗时久的另外执行
-  const diagnosticsLong = [...(await checkResourceExistence(content, document)), ...(await checkLinkValidity(content, document))];
+  const diagnosticsLong = [
+    ...(await checkCodespell(content, document)),
+    ...(await checkResourceExistence(content, document)), 
+    ...(await checkLinkValidity(content, document)),
+  ];
   if (diagnosticsLong.length > 0) {
     diagnostics.push(...diagnosticsLong);
     diagnosticsCollection.set(document.uri, diagnostics);
@@ -105,8 +108,8 @@ async function checkMarkdown(event: EVENT_TYPE, document: vscode.TextDocument, d
   // 弹窗提示的检查
   if (event === EVENT_TYPE.EVENT_ACTIVE || event === EVENT_TYPE.EVENT_OPEN_TEXT_DOC) {
     checkMdInToc(document);
-    checkName(document);
-    checkNameConsistency(document);
+    checkFileNaming(document);
+    checkFileNamingConsistency(document);
   }
 }
 
@@ -128,13 +131,14 @@ async function checkTocYaml(document: vscode.TextDocument, diagnosticsCollection
  */
 export function getCodeActions(document: vscode.TextDocument, context: vscode.CodeActionContext) {
   const actions: vscode.CodeAction[] = [
-    ...getPunctuationBlankSpaceCodeActions(context, document),
+    ...getPunctuationSpacesCodeActions(context, document),
     ...getPunctuationMauanlLinkActions(context, document),
     ...getCodespellCodeActions(context, document),
     ...getTagClosedCodeActions(context, document),
     ...getLinkValidityCodeActions(context),
     ...getResourceExistenceCodeActions(context),
     ...getMarkdownlintCodeActions(context, document),
+    ...getExtraSpacesCodeActions(context, document),
   ];
   return actions;
 }

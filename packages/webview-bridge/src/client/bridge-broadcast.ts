@@ -107,7 +107,7 @@ export class BroadcastBridge {
    * 添加 异步任务输出 监听
    * @param {Function} callback 回调方法
    */
-  static addAsyncTaskOutputListener<T = any>(callback: (name: string, data: T) => void) {
+  static addAsyncTaskOutputListener(callback: (...args: any[]) => void) {
     this[symbolAddListener]('onAsyncTaskOutput', callback);
   }
 
@@ -115,7 +115,7 @@ export class BroadcastBridge {
    * 移除 异步任务输出 监听
    * @param {Function} callback 回调方法
    */
-  static removeAsyncTaskOutputListener<T = any>(callback: (name: string, data: T) => void) {
+  static removeAsyncTaskOutputListener(callback: (...args: any[]) => void) {
     this[symbolRemoveListener]('onAsyncTaskOutput', callback);
   }
 }

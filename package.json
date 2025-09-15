@@ -4,7 +4,7 @@
   "description": "tools for markdown docs",
   "publisher": "gzbang",
   "icon": "icon.png",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "workspaces": [
     "packages/*"
@@ -33,10 +33,6 @@
     },
     "commands": [
       {
-        "command": "doc.tools.check",
-        "title": "运行Markdown检查"
-      },
-      {
         "command": "doc.tools.gen.toc.manual",
         "title": "生成手册 _toc.yaml"
       },
@@ -61,23 +57,27 @@
         "title": "修复MarkdownLint错误"
       },
       {
-        "command": "doc.tools.check.name",
+        "command": "doc.tools.batch.markdownlint",
+        "title": "批量执行 Markdownlint"
+      },
+      {
+        "command": "doc.tools.batch.check.fileNaming",
         "title": "批量检查目录和文件是否符合命名规范"
       },
       {
-        "command": "doc.tools.check.nameConsistency",
+        "command": "doc.tools.batch.check.fileNamingConsistency",
         "title": "批量检查中英文文档名称一致性"
       },
       {
-        "command": "doc.tools.check.linkAccessibility",
+        "command": "doc.tools.batch.check.linkAccessibility",
         "title": "批量检查链接可访问性"
       },
       {
-        "command": "doc.tools.check.toc",
+        "command": "doc.tools.batch.check.toc",
         "title": "批量检查 _toc.yaml"
       },
       {
-        "command": "doc.tools.check.tagClosed",
+        "command": "doc.tools.batch.check.tagClosed",
         "title": "批量检查 Html 标签闭合"
       },
       {
@@ -113,24 +113,28 @@
           "group": "doc.tools.gen"
         },
         {
-          "command": "doc.tools.check.name",
-          "group": "doc.tools.check"
+          "command": "doc.tools.batch.markdownlint",
+          "group": "doc.tools.batch.check"
         },
         {
-          "command": "doc.tools.check.nameConsistency",
-          "group": "doc.tools.check"
+          "command": "doc.tools.batch.check.fileNaming",
+          "group": "doc.tools.batch.check"
         },
         {
-          "command": "doc.tools.check.linkAccessibility",
-          "group": "doc.tools.check"
+          "command": "doc.tools.batch.check.fileNamingConsistency",
+          "group": "doc.tools.batch.check"
         },
         {
-          "command": "doc.tools.check.toc",
-          "group": "doc.tools.check"
+          "command": "doc.tools.batch.check.linkAccessibility",
+          "group": "doc.tools.batch.check"
         },
         {
-          "command": "doc.tools.check.tagClosed",
-          "group": "doc.tools.check"
+          "command": "doc.tools.batch.check.toc",
+          "group": "doc.tools.batch.check"
+        },
+        {
+          "command": "doc.tools.batch.check.tagClosed",
+          "group": "doc.tools.batch.check"
         }
       ],
       "doc.tools.markdown": [
@@ -213,7 +217,7 @@
           "default": true,
           "description": "启用 _toc.yaml 检查（包含：1.目录中引用的文件需要存在；2.md 文件是否加入 _toc.yaml）"
         },
-        "docTools.check.punctuationBlankSpace.enable": {
+        "docTools.check.punctuationSpaces.enable": {
           "type": "boolean",
           "default": false,
           "description": "启用标点符号前后无空格检查（因语句含义复杂，可能存在误报）"
@@ -238,12 +242,12 @@
           "default": false,
           "description": "启用中英文标点符号是否配对检查（因语句含义复杂，可能存在误报）"
         },
-        "docTools.check.extraBlankSpace.enable": {
+        "docTools.check.extraSpaces.enable": {
           "type": "boolean",
           "default": false,
-          "description": "启用中文文字之间无空格检查"
+          "description": "启用中文文字之间无空格检查（因语句含义复杂，可能存在误报）"
         },
-        "docTools.check.name.enable": {
+        "docTools.check.fileNaming.enable": {
           "type": "boolean",
           "default": false,
           "description": "启用文件/目录命名规范检查"
@@ -253,7 +257,7 @@
           "default": [],
           "description": "文件/目录命名规范白名单（添加后忽略对该名称的检查）"
         },
-        "docTools.check.nameConsistency.enable": {
+        "docTools.check.fileNamingConsistency.enable": {
           "type": "boolean",
           "default": false,
           "description": "启用中英文文档名称一致性检查"
@@ -266,6 +270,7 @@
     "build:webview": "yarn workspace webview build",
     "dev:ext": "yarn workspace extension watch:esbuild",
     "build:ext": "yarn workspace extension package",
+    "build:docs-ci": "yarn workspace ci package",
     "build": "yarn build:ext && yarn build:webview && vsce package"
   }
 }
