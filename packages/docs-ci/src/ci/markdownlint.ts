@@ -1,10 +1,10 @@
-import { DEFAULT_MD_CONFIG, execMarkdownlint } from 'checkers';
+import { execMarkdownlint } from 'checkers';
 
 import { formatLog } from '../utils/common';
 import { createOutputItem } from '../utils/output';
 
 export async function execMarkdownlintCi(content: string, filePath: string) {
-  const [results] = await execMarkdownlint(content, DEFAULT_MD_CONFIG);
+  const [results] = await execMarkdownlint(content);
   return results.map((item) => {
     const output = createOutputItem({
       fileContent: content,

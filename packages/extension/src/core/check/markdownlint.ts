@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { type Configuration, type LintError } from 'markdownlint';
-import { DEFAULT_MD_CONFIG, execMarkdownlint, MARKDOWNLINT } from 'checkers';
+import { execMarkdownlint, MARKDOWNLINT } from 'checkers';
 
 import { isConfigEnabled } from '@/utils/common';
 

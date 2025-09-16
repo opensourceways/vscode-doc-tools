@@ -42,7 +42,8 @@ import {
 
     try {
       const completeFilePath = path.join(repoPath, filePath);
-      const content = getMarkdownFilterContent(fs.readFileSync(completeFilePath, 'utf-8'), {
+      const content = fs.readFileSync(completeFilePath, 'utf-8');
+      const filterContent = getMarkdownFilterContent(content, {
         disableHtmlComment: true,
         disableCode: true,
       });
@@ -51,17 +52,17 @@ import {
         // markdownlint
         outputItems.push(...(await execMarkdownlintCi(content, filePath)));
         // link validity check
-        outputItems.push(...(await execCheckLinkValidityCi(content, repoPath, filePath)));
+        outputItems.push(...(await execCheckLinkValidityCi(filterContent, repoPath, filePath)));
         // resource existence check
-        outputItems.push(...(await execCheckResourceExistenceCi(content, repoPath, filePath)));
+        outputItems.push(...(await execCheckResourceExistenceCi(filterContent, repoPath, filePath)));
         if (targetOwnerRepo === 'openeuler/docs-centralized') {
           continue;
         }
 
         // codespell check
-        outputItems.push(...(await execCheckCodespellCi(content, filePath)));
+        outputItems.push(...(await execCheckCodespellCi(filterContent, filePath)));
         // tag closed check
-        outputItems.push(...(await execCheckTagClosedCi(content, filePath)));
+        outputItems.push(...(await execCheckTagClosedCi(filterContent, filePath)));
         // file naming check
         outputItems.push(...(await execCheckFileNamingCi(completeFilePath)));
         // file naming consistency check
@@ -71,7 +72,7 @@ import {
 
       // toc check
       if (completeFilePath.endsWith('_toc.yaml') && targetOwnerRepo !== 'openeuler/docs-centralized') {
-        outputItems.push(...(await execCheckTocCi(content, repoPath, filePath)));
+        outputItems.push(...(await execCheckTocCi(filterContent, repoPath, filePath)));
         continue;
       }
     } catch (error: any) {
@@ -122,6 +123,9 @@ import {
         item.position ? `[错误位置]：${item.position}` : '',
         item.checkType ? `[检查类型]：${item.checkType}` : '',
         `[错误信息]：${item.message.length > 100 ? item.message.slice(0, 100) + '...' : item.message}`,
+        item.content && item.content.trim()
+          ? `[错误内容]：${item.content.trim().length > 100 ? item.content.trim().slice(0, 100) + '...' : item.content.trim()}`
+          : '',
       ].filter(Boolean);
 
       outputErrorsTable.push(`| ${index + 1} | ${detail.join('<br>')} |`);

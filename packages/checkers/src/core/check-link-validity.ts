@@ -79,7 +79,7 @@ export async function execCheckLinkValidity(
 
         status = await getLinkStatus(link, prefixPath, allWhitelist, signal);
         if (status >= 100 && status < 400) {
-          if (!disableCheckAnchor && link.startsWith('.') && anchor) {
+          if (!disableCheckAnchor && anchor && !link.startsWith('http')) {
             const mdPath = path.join(prefixPath, decodeURI(link.replace('.html', '.md')));
             if (!idsMap.get(mdPath)) {
               const mdContent = await getFileContentAsync(mdPath);

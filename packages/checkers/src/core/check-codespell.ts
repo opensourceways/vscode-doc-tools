@@ -11,7 +11,7 @@ export const CODESPELL_CHECK = 'codespell-check';
  * @param {string[]} whiteList 单词白名单
  * @returns {ResultT<string[] | undefined>[]} 返回检查结果
  */
-export async function execCheckCodespell(content: string, whiteList: string[]) {
+export async function execCheckCodespell(content: string, whiteList: string[] = []) {
   const remoteWhitelistConfig = await getRemoteCodespellConfig();
   const results = await spellCheckDocument(
     {

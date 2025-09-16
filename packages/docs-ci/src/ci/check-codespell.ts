@@ -1,10 +1,10 @@
-import { DEFAULT_WHITELIST_WORDS, execCheckCodespell } from 'checkers';
+import { execCheckCodespell } from 'checkers';
 
 import { formatLog } from '../utils/common';
 import { createOutputItem } from '../utils/output';
 
 export async function execCheckCodespellCi(content: string, filePath: string) {
-  const results = await execCheckCodespell(content, DEFAULT_WHITELIST_WORDS);
+  const results = await execCheckCodespell(content);
 
   return results.map((item) => {
     const output = createOutputItem({

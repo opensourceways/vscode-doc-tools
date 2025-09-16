@@ -102,7 +102,7 @@ export function createDocMarkdownRenderer(srcDir: string, webview: vscode.Webvie
         // 处理链接
         if (content.startsWith('<a ')) {
           renderContent = renderContent.replace(/<a\s+([^>]*)href="([^"]*)"([^>]*)>/g, (match, before, url, after) => {
-            if (url.startsWith('.')) {
+            if (url.startsWith('http')) {
               const [filePath] = url.split('#');
               const newUrl = fs.existsSync(path.join(fsDir, filePath))
                 ? `doctools://markdown?fsPath=${path.join(fsDir, url).replace(/\\/g, '/')}`
@@ -136,7 +136,7 @@ export function createDocMarkdownRenderer(srcDir: string, webview: vscode.Webvie
         // 处理链接
         if (content.includes('<a ')) {
           renderContent = renderContent.replace(/<a\s+([^>]*)href="([^"]*)"([^>]*)>/g, (match, before, url, after) => {
-            if (url.startsWith('.')) {
+            if (url.startsWith('http')) {
               const [filePath] = url.split('#');
               const newUrl = fs.existsSync(path.join(fsDir, filePath))
                 ? `doctools://markdown?fsPath=${path.join(fsDir, url).replace(/\\/g, '/')}`
@@ -156,7 +156,7 @@ export function createDocMarkdownRenderer(srcDir: string, webview: vscode.Webvie
         const hrefIndex = token.attrIndex('href');
         if (hrefIndex >= 0) {
           const href = tokens[idx].attrs![hrefIndex][1];
-          if (href.startsWith('.')) {
+          if (href.startsWith('http')) {
             const [filePath] = href.split('#');
             tokens[idx].attrs![hrefIndex][1] = fs.existsSync(path.join(fsDir, filePath))
               ? `doctools://markdown?fsPath=${path.join(fsDir, href).replace(/\\/g, '/')}`

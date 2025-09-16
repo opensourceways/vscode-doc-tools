@@ -59,7 +59,7 @@ function parseLintResults(content: string, lintResults: LintResults) {
  * @param {Configuration} config markdownlint 配置
  * @returns {Promise<[ResultT<string>[], LintError[]]>} 返回检查结果
  */
-export function execMarkdownlint(content: string, config: Configuration): Promise<[ResultT<string>[], LintError[]]> {
+export function execMarkdownlint(content: string, config: Configuration = {}): Promise<[ResultT<string>[], LintError[]]> {
   return new Promise(async (resolve) => {
     const remoteConfig = await getRemoteMarkdownlintConfig();
 
