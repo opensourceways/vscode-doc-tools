@@ -1,6 +1,6 @@
 import path from 'path';
 import fs from 'fs';
-import { getGitChangedFiles, getMarkdownFilterContent } from 'shared';
+import { createRequest, getGitChangedFiles, getMarkdownFilterContent } from 'shared';
 import { OutputItemT } from './@types/output';
 import { execCheckTocCi } from './ci/check-toc';
 import { execMarkdownlintCi } from './ci/markdownlint';
@@ -22,17 +22,55 @@ import {
 } from 'checkers';
 
 (async () => {
+  // 获取参数
   const [repoPath, checkDirsStr, targetOwnerRepo, targetBranch, detailUrl] = process.argv.slice(2);
   if (!repoPath) {
     console.error('请提供仓库存放路径');
     return;
   }
 
+  // 输出检查目标信息
   const checkDirs = checkDirsStr.trim() ? checkDirsStr.trim().split(',') : ['docs/zh', 'docs/en'];
   console.log(`检查目录: ${checkDirsStr}`);
   console.log(`目标仓库: ${targetOwnerRepo}`);
   console.log(`目标分支: ${targetBranch}`);
 
+  // 获取 ci 检查配置
+  let ciConfig: string[] = ['all'];
+  try {
+    const res = await createRequest('https://gitee.com/Zherphy/docs-ci/raw/master/repo_ci.json', 'get');
+    const config = await res.json();
+    if (config?.[targetOwnerRepo]) {
+      if (Array.isArray(config?.[targetOwnerRepo]?.[targetBranch])) {
+        ciConfig = config[targetOwnerRepo][targetBranch];
+      } else if (Array.isArray(config?.[targetOwnerRepo]?.global)) {
+        ciConfig = config[targetOwnerRepo].global;
+      }
+    }
+  } catch (err: any) {
+    console.error('获取 CI 配置失败：', err?.message);
+  }
+
+  // 获取可检查项
+  const checkItems: Record<string, boolean> = {};
+  const allCis = [
+    MARKDOWNLINT,
+    LINK_VALIDITY_CHECK,
+    RESOURCE_EXISTENCE_CHECK,
+    CODESPELL_CHECK,
+    TAG_CLOSED_CHECK,
+    FILE_NAMING_CHECK,
+    FILE_NAMING_CONSISTENCY_CHECK,
+    TOC_CHECK,
+  ];
+
+  allCis.forEach((item) => {
+    if (ciConfig?.[0] === 'all' || (Array.isArray(ciConfig) && ciConfig.includes(item))) {
+      checkItems[item] = true;
+    }
+  });
+
+  // 执行检查
   const changed = getGitChangedFiles(repoPath);
   const outputItems: OutputItemT[] = [];
   for (const filePath of changed) {
@@ -50,29 +88,49 @@ import {
 
       if (completeFilePath.endsWith('.md')) {
         // markdownlint
-        outputItems.push(...(await execMarkdownlintCi(content, filePath)));
+        if (checkItems[MARKDOWNLINT]) {
+          outputItems.push(...(await execMarkdownlintCi(content, filePath)));
+        }
+
         // link validity check
-        outputItems.push(...(await execCheckLinkValidityCi(filterContent, repoPath, filePath)));
+        if (checkItems[LINK_VALIDITY_CHECK]) {
+          outputItems.push(...(await execCheckLinkValidityCi(filterContent, repoPath, filePath)));
+        }
+
         // resource existence check
-        outputItems.push(...(await execCheckResourceExistenceCi(filterContent, repoPath, filePath)));
-        if (targetOwnerRepo === 'openeuler/docs-centralized') {
-          continue;
+        if (checkItems[RESOURCE_EXISTENCE_CHECK]) {
+          outputItems.push(...(await execCheckResourceExistenceCi(filterContent, repoPath, filePath)));
         }
 
         // codespell check
-        outputItems.push(...(await execCheckCodespellCi(filterContent, filePath)));
+        if (checkItems[CODESPELL_CHECK]) {
+          outputItems.push(...(await execCheckCodespellCi(filterContent, filePath)));
+        }
+
         // tag closed check
-        outputItems.push(...(await execCheckTagClosedCi(filterContent, filePath)));
+        if (checkItems[TAG_CLOSED_CHECK]) {
+          outputItems.push(...(await execCheckTagClosedCi(filterContent, filePath)));
+        }
+
         // file naming check
-        outputItems.push(...(await execCheckFileNamingCi(completeFilePath)));
+        if (checkItems[FILE_NAMING_CHECK]) {
+          outputItems.push(...(await execCheckFileNamingCi(completeFilePath)));
+        }
+
         // file naming consistency check
-        outputItems.push(...(await execCheckFileNamingConsistencyCi(completeFilePath)));
+        if (checkItems[FILE_NAMING_CONSISTENCY_CHECK]) {
+          outputItems.push(...(await execCheckFileNamingConsistencyCi(completeFilePath)));
+        }
+
         continue;
       }
 
       // toc check
-      if (completeFilePath.endsWith('_toc.yaml') && targetOwnerRepo !== 'openeuler/docs-centralized') {
-        outputItems.push(...(await execCheckTocCi(filterContent, repoPath, filePath)));
+      if (completeFilePath.endsWith('_toc.yaml')) {
+        if (checkItems[TOC_CHECK]) {
+          outputItems.push(...(await execCheckTocCi(filterContent, repoPath, filePath)));
+        }
+
         continue;
       }
     } catch (error: any) {
@@ -86,27 +144,13 @@ import {
 
   // 检查执行结果
   const outputPath = './output.md';
-  const checkItems: Record<string, boolean> = {
-    [MARKDOWNLINT]: true,
-    [LINK_VALIDITY_CHECK]: true,
-    [RESOURCE_EXISTENCE_CHECK]: true,
-  };
-
-  if (targetOwnerRepo !== 'openeuler/docs-centralized') {
-    checkItems[CODESPELL_CHECK] = true;
-    checkItems[TAG_CLOSED_CHECK] = true;
-    checkItems[FILE_NAMING_CHECK] = true;
-    checkItems[FILE_NAMING_CONSISTENCY_CHECK] = true;
-    checkItems[TOC_CHECK] = true;
-  }
-
   if (outputItems.length === 0) {
     const outputCheckItemsTable = ['| 检查项 | 检查结果 | 详情 |', '| --- | --- | --- |'];
     Object.keys(checkItems).forEach((item) => {
-      outputCheckItemsTable.push(`| ${item} | ${checkItems[item] ? '✅ 已通过' : '❌ 未通过'} | [查看详情](${detailUrl}) |`);
+      outputCheckItemsTable.push(`| ${item} | ✅ 已通过 | [查看详情](${detailUrl}) |`);
     });
     console.log('✅ 门禁检查通过！');
-    fs.writeFileSync(outputPath, `✅ 门禁检查通过！\n\n${outputCheckItemsTable.join('\n')}`);
+    fs.writeFileSync(outputPath, `✅ 门禁检查通过！\n\n${outputCheckItemsTable.length > 1 ? outputCheckItemsTable.join('\n') : ''}`);
     return;
   }
 
