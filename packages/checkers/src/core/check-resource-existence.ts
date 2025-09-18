@@ -6,7 +6,7 @@ import { getRemoteWhitelistUrlsConfig } from '../config';
 export const RESOURCE_EXISTENCE_CHECK = 'resource-existence-check';
 
 const REGEX = [
-  /!\[.*?\]\((.*?)\)/g, // 提取 ![xxx](xxx) 语法的链接
+  /!\[.*?\]\((.*?)( ".*?")?\)/g, // 提取 ![xxx](xxx) 语法的链接
   /<img\s+[^>]*src="([^"]+)"[^>]*>/gi, // 提取 img 标签的链接
   /<image\s+[^>]*src="([^"]+)"[^>]*>/gi, // 提取 image 标签的链接
   /<video\s+[^>]*src="([^"]+)"[^>]*>/gi, // 提取 video 标签的链接
