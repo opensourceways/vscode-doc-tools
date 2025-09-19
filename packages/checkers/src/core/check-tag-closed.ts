@@ -53,7 +53,7 @@ export function execCheckTagClosed(content: string) {
     }
 
     // 跳过自闭合标签
-    if (match[1] && selfClosedTags.has(match[1]?.toLowerCase())) {
+    if (match[1] && selfClosedTags.has(match[1]?.toLowerCase()) && match[0].startsWith(`<${match[1]}`)) {
       continue;
     }
 

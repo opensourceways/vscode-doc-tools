@@ -1,7 +1,7 @@
 export const FILE_NAMING_CHECK = 'file-naming-check';
 
 export function isSnakeCase(str: string) {
-  const snakeCaseRegex = /^[a-z0-9\.\+]*(_[a-z0-9\.\+]+)*$/;
+  const snakeCaseRegex = /^[a-z0-9]*(_[a-z0-9]+)*$/;
   return snakeCaseRegex.test(str);
 }
 
