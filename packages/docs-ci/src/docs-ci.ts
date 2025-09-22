@@ -114,12 +114,12 @@ import {
 
         // file naming check
         if (checkItems[FILE_NAMING_CHECK]) {
-          outputItems.push(...(await execCheckFileNamingCi(completeFilePath)));
+          outputItems.push(...(await execCheckFileNamingCi(filePath)));
         }
 
         // file naming consistency check
         if (checkItems[FILE_NAMING_CONSISTENCY_CHECK]) {
-          outputItems.push(...(await execCheckFileNamingConsistencyCi(completeFilePath)));
+          outputItems.push(...(await execCheckFileNamingConsistencyCi(repoPath, filePath)));
         }
 
         continue;

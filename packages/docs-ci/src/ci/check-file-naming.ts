@@ -4,7 +4,7 @@ import { formatLog } from '../utils/common';
 import { createOutputItem } from '../utils/output';
 
 export function execCheckFileNamingCi(filePath: string) {
-  if (!execCheckFileNaming(filePath.split('/').pop()!, DEFAULT_WHITELIST_NAMES)) {
+  if (!execCheckFileNaming(filePath.split('/').pop() || '', DEFAULT_WHITELIST_NAMES)) {
     const output = createOutputItem({
       filePath,
       checkType: 'file-naming-check',

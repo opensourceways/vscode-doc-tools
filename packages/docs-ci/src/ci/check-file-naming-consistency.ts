@@ -1,9 +1,11 @@
+import path from 'path';
 import { DEFAULT_WHITELIST_NAMES, execCheckFileNamingConsistency } from 'checkers';
 import { createOutputItem } from '../utils/output';
 import { formatLog } from '@/utils/common';
 
-export async function execCheckFileNamingConsistencyCi(filePath: string) {
-  const [isFileNamingConsistency, similarfilePath] = await execCheckFileNamingConsistency(filePath, DEFAULT_WHITELIST_NAMES);
+export async function execCheckFileNamingConsistencyCi(repoPath: string, filePath: string) {
+  const completedPath = path.join(repoPath, filePath);
+  const [isFileNamingConsistency, similarfilePath] = await execCheckFileNamingConsistency(completedPath, DEFAULT_WHITELIST_NAMES);
   if (!isFileNamingConsistency) {
     // CI不检查中文文档是否缺少英文文档
     if (!similarfilePath && filePath.includes('/zh/')) {

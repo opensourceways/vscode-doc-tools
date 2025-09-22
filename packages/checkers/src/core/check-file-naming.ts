@@ -12,5 +12,11 @@ export function isSnakeCase(str: string) {
  * @returns {boolean} 返回检查结果
  */
 export function execCheckFileNaming(name: string, nameWhiteList: string[] = []) {
-  return nameWhiteList.includes(name) || isSnakeCase(name);
+  if (nameWhiteList.includes(name)) {
+    return nameWhiteList.includes(name);
+  }
+
+  let sp = name.split('.');
+  sp.pop();
+  return isSnakeCase(sp.join('.'));
 }
